@@ -85,7 +85,7 @@ export default async function ResourcesPage({
                 {resources.map((resource) => (
                   <ResourceCard
                     key={resource.id}
-                    resource={resource as Parameters<typeof ResourceCard>[0]["resource"]}
+                    resource={resource}
                   />
                 ))}
               </div>

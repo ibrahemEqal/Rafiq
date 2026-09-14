@@ -79,10 +79,10 @@ export default async function BooksPage() {
 
                 {/* معلومات الكلية */}
                 <div className="space-y-3 mb-6 pt-6 border-t border-slate-50">
-                  {item.colleges && (
+                  {item.colleges?.[0] && (
                     <div className="flex items-center gap-2 text-slate-500 text-sm">
                       <MapPin size={16} className="text-slate-400" />
-                      <span>{item.colleges.name_ar}</span>
+                      <span>{item.colleges[0].name_ar}</span>
                     </div>
                   )}
                 </div>

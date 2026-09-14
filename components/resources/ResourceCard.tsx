@@ -10,12 +10,14 @@ interface ResourceType {
   download_count: number;
   view_count: number;
   created_at: string;
-  courses?: { name_ar: string; name_en: string } | null;
-  profiles?: { full_name: string } | null;
+  courses?: { name_ar: string; name_en: string }[] | null;
+  profiles?: { full_name: string }[] | null;
 }
 
 export default function ResourceCard({ resource }: { resource: ResourceType }) {
   const t = useTranslations("Resources");
+  const course = resource.courses?.[0];
+  const profile = resource.profiles?.[0];
 
   const formatSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -48,15 +50,15 @@ export default function ResourceCard({ resource }: { resource: ResourceType }) {
           {resource.title}
         </h3>
         
-        {resource.courses && (
+        {course && (
           <p className="text-sm font-medium text-teal-600 mb-4 bg-teal-50 w-max px-2.5 py-1 rounded-md">
-            {resource.courses.name_ar}
+            {course.name_ar}
           </p>
         )}
 
         <div className="mt-auto pt-4 flex items-center justify-between text-sm text-slate-500">
           <span className="font-medium truncate max-w-[120px]">
-            {resource.profiles?.full_name || t("owner")}
+            {profile?.full_name || t("owner")}
           </span>
           <span className="font-medium bg-slate-100 px-2 py-1 rounded-md">
             {formatSize(resource.file_size)}
