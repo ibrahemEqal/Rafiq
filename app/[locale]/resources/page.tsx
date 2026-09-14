@@ -14,19 +14,24 @@ export default async function ResourcesPage({
   const params = await searchParams;
   const supabase = await createClient();
 
-  const { data: colleges } = await supabase.from("colleges").select("id, name_ar, name_en");
-  
   let query = supabase
     .from("resources")
     .select(`
-      *,
+      id, title, type, file_size, download_count, view_count, created_at,
       courses (name_ar, name_en),
       profiles!resources_uploader_id_fkey (full_name)
     `)
-    // .eq('status', 'approved');
+    .eq('status', 'approved');
 
-  if (params?.q) {
-    query = query.textSearch('search_vector', params.q);
+  const q = params?.q?.trim().slice(0, 80) || "";
+  const allowedTypes = new Set(["summary", "previous_exam", "lecture", "assignment", "notes", "other"]);
+  const selectedType = allowedTypes.has(params?.type || "") ? params.type : undefined;
+
+  if (q) {
+    query = query.textSearch('search_vector', q, { config: 'simple', type: 'websearch' });
+  }
+  if (selectedType) {
+    query = query.eq('type', selectedType);
   }
 
   const { data: resources } = await query.order('created_at', { ascending: false }).limit(20);
@@ -55,20 +60,25 @@ export default async function ResourcesPage({
 
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           <aside className="w-full lg:w-72 shrink-0 sticky top-28 hidden lg:block">
-            <ResourceFilters colleges={colleges || []} />
+            <ResourceFilters selectedType={selectedType} query={q} />
           </aside>
 
           <main className="flex-1 w-full">
-            <div className="relative mb-8 group">
+            <form method="get" className="relative mb-8 group">
               <div className="absolute inset-y-0 start-0 flex items-center pointer-events-none text-slate-400 group-focus-within:text-teal-600 transition-colors ps-4">
                 <Search size={22} />
               </div>
+              {selectedType && <input type="hidden" name="type" value={selectedType} />}
               <input
-                type="text"
+                type="search"
+                name="q"
+                defaultValue={q}
+                maxLength={80}
                 placeholder={t("searchPlaceholder")}
-                className="w-full py-4 px-4 ps-12 bg-white border border-slate-200 rounded-2xl shadow-sm focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none text-slate-900 text-lg transition-all"
+                className="w-full py-4 px-4 pe-24 ps-12 bg-white border border-slate-200 rounded-2xl shadow-sm focus:border-teal-500 focus:ring-4 focus:ring-teal-50 outline-none text-slate-900 text-lg transition-all"
               />
-            </div>
+              <button type="submit" className="absolute end-2 top-2 rounded-xl bg-slate-900 px-4 py-2.5 font-bold text-white hover:bg-slate-800">بحث</button>
+            </form>
 
             {resources && resources.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

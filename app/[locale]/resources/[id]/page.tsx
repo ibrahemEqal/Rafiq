@@ -100,7 +100,6 @@ export default async function ResourceDetailsPage({
             <div className="w-full md:w-auto">
               <DownloadButton 
                 resourceId={resource.id} 
-                fileUrl={resource.storage_path} 
                 buttonText={t("download")} 
               />
             </div>

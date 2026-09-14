@@ -22,7 +22,7 @@ export default async function NewResourcePage() {
             <p className="text-slate-500">{t("uploadSubtitle")}</p>
           </div>
           
-          <UploadForm colleges={colleges || []} courses={courses || []} />
+          <UploadForm colleges={colleges || []} courses={courses || []} userId={user.id} />
         </div>
       </div>
     </div>

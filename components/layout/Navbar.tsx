@@ -1,7 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
-import { BookOpen, Library, MessageCircleQuestion, Sparkles, User } from "lucide-react";
-import { headers } from "next/headers";
+import { Library, Sparkles, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import SignOutButton from "./SignOutButton";
 
@@ -10,14 +9,11 @@ export default async function Navbar({ locale }: { locale: string }) {
   const toggleLocale = locale === "ar" ? "en" : "ar";
   const toggleText = locale === "ar" ? "English" : "عربي";
 
-  // إخفاء النافبار في صفحات المصادقة
-  const headerList = await headers();
-  const pathname = headerList.get("x-invoke-path") || "";
-  if (pathname.includes("/auth")) return null;
 
   // فحص الجلسة (هل المستخدم مسجل دخول؟)
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
+  const email = typeof data?.claims?.email === "string" ? data.claims.email : null;
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/50 backdrop-blur-2xl border-b border-slate-200/50">
@@ -58,20 +54,20 @@ export default async function Navbar({ locale }: { locale: string }) {
           </Link>
           
           <div className="hidden sm:flex items-center gap-2 border-s border-slate-200 ps-4">
-            {user ? (
+            {email ? (
               // إذا كان مسجلاً للدخول، أظهر القائمة المنسدلة
               <div className="relative group">
                 <button className="flex items-center gap-2 p-1.5 rounded-full hover:bg-slate-100 transition-colors">
                   <div className="w-9 h-9 flex items-center justify-center bg-teal-100 text-teal-700 rounded-full font-bold shadow-sm">
                     {/* عرض أول حرف من إيميله (مؤقتاً لحين جلب بروفايله) */}
-                    {user.email?.charAt(0).toUpperCase()}
+                    {email.charAt(0).toUpperCase()}
                   </div>
                 </button>
                 
                 {/* القائمة المنسدلة (تظهر عند الـ Hover) */}
                 <div className="absolute end-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right">
                   <div className="p-2 border-b border-slate-100">
-                    <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                    <p className="text-xs text-slate-500 truncate">{email}</p>
                   </div>
                   <div className="p-1">
                     <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors">

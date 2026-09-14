@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { createBrowserClient } from "@supabase/ssr";
-import { createResourceRecord } from "@/lib/actions/resources";
+import { createClient } from "@/lib/supabase/client";
+import { createResourceRecord, type ResourceInput } from "@/lib/actions/resources";
 import { UploadCloud, CheckCircle2 } from "lucide-react";
 
 type ResourceOption = {
@@ -12,7 +12,7 @@ type ResourceOption = {
   name_ar: string;
 };
 
-export default function UploadForm({ colleges, courses }: { colleges: ResourceOption[]; courses: ResourceOption[] }) {
+export default function UploadForm({ colleges, courses, userId }: { colleges: ResourceOption[]; courses: ResourceOption[]; userId: string }) {
   const t = useTranslations("Resources");
   const router = useRouter();
   
@@ -20,46 +20,45 @@ export default function UploadForm({ colleges, courses }: { colleges: ResourceOp
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file || file.size > 25 * 1024 * 1024) return;
 
     setLoading(true);
     const formData = new FormData(e.currentTarget);
 
     try {
       // 1. رفع الملف مباشرة إلى Storage بأداء عالٍ
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = `uploads/${fileName}`;
+      const fileExt = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
+      const filePath = `${userId}/${crypto.randomUUID()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("resources")
-        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+        .upload(filePath, file, { cacheControl: '31536000', contentType: file.type, upsert: false });
 
       if (uploadError) throw uploadError;
 
-      // 2. جلب الرابط العام للملف
-      const { data: { publicUrl } } = supabase.storage.from("resources").getPublicUrl(filePath);
 
-      // 3. إرسال البيانات للسيرفر لحفظها في قاعدة البيانات
+      // حفظ سجل موثوق في قاعدة البيانات بعد نجاح الرفع
       const result = await createResourceRecord({
         title: formData.get("title") as string,
-        type: formData.get("type") as string,
+        type: formData.get("type") as ResourceInput["type"],
         college_id: formData.get("college_id") as string,
         course_id: formData.get("course_id") as string,
-        file_url: publicUrl,
+        storage_path: filePath,
         file_size: file.size,
+        mime_type: file.type as "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/zip" | "application/x-zip-compressed",
       });
 
       if (result.success) {
         setSuccess(true);
-        setTimeout(() => router.push("/resources"), 2000);
+        router.push("/resources");
+        router.refresh();
+      } else {
+        await supabase.storage.from("resources").remove([filePath]);
+        throw new Error(result.error);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -106,7 +105,7 @@ export default function UploadForm({ colleges, courses }: { colleges: ResourceOp
         <label className="block text-sm font-semibold text-slate-700 mb-2">{t("fileType")}</label>
         <select name="type" required className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none bg-white">
           <option value="summary">ملخص</option>
-          <option value="exam">امتحان سابق</option>
+          <option value="previous_exam">امتحان سابق</option>
           <option value="lecture">محاضرة</option>
         </select>
       </div>
