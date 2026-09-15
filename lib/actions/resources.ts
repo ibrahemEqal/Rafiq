@@ -1,30 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import {
+  resourceSchema,
+  formatResourceValidationError,
+  type ResourceInput,
+} from "@/lib/validation/resource";
 
-const resourceSchema = z.object({
-  title: z.string().trim().min(3).max(160),
-  type: z.enum(["previous_exam", "summary", "lecture", "assignment", "notes", "other"]),
-  college_id: z.string().uuid(),
-  course_id: z.string().uuid(),
-  storage_path: z.string().min(3).max(500),
-  file_size: z.number().int().positive().max(25 * 1024 * 1024),
-  mime_type: z.enum([
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/zip",
-    "application/x-zip-compressed",
-  ]),
-});
-
-export type ResourceInput = z.infer<typeof resourceSchema>;
+export type { ResourceInput } from "@/lib/validation/resource";
 
 export async function createResourceRecord(input: ResourceInput) {
   const parsed = resourceSchema.safeParse(input);
-  if (!parsed.success) return { error: "Invalid resource data." };
+  if (!parsed.success) {
+    return { error: formatResourceValidationError(parsed.error) };
+  }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

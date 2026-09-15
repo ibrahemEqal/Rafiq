@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/routing";
 import { createClient } from "@/lib/supabase/client";
-import { createResourceRecord, type ResourceInput } from "@/lib/actions/resources";
+import { createResourceRecord } from "@/lib/actions/resources";
+import {
+  resourceSchema,
+  getResourceFileMetadata,
+  formatResourceValidationError,
+} from "@/lib/validation/resource";
 import { UploadCloud, CheckCircle2 } from "lucide-react";
 
 type ResourceOption = {
@@ -14,55 +19,75 @@ type ResourceOption = {
 
 export default function UploadForm({ colleges, courses, userId }: { colleges: ResourceOption[]; courses: ResourceOption[]; userId: string }) {
   const t = useTranslations("Resources");
+  const locale = useLocale();
   const router = useRouter();
   
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!file || file.size > 25 * 1024 * 1024) return;
+    if (loading) return;
+    setFormError(null);
+    if (!file) {
+      setFormError(locale === "ar" ? "اختر ملفًا أولًا." : "Choose a file first.");
+      return;
+    }
+    const metadata = getResourceFileMetadata(file.name);
+    if (!metadata) {
+      setFormError(locale === "ar" ? "الملفات المسموحة: PDF، DOC، DOCX، ZIP فقط." : "Only PDF, DOC, DOCX and ZIP files are supported.");
+      return;
+    }
+    const formData = new FormData(e.currentTarget);
+    const filePath = `${userId}/${crypto.randomUUID()}.${metadata.extension}`;
+    const parsed = resourceSchema.safeParse({
+      title: formData.get("title"),
+      type: formData.get("type"),
+      college_id: formData.get("college_id"),
+      course_id: formData.get("course_id"),
+      storage_path: filePath,
+      file_size: file.size,
+      mime_type: metadata.mimeType,
+    });
+    if (!parsed.success) {
+      setFormError(formatResourceValidationError(parsed.error));
+      return;
+    }
 
     setLoading(true);
-    const formData = new FormData(e.currentTarget);
 
     try {
       // 1. رفع الملف مباشرة إلى Storage بأداء عالٍ
-      const fileExt = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
-      const filePath = `${userId}/${crypto.randomUUID()}.${fileExt}`;
-
       const { error: uploadError } = await supabase.storage
         .from("resources")
-        .upload(filePath, file, { cacheControl: '31536000', contentType: file.type, upsert: false });
+        .upload(filePath, file, { cacheControl: '31536000', contentType: metadata.mimeType, upsert: false });
 
       if (uploadError) throw uploadError;
 
 
       // حفظ سجل موثوق في قاعدة البيانات بعد نجاح الرفع
-      const result = await createResourceRecord({
-        title: formData.get("title") as string,
-        type: formData.get("type") as ResourceInput["type"],
-        college_id: formData.get("college_id") as string,
-        course_id: formData.get("course_id") as string,
-        storage_path: filePath,
-        file_size: file.size,
-        mime_type: file.type as "application/pdf" | "application/msword" | "application/vnd.openxmlformats-officedocument.wordprocessingml.document" | "application/zip" | "application/x-zip-compressed",
-      });
+      const result = await createResourceRecord(parsed.data);
 
       if (result.success) {
         setSuccess(true);
         router.push("/resources");
         router.refresh();
       } else {
-        await supabase.storage.from("resources").remove([filePath]);
-        throw new Error(result.error);
+        const { error: cleanupError } = await supabase.storage.from("resources").remove([filePath]);
+        const cleanupMessage = cleanupError
+          ? (locale === "ar" ? "\nتعذّر حذف الملف غير المسجّل من التخزين." : "\nThe unsaved upload could not be removed from storage.")
+          : "";
+        setFormError(result.error + cleanupMessage);
       }
     } catch (error) {
-      console.error("Error:", error);
-      alert("حدث خطأ أثناء الرفع.");
+      const message = error instanceof Error
+        ? error.message
+        : (locale === "ar" ? "حدث خطأ أثناء الرفع." : "Upload failed.");
+      setFormError(message);
     } finally {
       setLoading(false);
     }
@@ -81,7 +106,7 @@ export default function UploadForm({ colleges, courses, userId }: { colleges: Re
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
         <label className="block text-sm font-semibold text-slate-700 mb-2">{t("fileTitle")}</label>
-        <input type="text" name="title" required className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none" />
+        <input type="text" name="title" required minLength={3} maxLength={160} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none" />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -128,6 +153,12 @@ export default function UploadForm({ colleges, courses, userId }: { colleges: Re
           {file && <span className="text-xs text-slate-400 mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB</span>}
         </label>
       </div>
+
+      {formError && (
+        <p role="alert" className="whitespace-pre-line rounded-xl bg-red-50 p-4 text-sm text-red-700">
+          {formError}
+        </p>
+      )}
 
       <button 
         type="submit" 
