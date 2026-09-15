@@ -1,18 +1,19 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { redirect } from "@/i18n/routing";
 import AddBookForm from "@/components/books/AddBookForm";
+import ClientMessages from "@/components/shared/ClientMessages";
+import { getColleges } from "@/lib/data/catalog";
 
 export default async function NewBookPage() {
-  const t = await getTranslations("Books");
-  const supabase = await createClient();
+  const [t, locale, supabase] = await Promise.all([getTranslations("Books"), getLocale(), createClient()]);
   
   // حماية الصفحة
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  if (!user) return redirect({ href: "/auth/login", locale });
 
   // جلب الكليات للنموذج
-  const { data: colleges } = await supabase.from("colleges").select("id, name_ar");
+  const colleges = await getColleges();
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
@@ -23,7 +24,7 @@ export default async function NewBookPage() {
             <p className="text-slate-500">{t("subtitle")}</p>
           </div>
           
-          <AddBookForm colleges={colleges || []} />
+          <ClientMessages namespace="Books"><AddBookForm colleges={colleges} /></ClientMessages>
         </div>
       </div>
     </div>

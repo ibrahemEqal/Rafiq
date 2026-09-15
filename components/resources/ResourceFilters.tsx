@@ -1,59 +1,41 @@
-"use client";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/routing";
 
-import { useTranslations } from "next-intl";
-
-type College = {
-  id: string | number;
-  name_ar: string;
-};
-
-export default function ResourceFilters({ colleges }: { colleges: College[] }) {
-  const t = useTranslations("Resources");
+export default async function ResourceFilters({
+  selectedType,
+  query,
+}: {
+  selectedType?: string;
+  query?: string;
+}) {
+  const t = await getTranslations("Resources");
 
   return (
-    <div className="bg-white border border-slate-200 rounded-3xl p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-slate-900">{t("filters")}</h3>
-        <button className="text-sm text-slate-400 hover:text-teal-600 transition-colors font-medium">
+    <form method="get" className="rounded-3xl border border-slate-200 bg-white p-6">
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-lg font-bold text-slate-900">{t("filters")}</h2>
+        <Link href="/resources" className="text-sm font-medium text-slate-400 hover:text-teal-600">
           {t("clearFilters")}
-        </button>
+        </Link>
       </div>
-
-      <div className="space-y-6">
-        {/* فلتر نوع الملف */}
-        <div>
-          <h4 className="text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">{t("fileType")}</h4>
-          <div className="space-y-2">
-            {(['all', 'summaries', 'exams', 'lectures'] as const).map((type) => (
-              <label key={type} className="flex items-center gap-3 cursor-pointer group">
-                <input 
-                  type="radio" 
-                  name="type" 
-                  className="w-4 h-4 text-teal-600 focus:ring-teal-500 border-slate-300"
-                  defaultChecked={type === 'all'} 
-                />
-                <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">
-                  {t(type)}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="h-px bg-slate-100" />
-
-        <div>
-          <h4 className="text-sm font-bold text-slate-900 mb-3 uppercase tracking-wider">{t("colleges")}</h4>
-          <select className="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xl focus:ring-teal-500 focus:border-teal-500 block p-3 outline-none">
-            <option value="">{t("all")}</option>
-            {colleges.map((college) => (
-              <option key={college.id} value={college.id}>{college.name_ar}</option>
-            ))}
-          </select>
-        </div>
-
-
-      </div>
-    </div>
+      {query && <input type="hidden" name="q" value={query} />}
+      <fieldset className="space-y-2">
+        <legend className="mb-3 text-sm font-bold uppercase tracking-wider text-slate-900">{t("fileType")}</legend>
+        {[
+          ["", t("all")],
+          ["summary", t("summaries")],
+          ["previous_exam", t("exams")],
+          ["lecture", t("lectures")],
+        ].map(([value, label]) => (
+          <label key={value} className="flex cursor-pointer items-center gap-3">
+            <input type="radio" name="type" value={value} defaultChecked={(selectedType ?? "") === value} className="h-4 w-4 accent-teal-600" />
+            <span className="text-sm font-medium text-slate-600">{label}</span>
+          </label>
+        ))}
+      </fieldset>
+      <button type="submit" className="mt-6 w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800">
+        {t("filters")}
+      </button>
+    </form>
   );
 }

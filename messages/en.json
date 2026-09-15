@@ -76,6 +76,37 @@
     "submitUpload": "Publish File",
     "uploadSuccess": "File uploaded successfully, pending review!"
   },
+  "Admin": {
+    "title": "Educational resource review",
+    "subtitle": "Inspect each file before approval. Pending files are hidden from other students; approval makes them publicly available.",
+    "adminOnly": "Administration",
+    "filters": "Filter by review status",
+    "statuses": { "pending": "Pending review", "approved": "Approved", "rejected": "Rejected", "removed": "Unpublished" },
+    "types": { "previous_exam": "Past exam", "summary": "Summary", "lecture": "Lecture", "assignment": "Assignment", "notes": "Notes", "other": "Other" },
+    "total": "Files: {count}",
+    "page": "Page {page} of {total}",
+    "inspect": "Download to inspect",
+    "approve": "Approve and publish",
+    "reject": "Reject",
+    "remove": "Unpublish",
+    "requeue": "Return to review",
+    "working": "Working…",
+    "confirmReview": "Confirm this decision? The stored file will not be deleted.",
+    "empty": "No files with this status on this page.",
+    "loadError": "The file list could not be loaded. Reload the page.",
+    "metadataError": "Some uploader or course names could not be loaded.",
+    "unknownUser": "Unknown uploader",
+    "unknownCourse": "Unknown course",
+    "uploader": "Uploader", "course": "Course", "file": "File type and size", "uploaded": "Upload date",
+    "pagination": "File pagination", "previous": "Previous", "next": "Next",
+    "errors": {
+      "unauthorized": "Admin access is required or your session expired. Sign in again.",
+      "invalid": "Invalid review data. Reload the page.",
+      "conflict": "This file changed or no longer exists. Check its current status before retrying.",
+      "failed": "Saving the decision could not be confirmed. Reload and check its status and your permissions.",
+      "previewFailed": "A review download link could not be generated. Try again."
+    }
+  },
   "Footer": {
     "rights": "All rights reserved © Rafeeq 2026"
   },

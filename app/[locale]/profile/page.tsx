@@ -11,23 +11,21 @@ export default async function ProfilePage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  const { data: books } = await supabase
-    .from("books")
-    .select("*")
-    .eq("owner_id", user.id)
-    .order("created_at", { ascending: false });
-
-  const { data: resources } = await supabase
-    .from("resources")
-    .select("*")
-    .eq("uploader_id", user.id)
-    .order("created_at", { ascending: false });
+  const [{ data: profile }, { data: books }, { data: resources }] = await Promise.all([
+    supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+    supabase
+      .from("books")
+      .select("id, title, status")
+      .eq("owner_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(30),
+    supabase
+      .from("resources")
+      .select("id, title, status, download_count, view_count")
+      .eq("uploader_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(30),
+  ]);
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">

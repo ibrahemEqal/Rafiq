@@ -1,17 +1,17 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { redirect } from "@/i18n/routing";
 import UploadForm from "@/components/resources/UploadForm";
+import ClientMessages from "@/components/shared/ClientMessages";
+import { getUploadCatalog } from "@/lib/data/catalog";
 
 export default async function NewResourcePage() {
-  const t = await getTranslations("Resources");
-  const supabase = await createClient();
+  const [t, locale, supabase] = await Promise.all([getTranslations("Resources"), getLocale(), createClient()]);
   
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  if (!user) return redirect({ href: "/auth/login", locale });
 
-  const { data: colleges } = await supabase.from("colleges").select("id, name_ar");
-  const { data: courses } = await supabase.from("courses").select("id, name_ar");
+  const { colleges, courses } = await getUploadCatalog();
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
@@ -22,7 +22,9 @@ export default async function NewResourcePage() {
             <p className="text-slate-500">{t("uploadSubtitle")}</p>
           </div>
           
-          <UploadForm colleges={colleges || []} courses={courses || []} />
+          <ClientMessages namespace="Resources">
+            <UploadForm colleges={colleges} courses={courses} userId={user.id} />
+          </ClientMessages>
         </div>
       </div>
     </div>

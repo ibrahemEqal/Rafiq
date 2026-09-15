@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
-import { BookOpen, Copy, MessageCircle, MapPin, User, Plus } from "lucide-react";
+import { BookOpen, Copy, MessageCircle, MapPin, Plus } from "lucide-react";
 import { Link } from "@/i18n/routing";
 
 export default async function BooksPage() {
@@ -11,11 +11,12 @@ export default async function BooksPage() {
   const { data: books } = await supabase
     .from("books")
     .select(`
-      *,
+      id, title, description, type, whatsapp_number,
       colleges (name_ar, name_en)
     `)
     .eq("status", "available")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(30);
 
   // دالة لتنظيف رقم الواتساب وتهيئته للرابط
   const formatWhatsapp = (phone: string) => {
@@ -78,10 +79,10 @@ export default async function BooksPage() {
 
                 {/* معلومات الكلية */}
                 <div className="space-y-3 mb-6 pt-6 border-t border-slate-50">
-                  {item.colleges && (
+                  {item.colleges?.[0] && (
                     <div className="flex items-center gap-2 text-slate-500 text-sm">
                       <MapPin size={16} className="text-slate-400" />
-                      <span>{item.colleges.name_ar}</span>
+                      <span>{item.colleges[0].name_ar}</span>
                     </div>
                   )}
                 </div>
