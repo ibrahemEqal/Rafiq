@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
-import { Library, Sparkles, User } from "lucide-react";
+import { Library, Sparkles, User, ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import SignOutButton from "./SignOutButton";
 
@@ -14,6 +14,11 @@ export default async function Navbar({ locale }: { locale: string }) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const email = typeof data?.claims?.email === "string" ? data.claims.email : null;
+  const userId = typeof data?.claims?.sub === "string" ? data.claims.sub : null;
+  const { data: profile } = userId
+    ? await supabase.from("profiles").select("role").eq("id", userId).maybeSingle()
+    : { data: null };
+  const isAdmin = profile?.role === "admin";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/50 backdrop-blur-2xl border-b border-slate-200/50">
@@ -45,6 +50,9 @@ export default async function Navbar({ locale }: { locale: string }) {
 
         {/* الأزرار / حساب المستخدم */}
         <div className="flex items-center gap-4">
+          {isAdmin && <Link href="/dashboard" aria-label={t("dashboard")} title={t("dashboard")} className="inline-flex items-center gap-2 rounded-xl bg-teal-50 px-3 py-2 text-sm font-bold text-teal-700 hover:bg-teal-100">
+            <ShieldCheck size={18} /><span className="hidden sm:inline">{t("dashboard")}</span>
+          </Link>}
           <Link 
             href="/" 
             locale={toggleLocale}

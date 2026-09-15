@@ -27,7 +27,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: node --experimental-strip-types --test tests/resource-validation.test.mjs
+      - run: node --experimental-strip-types --test tests/*.test.mjs
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build
