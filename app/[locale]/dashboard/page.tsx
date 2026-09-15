@@ -4,6 +4,7 @@ import { Link, redirect } from "@/i18n/routing";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminAccess, parseReviewFilters, resourceStatuses, type ResourceStatus } from "@/lib/admin/resource-review";
 import ResourceReviewActions from "@/components/admin/ResourceReviewActions";
+import ClientMessages from "@/components/shared/ClientMessages";
 import { ShieldCheck, FileText, User, BookOpen, Clock } from "lucide-react";
 
 const PAGE_SIZE = 20;
@@ -47,6 +48,7 @@ export default async function AdminDashboard({ searchParams }: {
   const dateFormat = new Intl.DateTimeFormat(locale === "ar" ? "ar-PS" : "en-US", { dateStyle: "medium", timeZone: "UTC" });
 
   return (
+    <ClientMessages namespace="Admin">
     <section className="min-h-screen bg-slate-50 px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-5xl space-y-6">
         <header className="rounded-3xl bg-slate-900 p-6 text-white sm:p-8">
@@ -94,5 +96,6 @@ export default async function AdminDashboard({ searchParams }: {
         </>}
       </div>
     </section>
+    </ClientMessages>
   );
 }

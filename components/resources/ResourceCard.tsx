@@ -1,4 +1,5 @@
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { oneRelation } from "@/lib/data/relations";
 import { FileText, Download, Eye, Clock } from "lucide-react";
 import { Link } from "@/i18n/routing";
 
@@ -10,14 +11,15 @@ interface ResourceType {
   download_count: number;
   view_count: number;
   created_at: string;
-  courses?: { name_ar: string; name_en: string }[] | null;
-  profiles?: { full_name: string }[] | null;
+  courses?: { name_ar: string; name_en: string } | { name_ar: string; name_en: string }[] | null;
+  profiles?: { full_name: string } | { full_name: string }[] | null;
 }
 
 export default function ResourceCard({ resource }: { resource: ResourceType }) {
   const t = useTranslations("Resources");
-  const course = resource.courses?.[0];
-  const profile = resource.profiles?.[0];
+  const locale = useLocale();
+  const course = oneRelation(resource.courses);
+  const profile = oneRelation(resource.profiles);
 
   const formatSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -41,7 +43,7 @@ export default function ResourceCard({ resource }: { resource: ResourceType }) {
         </div>
         <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
           <Clock size={14} />
-          <span>{new Date(resource.created_at).toLocaleDateString('ar-EG')}</span>
+          <span>{new Date(resource.created_at).toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US", { timeZone: "UTC" })}</span>
         </div>
       </div>
 
@@ -52,7 +54,7 @@ export default function ResourceCard({ resource }: { resource: ResourceType }) {
         
         {course && (
           <p className="text-sm font-medium text-teal-600 mb-4 bg-teal-50 w-max px-2.5 py-1 rounded-md">
-            {course.name_ar}
+            {locale === "ar" ? course.name_ar : course.name_en}
           </p>
         )}
 

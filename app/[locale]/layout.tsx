@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
@@ -34,13 +34,12 @@ export default async function RootLayout({
     notFound();
   }
 
-  const messages = await getMessages();
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
     <html lang={locale} dir={dir}>
       <body className="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider messages={null}>
           <Navbar locale={locale} />
           {/* الحاوية الرئيسية للمحتوى */}
           <main className="flex-1 flex flex-col">

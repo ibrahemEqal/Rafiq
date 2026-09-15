@@ -1,7 +1,8 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import { FileText, Clock, User, Eye, ArrowRight } from "lucide-react";
+import { FileText, Clock, User, ArrowRight } from "lucide-react";
+import { oneRelation } from "@/lib/data/relations";
 import { Link } from "@/i18n/routing";
 import DownloadButton from "@/components/resources/DownloadButton";
 
@@ -10,14 +11,12 @@ export default async function ResourceDetailsPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const t = await getTranslations("Resources");
-  const resolvedParams = await params;
-  const supabase = await createClient();
+  const [t, locale, resolvedParams, supabase] = await Promise.all([getTranslations("Resources"), getLocale(), params, createClient()]);
 
   const { data: resource } = await supabase
     .from("resources")
     .select(`
-      *,
+      id, title, type, file_size, download_count, view_count, created_at,
       courses (name_ar, name_en),
       profiles!resources_uploader_id_fkey (full_name)
     `)
@@ -25,6 +24,8 @@ export default async function ResourceDetailsPage({
     .single();
 
   if (!resource) notFound();
+  const course = oneRelation(resource.courses);
+  const profile = oneRelation(resource.profiles);
 
   const formatSize = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -35,8 +36,8 @@ export default async function ResourceDetailsPage({
   };
 
   // تنسيق التاريخ
-  const uploadDate = new Date(resource.created_at).toLocaleDateString('ar-EG', {
-    year: 'numeric', month: 'long', day: 'numeric'
+  const uploadDate = new Date(resource.created_at).toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US", {
+    year: 'numeric', month: 'long', day: 'numeric', timeZone: "UTC"
   });
 
   return (
@@ -58,9 +59,9 @@ export default async function ResourceDetailsPage({
                 <span className="px-3 py-1 bg-indigo-100 text-indigo-700 text-sm font-bold rounded-lg uppercase tracking-wider">
                   {resource.type}
                 </span>
-                {resource.courses && (
+                {course && (
                   <span className="px-3 py-1 bg-teal-50 text-teal-700 text-sm font-bold rounded-lg">
-                    {resource.courses.name_ar}
+                    {locale === "ar" ? course.name_ar : course.name_en}
                   </span>
                 )}
               </div>
@@ -71,7 +72,7 @@ export default async function ResourceDetailsPage({
               <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-slate-500">
                 <div className="flex items-center gap-2">
                   <User size={18} className="text-slate-400" />
-                  <span>{resource.profiles?.full_name || t("owner")}</span>
+                  <span>{profile?.full_name || t("owner")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock size={18} className="text-slate-400" />
