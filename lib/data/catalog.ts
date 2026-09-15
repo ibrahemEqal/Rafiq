@@ -23,6 +23,13 @@ export async function getColleges() {
   return data ?? [];
 }
 
+export async function getCourses() {
+  const { data, error } = await createCatalogClient().from("courses")
+    .select("id, name_ar, name_en").order("name_ar");
+  if (error) throw new Error("Course catalog unavailable");
+  return data ?? [];
+}
+
 export async function getUploadCatalog() {
   const client = createCatalogClient();
   const [collegeResult, courseResult] = await Promise.all([

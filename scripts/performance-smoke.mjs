@@ -6,6 +6,8 @@ import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { performance } from 'node:perf_hooks';
+import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 
 const project = resolve(process.argv[2] || process.cwd());
 const baseline = process.argv.includes('--baseline');
@@ -16,6 +18,19 @@ const resourceId = 'afc00000-0000-4000-8000-000000000003';
 const courseId = 'afc00000-0000-4000-8000-000000000004';
 const collegeId = 'afc00000-0000-4000-8000-000000000005';
 const calls = [];
+const questionId = 'afc00000-0000-4000-8000-000000000006';
+const answerId = 'afc00000-0000-4000-8000-000000000007';
+let sequence = 100;
+const nextId = () => `afc00000-0000-4000-8000-${String(++sequence).padStart(12, '0')}`;
+const questions = Array.from({ length: 21 }, (_, i) => ({
+  id: i === 0 ? questionId : nextId(), title: `QA question ${i} <script>alert(1)</script>`, body: 'How can I trace BFS on this graph?\n<script>alert(1)</script>',
+  author_id: studentId, course_id: courseId, created_at: new Date(Date.UTC(2026, 8, 15, 12, 0, i)).toISOString(),
+  courses: { name_ar: 'الخوارزميات', name_en: 'Algorithms' }, profiles: { full_name: 'QA Student', username: 'qa_student' },
+}));
+const answers = Array.from({ length: 21 }, (_, i) => ({
+  id: i === 0 ? answerId : nextId(), question_id: questionId, author_id: studentId,
+  body: `QA answer ${i}: use a queue.\n<script>alert(1)</script>`, created_at: new Date(Date.UTC(2026, 8, 15, 12, 1, i)).toISOString(), profiles: { full_name: 'QA Student', username: 'qa_student' },
+}));
 const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
 function cookie(id) {
   const now = Math.floor(Date.now()/1000);
@@ -26,7 +41,7 @@ const mock = createServer(async (req, res) => {
   const url = new URL(req.url, 'http://127.0.0.1:54329');
   let id;
   try { id = JSON.parse(Buffer.from(req.headers.authorization.split(' ')[1].split('.')[1], 'base64url')).sub; } catch {}
-  calls.push({ path: url.pathname, select: url.searchParams.get('select'), id, method: req.method, anonymous: req.headers.authorization === 'Bearer mock-key' && !req.headers.cookie });
+  calls.push({ path: url.pathname, select: url.searchParams.get('select'), id, method: req.method, filteredId: url.searchParams.has('id'), order: url.searchParams.get('order'), offset: url.searchParams.get('offset'), limit: url.searchParams.get('limit'), course: url.searchParams.get('course_id'), search: url.searchParams.get('search_vector'), anonymous: req.headers.authorization === 'Bearer mock-key' && !req.headers.cookie });
   await new Promise(done => setTimeout(done, latency));
   res.setHeader('content-type', 'application/json');
   const reply = data => res.end(JSON.stringify(data));
@@ -36,6 +51,22 @@ const mock = createServer(async (req, res) => {
   if (url.pathname === '/rest/v1/courses') return reply([{ id: courseId, name_ar: 'الخوارزميات', name_en: 'Algorithms' }]);
   if (url.pathname === '/rest/v1/colleges') return reply([{ id: collegeId, name_ar: 'الهندسة', name_en: 'Engineering' }]);
   if (url.pathname === '/rest/v1/books') return reply([]);
+  if (['/rest/v1/questions', '/rest/v1/answers'].includes(url.pathname)) {
+    const table = url.pathname.endsWith('/questions') ? questions : answers;
+    if (req.method === 'POST') {
+      let body = ''; for await (const chunk of req) body += chunk;
+      const payload = JSON.parse(body);
+      if (!id || payload.author_id !== id) { res.statusCode = 403; return reply({ code: '42501' }); }
+      const row = { ...payload, id: nextId(), created_at: '2026-09-16T00:00:00.000Z', courses: payload.course_id ? { name_ar: 'الخوارزميات', name_en: 'Algorithms' } : null, profiles: { full_name: 'QA Student', username: 'qa_student' } };
+      table.push(row); return reply(singleton([row]));
+    }
+    let rows = table.filter(row => ['id', 'question_id', 'course_id'].every(key => !url.searchParams.has(key) || url.searchParams.get(key) === `eq.${row[key]}`));
+    const search = url.searchParams.get('search_vector');
+    if (search) rows = rows.filter(row => `${row.title} ${row.body}`.toLowerCase().includes(search.split(').').at(-1).toLowerCase()));
+    rows = [...rows].sort((a,b) => b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id));
+    const offset = Number(url.searchParams.get('offset') || 0), limit = Number(url.searchParams.get('limit') || rows.length);
+    return reply(singleton(rows.slice(offset, offset+limit)));
+  }
   if (url.pathname === '/rest/v1/resources') {
     const row = { id: resourceId, title: 'QA resource <script>alert(1)</script>', type: 'summary', status: url.searchParams.get('status')?.replace('eq.', '') || 'approved', file_size: 1024, download_count: 0, view_count: 0, created_at: '2026-09-15T12:00:00Z', course_id: courseId, uploader_id: studentId, courses: { name_ar: 'الخوارزميات', name_en: 'Algorithms' }, profiles: { full_name: 'QA Student' } };
     res.setHeader('content-range', '0-0/1');
@@ -133,13 +164,72 @@ try {
   if (!baseline) {
     // Dashboard course metadata also uses this table, but is deliberately an
     // uncached session query. Only public name/ID dropdown reads are shared.
-    const catalogCalls = calls.filter(c => /\/(colleges|courses)$/.test(c.path) && c.select?.replace(/\s/g, '') === 'id,name_ar');
+    const catalogCalls = calls.filter(c => /\/(colleges|courses)$/.test(c.path) && !c.filteredId && c.order && ['id,name_ar', 'id,name_ar,name_en'].includes(c.select?.replace(/\s/g, '')));
     assert.ok(catalogCalls.every(c => c.anonymous), 'Shared catalog reads must never carry a session');
     assert.equal(calls.slice(studentUploadStart).filter(c => /\/(colleges|courses)$/.test(c.path)).length, 0, 'The public cache is reusable, unlike session data');
   }
   const anonymous = await visit('/en/resources/new', null);
   assert.ok((anonymous.headers.location || anonymous.body).includes('/auth/login'));
   assert.ok(!anonymous.body.includes('afc00000-0000-4000-8000-000000000004'));
+  if (!baseline) {
+    const manifest = JSON.parse(await readFile(resolve(project, '.next/server/server-reference-manifest.json'), 'utf8'));
+    const { encodeReply } = createRequire(resolve(project, 'package.json'))('next/dist/compiled/react-server-dom-turbopack/client.node.js');
+    async function action(path, name, input, user) {
+      const entry = Object.entries(manifest.node).find(([, info]) => info.exportedName === name);
+      assert.ok(entry, `Missing compiled action ${name}`);
+      const body = await encodeReply([input]);
+      assert.equal(typeof body, 'string', 'Fixture inputs must use simple Flight JSON');
+      return new Promise((done, fail) => {
+        const req = request(`http://localhost:4100${path}`, { method: 'POST', headers: { ...(user ? { cookie: cookie(user) } : {}), 'Next-Action': entry[0], accept: 'text/x-component', origin: 'http://localhost:4100', 'content-type': 'text/plain;charset=UTF-8' } }, res => {
+          let response = ''; res.on('data', b => response += b); res.on('end', () => done({ status: res.statusCode, body: response }));
+        }); req.setTimeout(15000, () => req.destroy(Error('Action check timed out'))); req.on('error', fail); req.end(body);
+      });
+    }
+    for (const prefix of ['', '/en']) {
+      const start = calls.length;
+      const list = await visit(`${prefix}/questions`, null); assert.equal(list.status, 200);
+      assert.ok(list.body.includes('&lt;script&gt;') && list.body.includes(prefix ? 'Ask a question' : 'اطرح سؤالًا'));
+      const listQueries = calls.slice(start).filter(c => c.path === '/rest/v1/questions');
+      assert.equal(listQueries.length, 1); assert.equal(listQueries[0].limit, '21');
+      const filtered = await visit(`${prefix}/questions?q=BFS&course=${courseId}&page=2`, null); assert.equal(filtered.status, 200);
+      const query = calls.filter(c => c.path === '/rest/v1/questions').at(-1);
+      assert.equal(query.offset, '20'); assert.equal(query.course, `eq.${courseId}`); assert.ok(query.search.startsWith('wfts(simple).'));
+      const missingSearch = await visit(`${prefix}/questions?q=absent-fixture-term`, null);
+      assert.ok(missingSearch.body.includes(prefix ? 'No matching questions' : 'لا توجد أسئلة'));
+      const details = await visit(`${prefix}/questions/${questionId}`, studentId); assert.equal(details.status, 200);
+      assert.ok(details.body.includes('QA answer') && details.body.includes('&lt;script&gt;') && details.body.includes('name="body"'));
+      const answerPage = await visit(`${prefix}/questions/${questionId}?page=2`, null); assert.equal(answerPage.status, 200);
+      assert.ok(answerPage.body.includes('QA answer 0') && answerPage.body.includes(prefix ? 'Sign in to add an answer' : 'سجّل دخولك لتضيف إجابة'));
+      assert.ok(!answerPage.body.includes('name="body"'));
+      const newPage = await visit(`${prefix}/questions/new`, studentId); assert.equal(newPage.status, 200);
+      assert.ok(newPage.body.includes('name="title"') && newPage.body.includes(prefix ? 'Question details' : 'تفاصيل السؤال'));
+      assert.ok(!newPage.body.includes('passwordMismatch'));
+      const denied = await visit(`${prefix}/questions/new`, null);
+      assert.ok((denied.headers.location || denied.body).includes(`${prefix}/auth/login`));
+      assert.ok(!denied.body.includes('name="title"'));
+    }
+    const beforeInvalid = questions.length;
+    const invalid = await action('/en/questions/new', 'createQuestion', { title: 'x', body: '' }, studentId);
+    assert.ok(invalid.body.includes('"error":"invalid"')); assert.equal(questions.length, beforeInvalid);
+    const unauthorized = await action('/en/questions/new', 'createQuestion', { title: 'Unauthorized test', body: 'This must not create a post.' }, null);
+    assert.ok(unauthorized.body.includes('"error":"unauthorized"')); assert.equal(questions.length, beforeInvalid);
+    const posted = await action('/en/questions/new', 'createQuestion', { title: 'HTTP posted question <script>', body: 'Can I use a queue here? <script>alert(1)</script>', course_id: courseId, author_id: adminId }, studentId);
+    assert.equal(posted.status, 200); assert.ok(posted.body.includes('"success":true'));
+    const row = questions.at(-1); assert.equal(row.author_id, studentId); assert.equal(questions.length, beforeInvalid+1);
+    const beforeAnswer = answers.length;
+    const deniedAnswer = await action(`/en/questions/${row.id}`, 'createAnswer', { question_id: row.id, body: 'Unauthenticated answer' }, null);
+    assert.ok(deniedAnswer.body.includes('"error":"unauthorized"')); assert.equal(answers.length, beforeAnswer);
+    const postedAnswer = await action(`/en/questions/${row.id}`, 'createAnswer', { question_id: row.id, body: 'HTTP posted answer <script>alert(1)</script>', author_id: adminId }, studentId);
+    assert.equal(postedAnswer.status, 200); assert.ok(postedAnswer.body.includes('"success":true'));
+    assert.equal(answers.at(-1).author_id, studentId); assert.equal(answers.length, beforeAnswer+1);
+    const publicRead = await visit(`/en/questions/${row.id}`, null);
+    assert.ok(publicRead.body.includes('HTTP posted answer &lt;script&gt;') && publicRead.body.includes('HTTP posted question &lt;script&gt;'));
+    const missing = await visit('/en/questions/afc00000-0000-4000-8000-999999999999', null);
+    assert.ok(missing.status === 404 || missing.body.includes('noindex'));
+    const malformed = await visit('/en/questions/not-a-guid', null);
+    assert.ok(malformed.status === 404 || malformed.body.includes('noindex'));
+    console.log('PASS: Arabic/English Q&A pages, filtering/paging, real action POSTs, public reads, escaped bodies and verified authors');
+  }
   console.log(JSON.stringify(metrics, null, 2));
   console.log('PASS: Arabic/English SSR, translated forms, escaped titles, admin/student isolation and anonymous upload redirect');
   if (!baseline) console.log('PASS: warm catalog cache, scoped client messages and lean resource details');
