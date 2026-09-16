@@ -6,6 +6,7 @@ import {
   moderateResourceWithClient,
   createAdminPreviewWithClient,
 } from "@/lib/admin/resource-review";
+import { moderateReportWithClient } from "@/lib/admin/report-review";
 
 export async function moderateResource(input: unknown) {
   const result = await moderateResourceWithClient(await createClient(), input);
@@ -20,4 +21,10 @@ export async function moderateResource(input: unknown) {
 
 export async function createAdminPreview(resourceId: unknown) {
   return createAdminPreviewWithClient(await createClient(), resourceId);
+}
+
+export async function moderateReport(input: unknown) {
+  const result = await moderateReportWithClient(await createClient(), input);
+  if ("success" in result) revalidatePath("/[locale]/dashboard/reports", "page");
+  return result;
 }

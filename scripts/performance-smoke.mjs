@@ -31,6 +31,7 @@ const answers = Array.from({ length: 21 }, (_, i) => ({
   id: i === 0 ? answerId : nextId(), question_id: questionId, author_id: studentId,
   body: `QA answer ${i}: use a queue.\n<script>alert(1)</script>`, created_at: new Date(Date.UTC(2026, 8, 15, 12, 1, i)).toISOString(), profiles: { full_name: 'QA Student', username: 'qa_student' },
 }));
+const reports = [];
 const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
 function cookie(id) {
   const now = Math.floor(Date.now()/1000);
@@ -60,12 +61,56 @@ const mock = createServer(async (req, res) => {
       const row = { ...payload, id: nextId(), created_at: '2026-09-16T00:00:00.000Z', courses: payload.course_id ? { name_ar: 'الخوارزميات', name_en: 'Algorithms' } : null, profiles: { full_name: 'QA Student', username: 'qa_student' } };
       table.push(row); return reply(singleton([row]));
     }
-    let rows = table.filter(row => ['id', 'question_id', 'course_id'].every(key => !url.searchParams.has(key) || url.searchParams.get(key) === `eq.${row[key]}`));
+    if (req.method === 'PATCH') {
+      let body = ''; for await (const chunk of req) body += chunk;
+      const payload = JSON.parse(body), target = url.searchParams.get('id')?.replace('eq.', '');
+      const row = table.find(item => item.id === target);
+      if (!row || !id || (row.author_id !== id && id !== adminId)) { res.statusCode = 200; return reply(singleton([])); }
+      Object.assign(row, payload, { updated_at: '2026-09-16T01:00:00.000Z' }); return reply(singleton([row]));
+    }
+    if (req.method === 'DELETE') {
+      const target = url.searchParams.get('id')?.replace('eq.', ''), index = table.findIndex(item => item.id === target);
+      const row = table[index];
+      if (!row || !id || (row.author_id !== id && id !== adminId)) { res.statusCode = 200; return reply(singleton([])); }
+      table.splice(index, 1);
+      if (table === questions) for (let i = answers.length - 1; i >= 0; i--) if (answers[i].question_id === row.id) answers.splice(i, 1);
+      return reply(singleton([row]));
+    }
+    let rows = table.filter(row => ['id', 'question_id', 'course_id'].every(key => {
+      const filter = url.searchParams.get(key);
+      if (!filter) return true;
+      if (filter.startsWith('eq.')) return filter === `eq.${row[key]}`;
+      if (filter.startsWith('in.(')) return filter.slice(4, -1).split(',').includes(String(row[key]));
+      return false;
+    }));
     const search = url.searchParams.get('search_vector');
     if (search) rows = rows.filter(row => `${row.title} ${row.body}`.toLowerCase().includes(search.split(').').at(-1).toLowerCase()));
     rows = [...rows].sort((a,b) => b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id));
     const offset = Number(url.searchParams.get('offset') || 0), limit = Number(url.searchParams.get('limit') || rows.length);
     return reply(singleton(rows.slice(offset, offset+limit)));
+  }
+  if (url.pathname === '/rest/v1/reports') {
+    if (req.method === 'POST') {
+      let body = ''; for await (const chunk of req) body += chunk;
+      const payload = JSON.parse(body);
+      const source = payload.target_type === 'question' ? questions : answers;
+      const target = source.find(item => item.id === payload.target_id);
+      if (!id || payload.reporter_id !== id || !target || target.author_id === id) { res.statusCode = 403; return reply({ code: '42501' }); }
+      if (reports.some(item => item.reporter_id === id && item.target_type === payload.target_type && item.target_id === payload.target_id && item.status === 'pending')) { res.statusCode = 409; return reply({ code: '23505', message: 'duplicate_pending_report' }); }
+      const row = { ...payload, id: nextId(), status: 'pending', created_at: '2026-09-16T01:00:00.000Z' };
+      reports.push(row); return reply(singleton([row]));
+    }
+    if (req.method === 'PATCH') {
+      let body = ''; for await (const chunk of req) body += chunk;
+      const payload = JSON.parse(body), target = url.searchParams.get('id')?.replace('eq.', '');
+      const expected = url.searchParams.get('status')?.replace('eq.', '');
+      const row = reports.find(item => item.id === target && item.status === expected);
+      if (!row || id !== adminId) return reply(singleton([]));
+      Object.assign(row, payload); return reply(singleton([row]));
+    }
+    let rows = reports.filter(row => !url.searchParams.has('status') || url.searchParams.get('status') === `eq.${row.status}`);
+    res.setHeader('content-range', rows.length ? `0-${rows.length-1}/${rows.length}` : '*/0');
+    return reply(singleton(rows));
   }
   if (url.pathname === '/rest/v1/resources') {
     const row = { id: resourceId, title: 'QA resource <script>alert(1)</script>', type: 'summary', status: url.searchParams.get('status')?.replace('eq.', '') || 'approved', file_size: 1024, download_count: 0, view_count: 0, created_at: '2026-09-15T12:00:00Z', course_id: courseId, uploader_id: studentId, courses: { name_ar: 'الخوارزميات', name_en: 'Algorithms' }, profiles: { full_name: 'QA Student' } };
@@ -224,11 +269,30 @@ try {
     assert.equal(answers.at(-1).author_id, studentId); assert.equal(answers.length, beforeAnswer+1);
     const publicRead = await visit(`/en/questions/${row.id}`, null);
     assert.ok(publicRead.body.includes('HTTP posted answer &lt;script&gt;') && publicRead.body.includes('HTTP posted question &lt;script&gt;'));
+    const deniedEdit = await action(`/en/questions/${row.id}`, 'updateAnswer', { answer_id: answers.at(-1).id, body: 'Anonymous edit' }, null);
+    assert.ok(deniedEdit.body.includes('"error":"unauthorized"'));
+    const editedQuestion = await action(`/en/questions/${row.id}/edit`, 'updateQuestion', { question_id: row.id, title: 'Edited HTTP question', body: 'Edited question body remains sufficiently detailed.', course_id: null, author_id: adminId }, studentId);
+    assert.ok(editedQuestion.body.includes('"success":true')); assert.equal(row.title, 'Edited HTTP question'); assert.equal(row.author_id, studentId);
+    const editedAnswerId = answers.at(-1).id;
+    const editedAnswer = await action(`/en/questions/${row.id}`, 'updateAnswer', { answer_id: editedAnswerId, body: 'Edited HTTP answer', author_id: adminId }, studentId);
+    assert.ok(editedAnswer.body.includes('"success":true')); assert.equal(answers.find(item => item.id === editedAnswerId).body, 'Edited HTTP answer');
+    const report = await action(`/en/questions/${row.id}`, 'reportForumPost', { target_type: 'question', target_id: row.id, reason: 'Moderator should inspect this fixture', reporter_id: studentId }, adminId);
+    assert.ok(report.body.includes('"success":true')); assert.equal(reports.at(-1).reporter_id, adminId); assert.equal(reports.at(-1).status, 'pending');
+    const duplicateReport = await action(`/en/questions/${row.id}`, 'reportForumPost', { target_type: 'question', target_id: row.id, reason: 'Duplicate fixture report' }, adminId);
+    assert.ok(duplicateReport.body.includes('"error":"duplicate"'));
+    const reportDashboard = await visit('/en/dashboard/reports', adminId); assert.equal(reportDashboard.status, 200);
+    assert.ok(reportDashboard.body.includes('Moderator should inspect this fixture') && reportDashboard.body.includes('Edited HTTP question'));
+    const reviewed = await action('/en/dashboard/reports', 'moderateReport', { reportId: reports.at(-1).id, expectedStatus: 'pending', status: 'reviewed' }, adminId);
+    assert.ok(reviewed.body.includes('"success":true')); assert.equal(reports.at(-1).status, 'reviewed');
+    const removedAnswer = await action(`/en/questions/${row.id}`, 'deleteForumPost', { target_type: 'answer', target_id: editedAnswerId }, adminId);
+    assert.ok(removedAnswer.body.includes('"success":true')); assert.equal(answers.some(item => item.id === editedAnswerId), false);
+    const removedQuestion = await action(`/en/questions/${row.id}`, 'deleteForumPost', { target_type: 'question', target_id: row.id }, studentId);
+    assert.ok(removedQuestion.body.includes('"success":true')); assert.equal(questions.some(item => item.id === row.id), false);
     const missing = await visit('/en/questions/afc00000-0000-4000-8000-999999999999', null);
     assert.ok(missing.status === 404 || missing.body.includes('noindex'));
     const malformed = await visit('/en/questions/not-a-guid', null);
     assert.ok(malformed.status === 404 || malformed.body.includes('noindex'));
-    console.log('PASS: Arabic/English Q&A pages, filtering/paging, real action POSTs, public reads, escaped bodies and verified authors');
+    console.log('PASS: Arabic/English Q&A pages, filters, verified CRUD/report actions, admin review, public reads and escaped bodies');
   }
   console.log(JSON.stringify(metrics, null, 2));
   console.log('PASS: Arabic/English SSR, translated forms, escaped titles, admin/student isolation and anonymous upload redirect');
