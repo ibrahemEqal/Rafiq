@@ -39,12 +39,24 @@
     "fullName": "Full Name",
     "username": "Username",
     "signUpBtn": "Create Account",
+    "signingUp": "Creating account...",
+    "signingIn": "Signing in...",
     "haveAccount": "Already have an account?",
     "confirmPassword": "Confirm Password",
     "passwordMismatch": "Passwords do not match",
     "authError": "Authentication failed. Please check your credentials.",
     "checkEmail": "Account created successfully! Please check your email to activate your account.",
-    "emailExists": "Email is already in use, please sign in."
+    "accountReady": "Your account is ready. You can sign in now.",
+    "emailExists": "Email is already in use, please sign in.",
+    "backHome": "Back to home",
+    "signupErrors": {
+      "mismatch": "Passwords do not match.",
+      "invalid": "Check your details. The password must be at least 8 characters and the username may only contain English letters, numbers, or underscores.",
+      "email_exists": "Email is already in use, please sign in.",
+      "rate_limited": "Too many attempts were made. Wait a moment and try again.",
+      "failed": "We could not create the account. Try again, or contact support if the problem continues.",
+      "config": "The site URL is not configured correctly. Please contact support."
+    }
   },
   "Resources": {
     "title": "Educational Resources",
