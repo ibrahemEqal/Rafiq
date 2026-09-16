@@ -12,6 +12,20 @@ alter table public.answers
 alter table public.reports
   add constraint reports_reason_length check (char_length(btrim(reason)) between 10 and 1000) not valid;
 
+-- A private append-only event ledger prevents delete-and-repost from resetting
+-- limits. RLS plus explicit revokes keep it out of the public Data API.
+create table if not exists public.forum_rate_events (
+  id bigint generated always as identity primary key,
+  actor_id uuid not null,
+  action text not null check (action in ('question', 'answer', 'report')),
+  created_at timestamptz not null default clock_timestamp()
+);
+alter table public.forum_rate_events enable row level security;
+revoke all on table public.forum_rate_events from public, anon, authenticated;
+revoke all on sequence public.forum_rate_events_id_seq from public, anon, authenticated;
+create index if not exists idx_forum_rate_events_actor_action_created
+  on public.forum_rate_events (actor_id, action, created_at desc);
+
 create index if not exists idx_questions_author_created_at
   on public.questions (author_id, created_at desc);
 create index if not exists idx_answers_author_created_at
@@ -22,13 +36,14 @@ create index if not exists idx_reports_reporter_created_at
 create or replace function public.enforce_forum_rate_limits()
 returns trigger
 language plpgsql
-security invoker
+security definer
 set search_path = public
 as $$
 declare
   actor uuid := auth.uid();
   recent_count integer;
   daily_count integer;
+  event_type text;
 begin
   if actor is null and current_user in ('postgres', 'service_role', 'supabase_admin') then
     return new;
@@ -41,25 +56,25 @@ begin
     if new.author_id <> actor then
       raise exception using errcode = '42501', message = 'forum_author_mismatch';
     end if;
-    select count(*) into recent_count from public.questions
-      where author_id = actor and created_at >= clock_timestamp() - interval '10 minutes';
-    select count(*) into daily_count from public.questions
-      where author_id = actor and created_at >= clock_timestamp() - interval '24 hours';
-    if recent_count >= 3 or daily_count >= 15 then
-      raise exception using errcode = 'P0001', message = 'forum_rate_limited';
-    end if;
+    event_type := 'question';
   elsif tg_table_name = 'answers' then
     if new.author_id <> actor then
       raise exception using errcode = '42501', message = 'forum_author_mismatch';
     end if;
-    select count(*) into recent_count from public.answers
-      where author_id = actor and created_at >= clock_timestamp() - interval '10 minutes';
-    select count(*) into daily_count from public.answers
-      where author_id = actor and created_at >= clock_timestamp() - interval '24 hours';
-    if recent_count >= 10 or daily_count >= 60 then
-      raise exception using errcode = 'P0001', message = 'forum_rate_limited';
-    end if;
+    event_type := 'answer';
   end if;
+
+  perform pg_advisory_xact_lock(hashtextextended(actor::text || ':' || event_type || ':rate', 0));
+  delete from public.forum_rate_events where actor_id = actor and created_at < clock_timestamp() - interval '24 hours';
+  select count(*) into recent_count from public.forum_rate_events
+    where actor_id = actor and action = event_type and created_at >= clock_timestamp() - interval '10 minutes';
+  select count(*) into daily_count from public.forum_rate_events
+    where actor_id = actor and action = event_type and created_at >= clock_timestamp() - interval '24 hours';
+  if (event_type = 'question' and (recent_count >= 3 or daily_count >= 15))
+     or (event_type = 'answer' and (recent_count >= 10 or daily_count >= 60)) then
+    raise exception using errcode = 'P0001', message = 'forum_rate_limited';
+  end if;
+  insert into public.forum_rate_events (actor_id, action) values (actor, event_type);
 
   return new;
 end;
@@ -125,13 +140,16 @@ begin
     raise exception using errcode = '23505', message = 'duplicate_pending_report';
   end if;
 
-  select count(*) into hourly_count from public.reports
-    where reporter_id = actor and created_at >= clock_timestamp() - interval '1 hour';
-  select count(*) into daily_count from public.reports
-    where reporter_id = actor and created_at >= clock_timestamp() - interval '24 hours';
+  perform pg_advisory_xact_lock(hashtextextended(actor::text || ':report:rate', 0));
+  delete from public.forum_rate_events where actor_id = actor and created_at < clock_timestamp() - interval '24 hours';
+  select count(*) into hourly_count from public.forum_rate_events
+    where actor_id = actor and action = 'report' and created_at >= clock_timestamp() - interval '1 hour';
+  select count(*) into daily_count from public.forum_rate_events
+    where actor_id = actor and action = 'report' and created_at >= clock_timestamp() - interval '24 hours';
   if hourly_count >= 5 or daily_count >= 20 then
     raise exception using errcode = 'P0001', message = 'forum_rate_limited';
   end if;
+  insert into public.forum_rate_events (actor_id, action) values (actor, 'report');
 
   new.reason := btrim(new.reason);
   new.status := 'pending';

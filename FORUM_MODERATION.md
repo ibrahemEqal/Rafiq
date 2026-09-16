@@ -34,7 +34,10 @@ The migration enforces limits in PostgreSQL, including direct API writes:
 | Answers | 10 per 10 minutes | 60 per 24 hours |
 | Reports | 5 per hour | 20 per 24 hours |
 
-Concurrent duplicate reports are serialized with a transaction advisory lock.
+Rate limits use a private, RLS-protected event ledger, so deleting a post does
+not reset the limit. Old events for an actor are purged after 24 hours when that
+actor writes again. Concurrent writes and duplicate reports are serialized with
+transaction advisory locks.
 Length constraints are added `NOT VALID`: new and edited rows are checked, while
 legacy content cannot make deployment fail. The rate limits are abuse brakes,
 not a complete reputation, CAPTCHA or ban system.

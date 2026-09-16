@@ -119,6 +119,6 @@ test('database guard failures map to stable UI errors without leaking details', 
 
 test('migration contains durable database limits, duplicate serialization and orphan cleanup', () => {
   const sql = readFileSync(new URL('../supabase/migrations/20260916200000_forum_moderation_controls.sql', import.meta.url), 'utf8');
-  for (const required of ['trg_questions_rate_limit', 'trg_answers_rate_limit', 'pg_advisory_xact_lock', 'duplicate_pending_report', 'self_report_forbidden', 'trg_questions_cleanup_reports', 'trg_answers_cleanup_reports', 'reports_reason_length']) assert.match(sql, new RegExp(required));
+  for (const required of ['forum_rate_events', 'revoke all on table public.forum_rate_events', 'trg_questions_rate_limit', 'trg_answers_rate_limit', 'pg_advisory_xact_lock', 'duplicate_pending_report', 'self_report_forbidden', 'trg_questions_cleanup_reports', 'trg_answers_cleanup_reports', 'reports_reason_length']) assert.match(sql, new RegExp(required));
   assert.doesNotMatch(sql, /service_role_key|SUPABASE_SERVICE/);
 });

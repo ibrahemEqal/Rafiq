@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(14);
+select plan(15);
 
 insert into auth.users (id, email, raw_user_meta_data)
 values
@@ -84,6 +84,10 @@ select results_eq(
 select lives_ok(
   $$delete from public.questions where id = 'fac00000-0000-4000-8000-000000000010'$$,
   'owner can delete a question'
+);
+select throws_ok(
+  $$execute add_question('fac00000-0000-4000-8000-000000000015', 'fac00000-0000-4000-8000-000000000001', 'Deletion must not reset limits')$$,
+  'P0001', 'forum_rate_limited', 'deleting a post does not reset the durable rate limit'
 );
 
 reset role;
