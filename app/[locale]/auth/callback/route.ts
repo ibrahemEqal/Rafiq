@@ -3,8 +3,10 @@ import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export async function GET(request: Request) {
+export async function GET(request: Request, { params }: { params: Promise<{ locale: string }> }) {
   const { searchParams, origin } = new URL(request.url)
+  const locale = (await params).locale === 'en' ? 'en' : 'ar'
+  const prefix = locale === 'en' ? '/en' : ''
   const code = searchParams.get('code')
 
   if (code) {
@@ -20,7 +22,7 @@ export async function GET(request: Request) {
               cookiesToSet.forEach(({ name, value, options }) =>
                 cookieStore.set(name, value, options)
               )
-            } catch (_) {}
+            } catch {}
           },
         },
       }
@@ -30,10 +32,10 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     
     if (!error) {
-      return NextResponse.redirect(`${origin}/`)
+      return NextResponse.redirect(`${origin}${prefix}/`)
     }
   }
 
   // في حال فشل التأكيد
-  return NextResponse.redirect(`${origin}/auth/login?error=true`)
+  return NextResponse.redirect(`${origin}${prefix}/auth/login?error=true`)
 }

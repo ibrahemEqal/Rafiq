@@ -1,9 +1,9 @@
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { Library } from "lucide-react";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  const t = useTranslations("Auth");
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  const t = await getTranslations("Auth");
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 relative overflow-hidden">
@@ -13,7 +13,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       <div className="absolute top-8 start-8">
         <Link href="/" className="text-slate-500 hover:text-teal-600 font-medium text-sm flex items-center gap-2 transition-colors">
-          &rarr; العودة للرئيسية
+          &rarr; {t("backHome")}
         </Link>
       </div>
 
