@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { oneRelation } from "@/lib/data/relations";
 import { parseQuestionFilters } from "@/lib/questions/validation";
 import AnswerComposer from "@/components/questions/AnswerComposer";
+import ForumPostActions from "@/components/questions/ForumPostActions";
+import ClientMessages from "@/components/shared/ClientMessages";
 import { User, BookOpen } from "lucide-react";
 
 const PAGE_SIZE = 20;
@@ -18,10 +20,17 @@ export default async function QuestionDetails({ params, searchParams }: {
   const [t, locale, route, queryParams, client] = await Promise.all([getTranslations("Questions"), getLocale(), params, searchParams, createClient()]);
   if (!z.guid().safeParse(route.id).success) notFound();
   const { page } = parseQuestionFilters(queryParams);
-  const [questionResult, answerResult] = await Promise.all([
-    client.from("questions").select("id, title, body, created_at, courses(name_ar, name_en), profiles!questions_author_id_fkey(full_name, username)").eq("id", route.id).maybeSingle(),
-    client.from("answers").select("id, body, created_at, profiles!answers_author_id_fkey(full_name, username)").eq("question_id", route.id)
+  const viewerPromise = client.auth.getClaims().then(async ({ data }) => {
+    const id = typeof data?.claims?.sub === "string" ? data.claims.sub : null;
+    if (!id) return null;
+    const { data: profile } = await client.from("profiles").select("role").eq("id", id).maybeSingle();
+    return { id, isAdmin: profile?.role === "admin" };
+  });
+  const [questionResult, answerResult, viewer] = await Promise.all([
+    client.from("questions").select("id, author_id, title, body, created_at, updated_at, courses(name_ar, name_en), profiles!questions_author_id_fkey(full_name, username)").eq("id", route.id).maybeSingle(),
+    client.from("answers").select("id, author_id, body, created_at, updated_at, profiles!answers_author_id_fkey(full_name, username)").eq("question_id", route.id)
       .order("created_at", { ascending: false }).order("id", { ascending: false }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    viewerPromise,
   ]);
   if (questionResult.error) throw new Error("Question unavailable");
   const question = questionResult.data;
@@ -33,7 +42,7 @@ export default async function QuestionDetails({ params, searchParams }: {
   const date = new Intl.DateTimeFormat(locale === "ar" ? "ar-PS" : "en-US", { dateStyle: "medium", timeZone: "UTC" });
   const pageHref = (next: number) => ({ pathname: `/questions/${question.id}`, query: { page: next } });
 
-  return <section className="min-h-screen bg-slate-50 px-4 py-10"><div className="mx-auto max-w-3xl space-y-6">
+  return <ClientMessages namespace="Questions"><section className="min-h-screen bg-slate-50 px-4 py-10"><div className="mx-auto max-w-3xl space-y-6">
     <Link href="/questions" className="text-sm font-bold text-teal-700">{t("back")}</Link>
     <article className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
       <h1 className="break-words text-2xl font-extrabold leading-relaxed text-slate-900 sm:text-3xl">{question.title}</h1>
@@ -43,6 +52,9 @@ export default async function QuestionDetails({ params, searchParams }: {
         <time dateTime={question.created_at}>{date.format(new Date(question.created_at))}</time>
       </div>
       <p dir="auto" className="whitespace-pre-wrap break-words text-sm leading-8 text-slate-700">{question.body}</p>
+      <ForumPostActions target={{ target_type: "question", target_id: question.id }} questionId={question.id}
+        canManage={Boolean(viewer && (viewer.id === question.author_id || viewer.isAdmin))}
+        canReport={Boolean(viewer && viewer.id !== question.author_id && !viewer.isAdmin)} />
     </article>
     <section aria-labelledby="answers-heading" className="space-y-4">
       <h2 id="answers-heading" className="text-xl font-extrabold text-slate-900">{t("answers")}</h2>
@@ -54,6 +66,9 @@ export default async function QuestionDetails({ params, searchParams }: {
           return <article key={answer.id} className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
             <header className="mb-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500"><span className="font-bold text-slate-700">{names?.full_name || names?.username || t("unknownUser")}</span><time dateTime={answer.created_at}>{date.format(new Date(answer.created_at))}</time></header>
             <p dir="auto" className="whitespace-pre-wrap break-words text-sm leading-8 text-slate-700">{answer.body}</p>
+            <ForumPostActions target={{ target_type: "answer", target_id: answer.id }} questionId={question.id} body={answer.body}
+              canManage={Boolean(viewer && (viewer.id === answer.author_id || viewer.isAdmin))}
+              canReport={Boolean(viewer && viewer.id !== answer.author_id && !viewer.isAdmin)} />
           </article>;
         })}
         {(page > 1 || more) && <nav aria-label={t("pagination")} className="flex items-center justify-between gap-3 text-sm font-bold">
@@ -66,5 +81,5 @@ export default async function QuestionDetails({ params, searchParams }: {
     <section className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8">
       <Suspense fallback={<p role="status" className="text-sm text-slate-500">{t("loadingAccount")}</p>}><AnswerComposer questionId={question.id} page={page} /></Suspense>
     </section>
-  </div></section>;
+  </div></section></ClientMessages>;
 }

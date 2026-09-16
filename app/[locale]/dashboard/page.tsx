@@ -55,6 +55,7 @@ export default async function AdminDashboard({ searchParams }: {
           <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm text-teal-200"><ShieldCheck size={16} />{t("adminOnly")}</div>
           <h1 className="text-2xl font-extrabold sm:text-3xl">{t("title")}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">{t("subtitle")}</p>
+          <Link href="/dashboard/reports" className="mt-5 inline-block text-sm font-bold text-amber-300">{t("openReports")}</Link>
         </header>
 
         <nav aria-label={t("filters")} className="flex flex-wrap gap-2">
