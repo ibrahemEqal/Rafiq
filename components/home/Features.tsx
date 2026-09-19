@@ -26,7 +26,7 @@ export default function Features() {
   ] as const;
 
   return (
-    <section className="py-32 bg-slate-50 relative border-t border-slate-200/60">
+    <section className="py-32 bg-slate-50 relative border-t border-slate-200/60 [content-visibility:auto] [contain-intrinsic-size:auto_700px]">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="text-center mb-20">
@@ -43,7 +43,7 @@ export default function Features() {
                 className="group relative flex flex-col p-8 sm:p-10 rounded-[2.5rem] bg-white border border-slate-200 hover:border-slate-300 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] transition-all duration-500 overflow-hidden"
               >
                 {/* تأثير الإضاءة عند المرور */}
-                <div className={`absolute -top-24 -end-24 w-48 h-48 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 blur-[50px] rounded-full transition-opacity duration-700 pointer-events-none`}></div>
+                <div className={`absolute -top-24 -end-24 w-48 h-48 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 rounded-full transition-opacity duration-700 pointer-events-none`}></div>
                 
                 <div className={`w-14 h-14 flex items-center justify-center rounded-2xl bg-gradient-to-br ${feature.gradient} text-white shadow-lg mb-8 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500`}>
                   <Icon size={28} strokeWidth={2} />

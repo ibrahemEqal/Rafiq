@@ -1,11 +1,13 @@
-import { getTranslations } from "next-intl/server";
-import { createClient } from "@/lib/supabase/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { BookOpen, Copy, MessageCircle, MapPin, Plus } from "lucide-react";
 import { Link } from "@/i18n/routing";
 
-export default async function BooksPage() {
+export default async function BooksPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("Books");
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // جلب الكتب المتاحة فقط، مع بيانات الكلية والناشر
   const { data: books } = await supabase
@@ -82,7 +84,7 @@ export default async function BooksPage() {
                   {item.colleges?.[0] && (
                     <div className="flex items-center gap-2 text-slate-500 text-sm">
                       <MapPin size={16} className="text-slate-400" />
-                      <span>{item.colleges[0].name_ar}</span>
+                      <span>{locale === "ar" ? item.colleges[0].name_ar : item.colleges[0].name_en}</span>
                     </div>
                   )}
                 </div>

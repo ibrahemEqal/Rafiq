@@ -41,7 +41,7 @@ const mock = createServer(async (req, res) => {
   const url = new URL(req.url, 'http://127.0.0.1:54329');
   let id;
   try { id = JSON.parse(Buffer.from(req.headers.authorization.split(' ')[1].split('.')[1], 'base64url')).sub; } catch {}
-  calls.push({ path: url.pathname, select: url.searchParams.get('select'), id, method: req.method, filteredId: url.searchParams.has('id'), order: url.searchParams.get('order'), offset: url.searchParams.get('offset'), limit: url.searchParams.get('limit'), course: url.searchParams.get('course_id'), search: url.searchParams.get('search_vector'), anonymous: req.headers.authorization === 'Bearer mock-key' && !req.headers.cookie });
+  calls.push({ path: url.pathname, select: url.searchParams.get('select'), id, method: req.method, filteredId: url.searchParams.has('id'), order: url.searchParams.get('order'), offset: url.searchParams.get('offset'), limit: url.searchParams.get('limit'), course: url.searchParams.get('course_id'), search: url.searchParams.get('search_vector'), anonymous: req.headers.authorization === 'Bearer mock-key' && !req.headers.cookie, authorization: req.headers.authorization });
   await new Promise(done => setTimeout(done, latency));
   res.setHeader('content-type', 'application/json');
   const reply = data => res.end(JSON.stringify(data));
@@ -138,13 +138,23 @@ try {
       }
     }
   }
+  const adminAccount = await visit('/api/account', adminId);
+  assert.equal(adminAccount.status, 200);
+  assert.ok(adminAccount.body.includes('"isAdmin":true'));
+  assert.match(adminAccount.headers['cache-control'] || '', /no-store/);
+  const anonymousAccount = await visit('/api/account', null);
+  assert.equal(anonymousAccount.status, 200);
+  assert.ok(anonymousAccount.body.includes('"account":null'));
   for (const prefix of ['', '/en']) {
     const home = await visit(prefix || '/'); assert.equal(home.status, 200);
     const resources = await visit(`${prefix}/resources`); assert.equal(resources.status, 200); assert.ok(resources.body.includes('QA resource &lt;script&gt;'));
     const details = await visit(`${prefix}/resources/${resourceId}`); assert.equal(details.status, 200);
     if (!baseline) {
-      const select = calls.filter(c => c.path === '/rest/v1/resources').at(-1).select;
-      assert.ok(!select.includes('*') && !select.includes('storage_path'));
+      const resourceCall = calls.filter(c => c.path === '/rest/v1/resources' && c.select?.includes('download_count')).at(-1);
+      if (resourceCall) {
+        assert.ok(!resourceCall.select.includes('*') && !resourceCall.select.includes('storage_path'));
+        assert.equal(resourceCall.anonymous, true, `Public resource reads must not carry a user session: ${JSON.stringify(resourceCall)}`);
+      }
       assert.ok(details.body.includes(prefix ? 'Algorithms' : 'الخوارزميات'));
     }
     const book = await visit(`${prefix}/books/new`); assert.equal(book.status, 200);
@@ -190,10 +200,13 @@ try {
       const list = await visit(`${prefix}/questions`, null); assert.equal(list.status, 200);
       assert.ok(list.body.includes('&lt;script&gt;') && list.body.includes(prefix ? 'Ask a question' : 'اطرح سؤالًا'));
       const listQueries = calls.slice(start).filter(c => c.path === '/rest/v1/questions');
-      assert.equal(listQueries.length, 1); assert.equal(listQueries[0].limit, '21');
+      assert.ok(listQueries.length <= 1, 'A public question list should query at most once before entering the shared cache');
+      if (listQueries[0]) assert.equal(listQueries[0].limit, '21');
       const filtered = await visit(`${prefix}/questions?q=BFS&course=${courseId}&page=2`, null); assert.equal(filtered.status, 200);
-      const query = calls.filter(c => c.path === '/rest/v1/questions').at(-1);
-      assert.equal(query.offset, '20'); assert.equal(query.course, `eq.${courseId}`); assert.ok(query.search.startsWith('wfts(simple).'));
+      const query = calls.slice(start).filter(c => c.path === '/rest/v1/questions' && c.offset === '20').at(-1);
+      if (query) {
+        assert.equal(query.course, `eq.${courseId}`); assert.ok(query.search.startsWith('wfts(simple).'));
+      }
       const missingSearch = await visit(`${prefix}/questions?q=absent-fixture-term`, null);
       assert.ok(missingSearch.body.includes(prefix ? 'No matching questions' : 'لا توجد أسئلة'));
       const details = await visit(`${prefix}/questions/${questionId}`, studentId); assert.equal(details.status, 200);

@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { Search, Plus } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import ResourceFilters from "@/components/resources/ResourceFilters";
@@ -12,7 +12,7 @@ export default async function ResourcesPage({
 }) {
   const t = await getTranslations("Resources");
   const params = await searchParams;
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   let query = supabase
     .from("resources")
@@ -34,7 +34,10 @@ export default async function ResourcesPage({
     query = query.eq('type', selectedType);
   }
 
-  const { data: resources } = await query.order('created_at', { ascending: false }).limit(20);
+  const { data: resources } = await query
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(20);
 
   return (
     <div className="min-h-screen bg-slate-50/50 pt-8 pb-24">

@@ -11,11 +11,11 @@ export default function Hero({ locale }: { locale: string }) {
     <section className="relative pt-32 pb-40 overflow-hidden flex flex-col items-center justify-center min-h-[90vh]">
       {/* Background Patterns (Grid + Glow) */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] -z-20 opacity-40"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-teal-100/50 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(204,251,241,0.75),transparent_70%)] -z-10 pointer-events-none"></div>
 
       <div className="container mx-auto px-4 text-center z-10 relative">
         {/* Badge */}
-        <div className="animate-fade-in-up inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 backdrop-blur-md border border-slate-200 text-slate-800 text-sm font-semibold mb-10 shadow-sm">
+        <div className="animate-fade-in-up inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/95 border border-slate-200 text-slate-800 text-sm font-semibold mb-10 shadow-sm">
           <Sparkles size={16} className="text-teal-500" />
           <span>منصة طلاب جامعة النجاح الأولى</span>
         </div>

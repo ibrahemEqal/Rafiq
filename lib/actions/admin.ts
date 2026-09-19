@@ -1,7 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { publicDataTags } from "@/lib/supabase/public";
 import {
   moderateResourceWithClient,
   createAdminPreviewWithClient,
@@ -14,6 +15,7 @@ export async function moderateResource(input: unknown) {
     revalidatePath("/[locale]/resources", "page");
     revalidatePath("/[locale]/resources/[id]", "page");
     revalidatePath("/[locale]/profile", "page");
+    revalidateTag(publicDataTags.resources, "max");
   }
   return result;
 }

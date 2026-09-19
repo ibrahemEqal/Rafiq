@@ -8,8 +8,8 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 relative overflow-hidden">
       
-      <div className="absolute top-[-10%] start-[-10%] w-[40%] h-[40%] bg-teal-200/20 blur-[100px] rounded-full" />
-      <div className="absolute bottom-[-10%] end-[-10%] w-[40%] h-[40%] bg-amber-200/20 blur-[100px] rounded-full" />
+      <div className="absolute top-[-10%] start-[-10%] w-[40%] h-[40%] bg-[radial-gradient(circle,rgba(153,246,228,0.3),transparent_70%)] rounded-full" />
+      <div className="absolute bottom-[-10%] end-[-10%] w-[40%] h-[40%] bg-[radial-gradient(circle,rgba(253,230,138,0.3),transparent_70%)] rounded-full" />
 
       <div className="absolute top-8 start-8">
         <Link href="/" className="text-slate-500 hover:text-teal-600 font-medium text-sm flex items-center gap-2 transition-colors">

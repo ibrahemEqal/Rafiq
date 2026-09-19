@@ -11,7 +11,7 @@ const answer = { question_id: questionId, body: 'Use a FIFO queue and visit each
 function fixture(options = {}) {
   const calls = [];
   const client = {
-    auth: { async getUser() { return { data: { user: options.signedOut ? null : { id: userId } }, error: options.authError ? { message: 'expired' } : null }; } },
+    auth: { async getClaims() { return { data: options.signedOut ? null : { claims: { sub: userId, email: 'student@example.invalid' } }, error: options.authError ? { message: 'expired' } : null }; } },
     from(table) {
       calls.push(['from', table]);
       let inserted;

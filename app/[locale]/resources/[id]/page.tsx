@@ -1,5 +1,5 @@
-import { getLocale, getTranslations } from "next-intl/server";
-import { createClient } from "@/lib/supabase/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { notFound } from "next/navigation";
 import { FileText, Clock, User, ArrowRight } from "lucide-react";
 import { oneRelation } from "@/lib/data/relations";
@@ -9,9 +9,13 @@ import DownloadButton from "@/components/resources/DownloadButton";
 export default async function ResourceDetailsPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ locale: string; id: string }>;
 }) {
-  const [t, locale, resolvedParams, supabase] = await Promise.all([getTranslations("Resources"), getLocale(), params, createClient()]);
+  const resolvedParams = await params;
+  const locale = resolvedParams.locale === "en" ? "en" : "ar";
+  setRequestLocale(locale);
+  const t = await getTranslations("Resources");
+  const supabase = createPublicClient();
 
   const { data: resource } = await supabase
     .from("resources")
@@ -21,6 +25,7 @@ export default async function ResourceDetailsPage({
       profiles!resources_uploader_id_fkey (full_name)
     `)
     .eq("id", resolvedParams.id)
+    .eq("status", "approved")
     .single();
 
   if (!resource) notFound();

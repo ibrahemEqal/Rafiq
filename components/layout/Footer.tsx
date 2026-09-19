@@ -5,7 +5,7 @@ export default function Footer() {
   const t = useTranslations("Footer");
 
   return (
-    <footer className="bg-white border-t border-slate-200 mt-auto relative overflow-hidden">
+    <footer className="bg-white border-t border-slate-200 mt-auto relative overflow-hidden [content-visibility:auto] [contain-intrinsic-size:auto_180px]">
       {/* زخرفة خلفية ناعمة */}
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-teal-500/20 to-transparent"></div>
       
