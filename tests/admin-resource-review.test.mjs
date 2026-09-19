@@ -16,10 +16,10 @@ function fixture(overrides = {}) {
   const calls = [];
   const client = {
     auth: {
-      async getUser() {
-        calls.push(["getUser"]);
+      async getClaims() {
+        calls.push(["getClaims"]);
         return {
-          data: { user: options.authenticated ? { id: userId, user_metadata: { role: "admin" } } : null },
+          data: options.authenticated ? { claims: { sub: userId, email: "admin@example.invalid" } } : null,
           error: options.authError ? { code: "expired" } : null,
         };
       },

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { getVerifiedIdentity } from "../auth/identity.ts";
 
 export const resourceStatuses = ["pending", "approved", "rejected", "removed"] as const;
 export type ResourceStatus = (typeof resourceStatuses)[number];
@@ -29,11 +30,11 @@ export function parseReviewFilters(input: Record<string, unknown>) {
 // Framework-independent server logic so authorization can be regression-tested.
 // The Supabase client must be the request's cookie-backed client, never service_role.
 export async function getAdminAccess(client: SupabaseClient) {
-  const { data: { user }, error } = await client.auth.getUser();
-  if (error || !user) return { userId: null, isAdmin: false };
+  const identity = await getVerifiedIdentity(client);
+  if (!identity) return { userId: null, isAdmin: false };
   const { data: profile, error: profileError } = await client
-    .from("profiles").select("role").eq("id", user.id).maybeSingle();
-  return { userId: user.id, isAdmin: !profileError && profile?.role === "admin" };
+    .from("profiles").select("role").eq("id", identity.id).maybeSingle();
+  return { userId: identity.id, isAdmin: !profileError && profile?.role === "admin" };
 }
 
 export async function moderateResourceWithClient(

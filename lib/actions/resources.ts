@@ -7,6 +7,7 @@ import {
   formatResourceValidationError,
   type ResourceInput,
 } from "@/lib/validation/resource";
+import { getVerifiedIdentity } from "@/lib/auth/identity";
 
 export type { ResourceInput } from "@/lib/validation/resource";
 
@@ -17,11 +18,11 @@ export async function createResourceRecord(input: ResourceInput) {
   }
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Unauthorized." };
+  const identity = await getVerifiedIdentity(supabase);
+  if (!identity) return { error: "Unauthorized." };
 
   if (
-    !parsed.data.storage_path.startsWith(user.id + "/") ||
+    !parsed.data.storage_path.startsWith(identity.id + "/") ||
     parsed.data.storage_path.includes("://")
   ) {
     return { error: "Invalid storage path." };
@@ -34,7 +35,7 @@ export async function createResourceRecord(input: ResourceInput) {
     storage_path: parsed.data.storage_path,
     file_size: parsed.data.file_size,
     mime_type: parsed.data.mime_type,
-    uploader_id: user.id,
+    uploader_id: identity.id,
     status: "pending",
   });
 

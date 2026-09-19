@@ -3,26 +3,27 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { User, BookOpen, FileText, Download, Eye, ShieldCheck, Clock } from "lucide-react";
 import MarkAsTakenButton from "@/components/profile/MarkAsTakenButton";
+import { getVerifiedIdentity } from "@/lib/auth/identity";
 
 export default async function ProfilePage() {
   const t = await getTranslations("Profile");
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  const identity = await getVerifiedIdentity(supabase);
+  if (!identity) redirect("/auth/login");
 
   const [{ data: profile }, { data: books }, { data: resources }] = await Promise.all([
-    supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+    supabase.from("profiles").select("full_name").eq("id", identity.id).single(),
     supabase
       .from("books")
       .select("id, title, status")
-      .eq("owner_id", user.id)
+      .eq("owner_id", identity.id)
       .order("created_at", { ascending: false })
       .limit(30),
     supabase
       .from("resources")
       .select("id, title, status, download_count, view_count")
-      .eq("uploader_id", user.id)
+      .eq("uploader_id", identity.id)
       .order("created_at", { ascending: false })
       .limit(30),
   ]);
@@ -39,7 +40,7 @@ export default async function ProfilePage() {
             <h1 className="text-2xl font-extrabold text-slate-900 mb-1">
               {profile?.full_name || "طالب جامعي"}
             </h1>
-            <p className="text-slate-500">{user.email}</p>
+            <p className="text-slate-500">{identity.email}</p>
           </div>
         </div>
 

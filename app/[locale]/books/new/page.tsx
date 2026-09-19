@@ -4,13 +4,14 @@ import { redirect } from "@/i18n/routing";
 import AddBookForm from "@/components/books/AddBookForm";
 import ClientMessages from "@/components/shared/ClientMessages";
 import { getColleges } from "@/lib/data/catalog";
+import { getVerifiedIdentity } from "@/lib/auth/identity";
 
 export default async function NewBookPage() {
   const [t, locale, supabase] = await Promise.all([getTranslations("Books"), getLocale(), createClient()]);
   
   // حماية الصفحة
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return redirect({ href: "/auth/login", locale });
+  const identity = await getVerifiedIdentity(supabase);
+  if (!identity) return redirect({ href: "/auth/login", locale });
 
   // جلب الكليات للنموذج
   const colleges = await getColleges();

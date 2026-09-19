@@ -4,11 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { getCourses } from "@/lib/data/catalog";
 import ClientMessages from "@/components/shared/ClientMessages";
 import QuestionForm from "@/components/questions/QuestionForm";
+import { getVerifiedIdentity } from "@/lib/auth/identity";
 
 export default async function NewQuestionPage() {
   const [t, locale, client] = await Promise.all([getTranslations("Questions"), getLocale(), createClient()]);
-  const { data: { user }, error } = await client.auth.getUser();
-  if (error || !user) return redirect({ href: "/auth/login", locale });
+  if (!await getVerifiedIdentity(client)) return redirect({ href: "/auth/login", locale });
   const courses = await getCourses();
   return <section className="min-h-screen bg-slate-50 px-4 py-10">
     <div className="mx-auto max-w-2xl space-y-6">

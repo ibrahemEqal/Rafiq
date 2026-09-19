@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/routing";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { oneRelation } from "@/lib/data/relations";
 import { parseQuestionFilters } from "@/lib/questions/validation";
 import AnswerComposer from "@/components/questions/AnswerComposer";
@@ -15,8 +15,9 @@ export default async function QuestionDetails({ params, searchParams }: {
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [t, locale, route, queryParams, client] = await Promise.all([getTranslations("Questions"), getLocale(), params, searchParams, createClient()]);
+  const [t, locale, route, queryParams] = await Promise.all([getTranslations("Questions"), getLocale(), params, searchParams]);
   if (!z.guid().safeParse(route.id).success) notFound();
+  const client = createPublicClient();
   const { page } = parseQuestionFilters(queryParams);
   const [questionResult, answerResult] = await Promise.all([
     client.from("questions").select("id, title, body, created_at, courses(name_ar, name_en), profiles!questions_author_id_fkey(full_name, username)").eq("id", route.id).maybeSingle(),

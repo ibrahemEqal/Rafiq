@@ -4,12 +4,13 @@ import { redirect } from "@/i18n/routing";
 import UploadForm from "@/components/resources/UploadForm";
 import ClientMessages from "@/components/shared/ClientMessages";
 import { getUploadCatalog } from "@/lib/data/catalog";
+import { getVerifiedIdentity } from "@/lib/auth/identity";
 
 export default async function NewResourcePage() {
   const [t, locale, supabase] = await Promise.all([getTranslations("Resources"), getLocale(), createClient()]);
   
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return redirect({ href: "/auth/login", locale });
+  const identity = await getVerifiedIdentity(supabase);
+  if (!identity) return redirect({ href: "/auth/login", locale });
 
   const { colleges, courses } = await getUploadCatalog();
 
@@ -23,7 +24,7 @@ export default async function NewResourcePage() {
           </div>
           
           <ClientMessages namespace="Resources">
-            <UploadForm colleges={colleges} courses={courses} userId={user.id} />
+            <UploadForm colleges={colleges} courses={courses} userId={identity.id} />
           </ClientMessages>
         </div>
       </div>

@@ -1,15 +1,14 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { Library, Sparkles } from "lucide-react";
-import { Suspense } from "react";
-import NavbarAccount from "./NavbarAccount";
+import NavbarAccountClient from "./NavbarAccountClient";
 
 export default async function Navbar({ locale }: { locale: string }) {
   const t = await getTranslations("Navigation");
   const toggleLocale = locale === "ar" ? "en" : "ar";
   const toggleText = locale === "ar" ? "English" : "عربي";
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/50 backdrop-blur-2xl border-b border-slate-200/50">
+    <header className="sticky top-0 z-50 w-full bg-white/95 border-b border-slate-200/70">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         
         {/* الشعار */}
@@ -46,9 +45,10 @@ export default async function Navbar({ locale }: { locale: string }) {
             {toggleText}
           </Link>
           
-          <Suspense fallback={<div aria-busy="true" className="h-10 w-10 rounded-full bg-slate-100 sm:w-48 motion-safe:animate-pulse" />}>
-            <NavbarAccount />
-          </Suspense>
+          <NavbarAccountClient
+            locale={locale}
+            labels={{ dashboard: t("dashboard"), profile: t("profile"), signOut: t("signOut"), signIn: t("signIn"), signUp: t("signUp") }}
+          />
         </div>
       </div>
     </header>

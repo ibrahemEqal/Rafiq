@@ -1,6 +1,6 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { getCourses } from "@/lib/data/catalog";
 import { oneRelation } from "@/lib/data/relations";
 import { parseQuestionFilters } from "@/lib/questions/validation";
@@ -10,7 +10,8 @@ const PAGE_SIZE = 20;
 
 export default async function QuestionsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const filtersPromise = searchParams.then(parseQuestionFilters);
-  const questionsPromise = Promise.all([createClient(), filtersPromise]).then(([client, filters]) => {
+  const questionsPromise = filtersPromise.then((filters) => {
+    const client = createPublicClient();
     let query = client.from("questions").select("id, title, created_at, courses(name_ar, name_en), profiles!questions_author_id_fkey(full_name, username)");
     if (filters.q) query = query.textSearch("search_vector", filters.q, { config: "simple", type: "websearch" });
     if (filters.course) query = query.eq("course_id", filters.course);
