@@ -5,6 +5,9 @@ export const publicDataTags = {
   resources: "public-resources",
   books: "public-books",
   questions: "public-questions",
+  answers: "public-answers",
+  answer_reactions: "public-answer-reactions",
+  answer_comments: "public-answer-comments",
   requests: "public-requests",
   request_responses: "public-request-responses",
 } as const;

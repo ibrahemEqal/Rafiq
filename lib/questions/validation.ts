@@ -9,8 +9,14 @@ export const answerSchema = z.object({
   question_id: z.guid(),
   body: z.string().trim().min(2).max(8000),
 });
-export type QuestionError = "unauthorized" | "invalid" | "notFound" | "failed";
-export type QuestionResult = { success: true; id: string } | { error: QuestionError };
+export const updateQuestionSchema = questionSchema.extend({ question_id: z.guid() });
+export const updateAnswerSchema = z.object({ answer_id: z.guid(), body: z.string().trim().min(2).max(8000) });
+export const forumTargetSchema = z.object({ target_type: z.enum(["question", "answer"]), target_id: z.guid() });
+export const reportSchema = forumTargetSchema.extend({ reason: z.string().trim().min(10).max(1000) });
+
+export type ForumTarget = z.infer<typeof forumTargetSchema>;
+export type QuestionError = "unauthorized" | "invalid" | "notFound" | "forbidden" | "duplicate" | "rateLimited" | "failed";
+export type QuestionResult = { success: true; id: string; questionId?: string } | { error: QuestionError };
 
 export function parseQuestionFilters(input: Record<string, unknown>) {
   const q = typeof input.q === "string" ? input.q.trim().slice(0, 80) : "";

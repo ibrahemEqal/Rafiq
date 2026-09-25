@@ -34,12 +34,12 @@ export default function AnswerForm({ questionId, page }: { questionId: string; p
   }
 
   return <form onSubmit={submit} className="space-y-4">
-    <label htmlFor="answer-body" className="block text-sm font-bold text-slate-900">{t("yourAnswer")}</label>
-    <textarea id="answer-body" name="body" rows={5} required minLength={2} maxLength={8000} disabled={busy} aria-describedby="answer-hint" className="w-full resize-y rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-50 disabled:opacity-60" />
-    <p id="answer-hint" className="text-xs text-slate-500">{t("answerHint")}</p>
+    <label htmlFor="answer-body" className="block text-base font-extrabold text-slate-900">{t("yourAnswer")}</label>
+    <textarea id="answer-body" name="body" rows={7} required minLength={2} maxLength={8000} disabled={busy} aria-describedby="answer-hint" placeholder={t("answerPlaceholder")} className="w-full resize-y rounded-2xl border border-slate-200 px-4 py-3.5 text-base leading-7 outline-none transition focus:border-violet-500 focus:ring-4 focus:ring-violet-100 disabled:opacity-60" />
+    <p id="answer-hint" className="text-xs leading-6 text-slate-500">{t("answerHint")}</p>
     {error && <p role="alert" className="text-sm text-red-700">{t(`errors.${error}`)}</p>}
     {success && <p role="status" className="text-sm text-teal-700">{t("answerSuccess")}</p>}
-    <button type="submit" disabled={busy} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-3 font-bold text-white hover:bg-slate-800 disabled:cursor-wait disabled:opacity-60">
+    <button type="submit" disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-3.5 font-extrabold text-white shadow-lg shadow-violet-200 transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-wait disabled:opacity-60">
       {busy ? <LoaderCircle size={18} className="animate-spin" /> : <Send size={18} />}{busy ? t("posting") : t("postAnswer")}
     </button>
   </form>;
