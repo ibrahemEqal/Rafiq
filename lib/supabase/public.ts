@@ -5,6 +5,8 @@ export const publicDataTags = {
   resources: "public-resources",
   books: "public-books",
   questions: "public-questions",
+  requests: "public-requests",
+  request_responses: "public-request-responses",
 } as const;
 
 function tagFor(input: RequestInfo | URL) {
