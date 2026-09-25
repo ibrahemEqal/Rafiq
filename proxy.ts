@@ -7,7 +7,7 @@ const intlMiddleware = createMiddleware(routing);
 
 function needsAuthRefresh(pathname: string) {
   const localizedPath = pathname.replace(/^\/(ar|en)(?=\/|$)/, "") || "/";
-  return ["/dashboard", "/profile", "/resources/new", "/books/new", "/questions/new"]
+  return ["/dashboard", "/profile", "/resources/new", "/books/new", "/questions/new", "/requests/new"]
     .some((path) => localizedPath === path || localizedPath.startsWith(`${path}/`));
 }
 

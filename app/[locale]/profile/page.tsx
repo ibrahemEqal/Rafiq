@@ -1,9 +1,10 @@
 import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { User, BookOpen, FileText, Download, Eye, ShieldCheck, Clock } from "lucide-react";
+import { User, BookOpen, FileText, Download, Eye, ShieldCheck, Clock, MessageCircleHeart, Plus } from "lucide-react";
 import MarkAsTakenButton from "@/components/profile/MarkAsTakenButton";
 import { getVerifiedIdentity } from "@/lib/auth/identity";
+import { Link } from "@/i18n/routing";
 
 export default async function ProfilePage() {
   const t = await getTranslations("Profile");
@@ -12,7 +13,7 @@ export default async function ProfilePage() {
   const identity = await getVerifiedIdentity(supabase);
   if (!identity) redirect("/auth/login");
 
-  const [{ data: profile }, { data: books }, { data: resources }] = await Promise.all([
+  const [{ data: profile }, { data: books }, { data: resources }, { data: requests }] = await Promise.all([
     supabase.from("profiles").select("full_name").eq("id", identity.id).single(),
     supabase
       .from("books")
@@ -26,6 +27,12 @@ export default async function ProfilePage() {
       .eq("uploader_id", identity.id)
       .order("created_at", { ascending: false })
       .limit(30),
+    supabase
+      .from("requests")
+      .select("id, title, status, created_at")
+      .eq("requester_id", identity.id)
+      .order("created_at", { ascending: false })
+      .limit(10),
   ]);
 
   return (
@@ -112,6 +119,16 @@ export default async function ProfilePage() {
           </div>
 
         </div>
+
+        <section className="rounded-3xl border border-violet-100 bg-white p-8 shadow-sm">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="flex items-center gap-3"><MessageCircleHeart size={24} className="text-violet-600" /><h2 className="text-xl font-bold text-slate-900">{t("myRequests")}</h2></div>
+            <Link href="/requests/new" className="inline-flex items-center gap-2 rounded-xl bg-violet-100 px-4 py-2 text-sm font-extrabold text-violet-700"><Plus size={16} />{t("addRequest")}</Link>
+          </div>
+          {requests?.length ? <div className="grid gap-3 sm:grid-cols-2">{requests.map(request => <Link key={request.id} href={`/requests/${request.id}`} className="group rounded-2xl border border-slate-100 bg-slate-50/60 p-4 transition hover:border-violet-200 hover:bg-violet-50/50">
+            <div className="flex items-start justify-between gap-3"><h3 className="line-clamp-2 font-bold text-slate-900 group-hover:text-violet-800">{request.title}</h3><span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-extrabold ${request.status === "open" ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"}`}>{request.status === "open" ? t("requestOpen") : t("requestFulfilled")}</span></div>
+          </Link>)}</div> : <p className="py-8 text-center text-slate-500">{t("noRequests")}</p>}
+        </section>
       </div>
     </div>
   );
