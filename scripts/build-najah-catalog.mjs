@@ -1,9 +1,17 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
+import { createCatalogPageLoader } from "./catalog-fetch.mjs";
 
 const base = "https://www.najah.edu";
 const arIndex = `${base}/ar/academic/undergraduate-programs/by-faculty/`;
-const output = resolve(process.argv[2] ?? "supabase/migrations/20260926020000_seed_najah_catalog.sql");
+const argumentsList = process.argv.slice(2);
+const outputArgument = argumentsList.find(argument => !argument.startsWith("--"));
+const output = resolve(outputArgument ?? "supabase/migrations/20260926020000_seed_najah_catalog.sql");
+const cacheDirectory = resolve(".cache/najah-catalog");
+const html = createCatalogPageLoader({
+  cacheDirectory,
+  refresh: argumentsList.includes("--refresh"),
+});
 const faculties = [
   ["كلية الطب البشري والعلوم الطبية المساندة", "Faculty of Medicine and Allied Medical Sciences", "medicine-allied-health"],
   ["كلية تكنولوجيا المعلومات والذكاء الاصطناعي", "Faculty of Information Technology and Artificial Intelligence", "it-ai"],
@@ -21,14 +29,6 @@ const decode = value => value.replace(/&#(\d+);/g, (_, n) => String.fromCodePoin
 const clean = html => decode(html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ")).replace(/[\u200e\u200f\ufeff]/g, "").replace(/\s+/g, " ").trim();
 const quote = value => `'${String(value).replaceAll("'", "''")}'`;
 
-async function html(url, tries = 3) {
-  for (let attempt = 1; attempt <= tries; attempt++) {
-    const response = await fetch(url, { headers: { "User-Agent": "Rafiq academic catalog importer" } });
-    if (response.ok) return response.text();
-    if (attempt === tries) throw new Error(`${response.status}: ${url}`);
-    await new Promise(done => setTimeout(done, attempt * 700));
-  }
-}
 function cards(source, language) {
   const out = new Map();
   const link = /<a\b[^>]*href=["']([^"']*\/academic\/undergraduate-programs\/program\/([^/]+)\/)["'][^>]*>([\s\S]*?)<\/a>/gi;
@@ -51,22 +51,22 @@ function courses(source) {
   }
   return out;
 }
-async function parallel(items, limit, worker) {
-  const out = Array(items.length); let cursor = 0;
-  await Promise.all(Array.from({ length: limit }, async () => { while (cursor < items.length) { const i = cursor++; out[i] = await worker(items[i], i); } }));
-  return out;
-}
-
-const [ar, en] = await Promise.all([html(arIndex), html(arIndex.replace("/ar/", "/en/"))]);
+console.log(`Catalog cache: ${cacheDirectory}`);
+console.log("Fetching one page at a time; interrupted runs resume from the cache.");
+const ar = await html(arIndex);
+const en = await html(arIndex.replace("/ar/", "/en/"));
 const arPrograms = cards(ar, "ar"); const enPrograms = cards(en, "en");
 console.log(`Found ${arPrograms.size} programs in the official catalog.`);
-const catalog = await parallel([...arPrograms.values()], 5, async (program, i) => {
+const catalog = [];
+let index = 0;
+for (const program of arPrograms.values()) {
   const arPlan = await html(`${program.href}study-plan/`);
-  const enPlan = await html(`${program.href.replace("/ar/", "/en/")}study-plan/`).catch(() => "");
+  const enPlan = await html(`${program.href.replace("/ar/", "/en/")}study-plan/`, { optional: true });
   const arCourses = courses(arPlan); const enCourses = courses(enPlan);
-  console.log(`[${i + 1}/${arPrograms.size}] ${program.name}: ${arCourses.size}`);
-  return { ...program, nameEn: enPrograms.get(program.slug)?.name || program.name, courses: [...arCourses].map(([code, nameAr]) => ({ code, nameAr, nameEn: enCourses.get(code) || nameAr })) };
-});
+  index += 1;
+  console.log(`[${index}/${arPrograms.size}] ${program.name}: ${arCourses.size}`);
+  catalog.push({ ...program, nameEn: enPrograms.get(program.slug)?.name || program.name, courses: [...arCourses].map(([code, nameAr]) => ({ code, nameAr, nameEn: enCourses.get(code) || nameAr })) });
+}
 
 const sql = ["-- Generated from the official An-Najah undergraduate catalog.", `-- Source: ${arIndex}`, "begin;", "insert into public.universities (name_ar,name_en,slug) values ('جامعة النجاح الوطنية','An-Najah National University','an-najah-national-university') on conflict (slug) do update set name_ar=excluded.name_ar,name_en=excluded.name_en;"];
 for (const [nameAr, nameEn, slug] of faculties) sql.push(`insert into public.colleges (university_id,name_ar,name_en,slug) select id,${quote(nameAr)},${quote(nameEn)},${quote(slug)} from public.universities where slug='an-najah-national-university' on conflict (university_id,slug) do update set name_ar=excluded.name_ar,name_en=excluded.name_en;`);
