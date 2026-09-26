@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Supabase local CLI state
 /supabase/.temp/
+
+# Resumable academic catalog downloads
+/.cache/najah-catalog/

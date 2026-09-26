@@ -1,53 +1,110 @@
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { ArrowLeft, ArrowRight, Search, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  GraduationCap,
+  Search,
+  Sparkles,
+  UsersRound,
+} from "lucide-react";
 
 export default function Hero({ locale }: { locale: string }) {
   const t = useTranslations("HomePage");
   const isRtl = locale === "ar";
   const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
+  const highlights = [t("heroOrganized"), t("heroCommunity"), t("heroAccess")];
 
   return (
-    <section className="relative pt-32 pb-40 overflow-hidden flex flex-col items-center justify-center min-h-[90vh]">
-      {/* Background Patterns (Grid + Glow) */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] -z-20 opacity-40"></div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(204,251,241,0.75),transparent_70%)] -z-10 pointer-events-none"></div>
+    <section className="relative isolate overflow-hidden bg-[#05091f] text-white">
+      <div className="absolute inset-0 -z-30 bg-[radial-gradient(circle_at_18%_12%,rgba(37,99,235,0.32),transparent_31%),radial-gradient(circle_at_82%_24%,rgba(124,58,237,0.28),transparent_30%),linear-gradient(145deg,#040718_0%,#081334_55%,#05091f_100%)]" />
+      <div className="absolute inset-0 -z-20 opacity-25 bg-[linear-gradient(rgba(255,255,255,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.055)_1px,transparent_1px)] bg-[size:54px_54px] [mask-image:linear-gradient(to_bottom,#000_20%,transparent_92%)]" />
+      <div className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-[#f6f8fc] to-transparent" />
 
-      <div className="container mx-auto px-4 text-center z-10 relative">
-        {/* Badge */}
-        <div className="animate-fade-in-up inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/95 border border-slate-200 text-slate-800 text-sm font-semibold mb-10 shadow-sm">
-          <Sparkles size={16} className="text-teal-500" />
-          <span>منصة طلاب جامعة النجاح الأولى</span>
+      <div className="mx-auto grid min-h-[calc(100svh-5rem)] max-w-7xl items-center gap-14 px-5 py-20 sm:px-8 sm:py-24 lg:grid-cols-[minmax(0,1.05fr)_minmax(420px,.95fr)] lg:gap-10 lg:px-10 lg:py-28">
+        <div className="relative z-10 flex flex-col items-start text-start">
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-white/[0.07] px-4 py-2 text-sm font-bold text-cyan-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md">
+            <Sparkles size={16} className="text-amber-300" aria-hidden="true" />
+            <span>{t("heroBadge")}</span>
+          </div>
+
+          <h1 className="max-w-3xl text-5xl font-black leading-[1.08] tracking-[-0.035em] text-white sm:text-6xl lg:text-7xl xl:text-[5rem]">
+            <span className="block">{t("heroTitlePrefix")}</span>
+            <span className="mt-2 block bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400 bg-clip-text text-transparent rtl:bg-gradient-to-l">
+              {t("heroTitleAccent")}
+            </span>
+          </h1>
+
+          <p className="mt-7 max-w-2xl text-lg font-medium leading-8 text-slate-300 sm:text-xl sm:leading-9">
+            {t("heroSubtitle")}
+          </p>
+
+          <div className="mt-10 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <Link
+              href="/resources"
+              className="group inline-flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-white px-7 py-4 text-base font-extrabold text-[#071333] shadow-[0_16px_45px_-18px_rgba(103,232,249,0.7)] transition duration-300 hover:-translate-y-1 hover:bg-cyan-50 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300"
+            >
+              <Search size={20} aria-hidden="true" />
+              <span>{t("ctaExplore")}</span>
+              <ArrowIcon size={18} className="opacity-60 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" aria-hidden="true" />
+            </Link>
+
+            <Link
+              href="/questions"
+              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.07] px-7 py-4 text-base font-extrabold text-white backdrop-blur-md transition duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white/[0.12] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-300"
+            >
+              <UsersRound size={20} aria-hidden="true" />
+              <span>{t("ctaAsk")}</span>
+            </Link>
+          </div>
+
+          <div className="mt-10 grid w-full gap-3 border-t border-white/10 pt-7 sm:grid-cols-3">
+            {highlights.map((highlight) => (
+              <div key={highlight} className="flex items-start gap-2.5 text-sm font-semibold leading-6 text-slate-300">
+                <CheckCircle2 size={17} className="mt-1 shrink-0 text-cyan-300" aria-hidden="true" />
+                <span>{highlight}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Title */}
-        <h1 className="animate-fade-in-up animation-delay-100 text-6xl md:text-7xl lg:text-[5.5rem] font-extrabold tracking-tight leading-[1.1] mb-8 max-w-5xl mx-auto text-slate-900">
-          رفيقك نحو <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-500">التفوق</span> الجامعي
-        </h1>
-        
-        {/* Subtitle */}
-        <p className="animate-fade-in-up animation-delay-200 text-xl md:text-2xl text-slate-500 max-w-3xl mx-auto mb-12 leading-relaxed font-medium">
-          {t("heroSubtitle")}
-        </p>
+        <div className="relative mx-auto w-full max-w-[580px] lg:justify-self-end">
+          <div className="absolute inset-[12%] rounded-full bg-blue-500/25 blur-[70px]" />
+          <div className="absolute -inset-5 rounded-[3.5rem] border border-white/[0.06]" />
+          <div className="relative overflow-hidden rounded-[3rem] border border-white/10 bg-white/[0.045] p-6 shadow-[0_35px_100px_-40px_rgba(37,99,235,0.7)] backdrop-blur-sm sm:p-9">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_12%,rgba(250,204,21,0.09),transparent_25%),radial-gradient(circle_at_15%_80%,rgba(34,211,238,0.13),transparent_30%)]" />
+            <Image
+              src="/brand/rafeeq-logo.webp"
+              alt={t("logoAlt")}
+              width={620}
+              height={634}
+              sizes="(max-width: 640px) 82vw, (max-width: 1024px) 520px, 560px"
+              preload
+              className="relative z-10 h-auto w-full drop-shadow-[0_30px_35px_rgba(0,0,0,0.32)]"
+            />
+          </div>
 
-        {/* CTA Buttons */}
-        <div className="animate-fade-in-up animation-delay-300 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link
-            href="/resources"
-            className="group relative flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 bg-slate-900 text-white text-lg font-bold rounded-full overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-slate-900/20 hover:-translate-y-1 transition-all duration-300"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <Search size={20} className="relative z-10 opacity-90" />
-            <span className="relative z-10">{t("ctaExplore")}</span>
-          </Link>
-          
-          <Link
-            href="/questions"
-            className="group flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 bg-white text-slate-900 text-lg font-bold rounded-full shadow-sm border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all duration-300"
-          >
-            <span>{t("ctaAsk")}</span>
-            <ArrowIcon size={20} className="opacity-60 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform" />
-          </Link>
+          <div className="absolute -end-3 top-[12%] hidden items-center gap-3 rounded-2xl border border-white/15 bg-[#0b1739]/90 px-4 py-3 text-start shadow-2xl backdrop-blur-xl sm:flex lg:-end-8">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-amber-300 text-[#071333]">
+              <GraduationCap size={21} aria-hidden="true" />
+            </span>
+            <span>
+              <span className="block text-xs font-bold text-slate-400">{t("heroCardCatalogLabel")}</span>
+              <span className="mt-0.5 block text-sm font-black text-white">{t("heroCardCatalog")}</span>
+            </span>
+          </div>
+
+          <div className="absolute -start-3 bottom-[10%] hidden items-center gap-3 rounded-2xl border border-white/15 bg-white/95 px-4 py-3 text-start text-[#071333] shadow-2xl backdrop-blur-xl sm:flex lg:-start-8">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 text-white">
+              <UsersRound size={20} aria-hidden="true" />
+            </span>
+            <span>
+              <span className="block text-xs font-bold text-slate-500">{t("heroCardCommunityLabel")}</span>
+              <span className="mt-0.5 block text-sm font-black">{t("heroCardCommunity")}</span>
+            </span>
+          </div>
         </div>
       </div>
     </section>

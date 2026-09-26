@@ -73,8 +73,9 @@ a student can publish a general/course question and another account can answer;
 both authors are correct in the database; refresh preserves posts and Arabic/
 English links stay localized. Then retest existing uploads and admin approval.
 
-This is a basic forum, not a complete moderation system. There is no answer
-acceptance/voting, edit/delete UI, reports, durable rate limiting or database text
-CHECK constraints added here. The button's pending state is UX, not spam defense.
-Existing owner/admin update/delete RLS remains unchanged. Add abuse controls and
-moderation before opening unrestricted public registration at scale.
+The follow-up moderation release adds owner/admin edit and delete controls,
+question/answer reporting, database text checks, durable posting/report limits
+and an admin report queue. See `FORUM_MODERATION.md` for the exact limits and
+deployment checks. This is still not a complete trust system: there is no answer
+acceptance/voting, reputation, CAPTCHA, account suspension or automated abuse
+detection. Add those controls before unrestricted registration at large scale.
