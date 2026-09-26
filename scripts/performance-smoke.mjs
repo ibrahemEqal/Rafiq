@@ -17,6 +17,7 @@ const studentId = 'afc00000-0000-4000-8000-000000000002';
 const resourceId = 'afc00000-0000-4000-8000-000000000003';
 const courseId = 'afc00000-0000-4000-8000-000000000004';
 const collegeId = 'afc00000-0000-4000-8000-000000000005';
+const majorId = 'afc00000-0000-4000-8000-000000000008';
 const calls = [];
 const questionId = 'afc00000-0000-4000-8000-000000000006';
 const answerId = 'afc00000-0000-4000-8000-000000000007';
@@ -49,8 +50,9 @@ const mock = createServer(async (req, res) => {
   const singleton = data => req.headers.accept?.includes('vnd.pgrst.object') ? data[0] : data;
   if (url.pathname === '/auth/v1/user') return reply({ id, aud: 'authenticated', role: 'authenticated', email: `${id}@example.invalid`, app_metadata: {}, user_metadata: {}, created_at: '2026-09-15T12:00:00Z' });
   if (url.pathname === '/rest/v1/profiles') return reply(singleton([{ id: url.searchParams.get('id')?.replace('eq.', '') || studentId, role: id === adminId ? 'admin' : 'student', full_name: 'QA Student', username: 'qa_student' }]));
-  if (url.pathname === '/rest/v1/courses') return reply([{ id: courseId, name_ar: 'الخوارزميات', name_en: 'Algorithms' }]);
-  if (url.pathname === '/rest/v1/colleges') return reply([{ id: collegeId, name_ar: 'الهندسة', name_en: 'Engineering' }]);
+  if (url.pathname === '/rest/v1/courses') return reply(singleton([{ id: courseId, major_id: majorId, code: '10671212', slug: 'algorithms', name_ar: 'الخوارزميات', name_en: 'Algorithms' }]));
+  if (url.pathname === '/rest/v1/majors') return reply(singleton([{ id: majorId, college_id: collegeId, slug: 'computer-science', name_ar: 'علم الحاسوب', name_en: 'Computer Science' }]));
+  if (url.pathname === '/rest/v1/colleges') return reply(singleton([{ id: collegeId, slug: 'engineering', name_ar: 'الهندسة', name_en: 'Engineering' }]));
   if (url.pathname === '/rest/v1/books') return reply([]);
   if (['/rest/v1/questions', '/rest/v1/answers'].includes(url.pathname)) {
     const table = url.pathname.endsWith('/questions') ? questions : answers;
@@ -192,7 +194,7 @@ try {
   assert.ok(anonymousAccount.body.includes('"account":null'));
   for (const prefix of ['', '/en']) {
     const home = await visit(prefix || '/'); assert.equal(home.status, 200);
-    const resources = await visit(`${prefix}/resources`); assert.equal(resources.status, 200); assert.ok(resources.body.includes('QA resource &lt;script&gt;'));
+    const resources = await visit(`${prefix}/resources?college=${collegeId}&major=${majorId}&course=${courseId}`); assert.equal(resources.status, 200); assert.ok(resources.body.includes('QA resource &lt;script&gt;'));
     const details = await visit(`${prefix}/resources/${resourceId}`); assert.equal(details.status, 200);
     if (!baseline) {
       const resourceCall = calls.filter(c => c.path === '/rest/v1/resources' && c.select?.includes('download_count')).at(-1);

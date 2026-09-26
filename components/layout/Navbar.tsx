@@ -1,6 +1,6 @@
+import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/routing";
-import { Library, Sparkles } from "lucide-react";
 import NavbarAccountClient from "./NavbarAccountClient";
 
 export default async function Navbar({ locale }: { locale: string }) {
@@ -11,14 +11,18 @@ export default async function Navbar({ locale }: { locale: string }) {
     <header className="sticky top-0 z-50 w-full bg-white/95 border-b border-slate-200/70">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         
-        {/* الشعار */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-slate-900 text-white shadow-[0_0_20px_rgba(15,23,42,0.1)] group-hover:shadow-[0_0_25px_rgba(13,148,136,0.3)] transition-all duration-500">
-            <Sparkles size={16} className="absolute -top-1 -end-1 text-teal-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <Library size={20} className="group-hover:text-teal-400 transition-colors duration-500" />
-          </div>
+          <Image
+            src="/brand/rafeeq-logo.webp"
+            alt=""
+            width={44}
+            height={45}
+            sizes="44px"
+            loading="eager"
+            className="size-11 rounded-full shadow-[0_8px_22px_-10px_rgba(37,99,235,0.65)] transition duration-300 group-hover:scale-105"
+          />
           <span className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            Rafeeq<span className="text-teal-600">.</span>
+            Rafeeq<span className="text-blue-600">.</span>
           </span>
         </Link>
 
