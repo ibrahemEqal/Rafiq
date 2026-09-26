@@ -13,7 +13,7 @@ export default async function Navbar({ locale }: { locale: string }) {
         
         <Link href="/" className="flex items-center gap-3 group">
           <Image
-            src="/brand/rafeeq-logo.png"
+            src="/brand/rafeeq-logo.webp"
             alt=""
             width={44}
             height={45}

@@ -8,15 +8,15 @@ const [hero, features, navbar, arabic, english, logo] = await Promise.all([
   readFile(new URL("../components/layout/Navbar.tsx", import.meta.url), "utf8"),
   readFile(new URL("../messages/ar.json", import.meta.url), "utf8").then(JSON.parse),
   readFile(new URL("../messages/en.json", import.meta.url), "utf8").then(JSON.parse),
-  stat(new URL("../public/brand/rafeeq-logo.png", import.meta.url)),
+  stat(new URL("../public/brand/rafeeq-logo.webp", import.meta.url)),
 ]);
 
 test("the real Rafeeq logo is rendered with Next Image above the fold", () => {
   assert.match(hero, /from "next\/image"/);
-  assert.match(hero, /src="\/brand\/rafeeq-logo\.png"/);
+  assert.match(hero, /src="\/brand\/rafeeq-logo\.webp"/);
   assert.match(hero, /preload/);
-  assert.match(navbar, /src="\/brand\/rafeeq-logo\.png"/);
-  assert.ok(logo.size > 0);
+  assert.match(navbar, /src="\/brand\/rafeeq-logo\.webp"/);
+  assert.ok(logo.size > 0 && logo.size < 100_000);
 });
 
 test("the branded home page remains server-rendered and links to every core space", () => {

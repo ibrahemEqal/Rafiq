@@ -12,7 +12,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-between gap-6 md:flex-row">
         
         <div className="flex items-center gap-3 opacity-90 transition-opacity hover:opacity-100">
-          <Image src="/brand/rafeeq-logo.png" alt="" width={38} height={39} sizes="38px" className="size-10 rounded-full" />
+          <Image src="/brand/rafeeq-logo.webp" alt="" width={38} height={39} sizes="38px" className="size-10 rounded-full" />
           <span className="text-xl font-black text-slate-800">Rafeeq</span>
         </div>
 

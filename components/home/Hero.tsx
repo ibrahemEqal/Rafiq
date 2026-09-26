@@ -76,7 +76,7 @@ export default function Hero({ locale }: { locale: string }) {
           <div className="relative overflow-hidden rounded-[3rem] border border-white/10 bg-white/[0.045] p-6 shadow-[0_35px_100px_-40px_rgba(37,99,235,0.7)] backdrop-blur-sm sm:p-9">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_12%,rgba(250,204,21,0.09),transparent_25%),radial-gradient(circle_at_15%_80%,rgba(34,211,238,0.13),transparent_30%)]" />
             <Image
-              src="/brand/rafeeq-logo.png"
+              src="/brand/rafeeq-logo.webp"
               alt={t("logoAlt")}
               width={620}
               height={634}

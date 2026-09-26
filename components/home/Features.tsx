@@ -110,7 +110,7 @@ export default function Features({ locale }: { locale: string }) {
         <div className="relative mt-20 overflow-hidden rounded-[2.5rem] bg-[#05091f] px-7 py-12 text-white shadow-[0_30px_90px_-45px_rgba(37,99,235,0.65)] sm:px-12 sm:py-14 lg:px-16">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_20%,rgba(34,211,238,0.2),transparent_28%),radial-gradient(circle_at_88%_80%,rgba(124,58,237,0.26),transparent_34%)]" />
           <Image
-            src="/brand/rafeeq-logo.png"
+            src="/brand/rafeeq-logo.webp"
             alt=""
             width={250}
             height={256}
