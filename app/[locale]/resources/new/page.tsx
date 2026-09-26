@@ -12,7 +12,7 @@ export default async function NewResourcePage() {
   const identity = await getVerifiedIdentity(supabase);
   if (!identity) return redirect({ href: "/auth/login", locale });
 
-  const { colleges, courses } = await getUploadCatalog();
+  const { colleges } = await getUploadCatalog();
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
@@ -24,7 +24,7 @@ export default async function NewResourcePage() {
           </div>
           
           <ClientMessages namespace="Resources">
-            <UploadForm colleges={colleges} courses={courses} userId={identity.id} />
+            <UploadForm colleges={colleges} userId={identity.id} />
           </ClientMessages>
         </div>
       </div>
