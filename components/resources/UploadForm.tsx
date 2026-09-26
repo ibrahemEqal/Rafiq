@@ -15,9 +15,10 @@ import { UploadCloud, CheckCircle2 } from "lucide-react";
 type ResourceOption = {
   id: string;
   name_ar: string;
+  name_en: string;
 };
 
-export default function UploadForm({ colleges, courses, userId }: { colleges: ResourceOption[]; courses: ResourceOption[]; userId: string }) {
+export default function UploadForm({ colleges, userId }: { colleges: ResourceOption[]; userId: string }) {
   const t = useTranslations("Resources");
   const locale = useLocale();
   const router = useRouter();
@@ -26,8 +27,27 @@ export default function UploadForm({ colleges, courses, userId }: { colleges: Re
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [majors, setMajors] = useState<ResourceOption[]>([]);
+  const [courses, setCourses] = useState<(ResourceOption & { code: string })[]>([]);
+  const [catalogLoading, setCatalogLoading] = useState(false);
 
   const supabase = createClient();
+  const optionName = (option: ResourceOption) => locale === "ar" ? option.name_ar : option.name_en;
+  const loadCatalog = async (kind: "college" | "major", value: string) => {
+    if (!value) { if (kind === "college") setMajors([]); setCourses([]); return; }
+    setCatalogLoading(true);
+    setFormError(null);
+    try {
+      const key = kind === "college" ? "college_id" : "major_id";
+      const response = await fetch(`/api/catalog?${key}=${encodeURIComponent(value)}`);
+      if (!response.ok) throw new Error();
+      const payload = await response.json();
+      if (kind === "college") { setMajors(payload.majors ?? []); setCourses([]); }
+      else setCourses(payload.courses ?? []);
+    } catch {
+      setFormError(locale === "ar" ? "تعذّر تحميل الدليل الأكاديمي." : "The academic catalog could not be loaded.");
+    } finally { setCatalogLoading(false); }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -109,19 +129,26 @@ export default function UploadForm({ colleges, courses, userId }: { colleges: Re
         <input type="text" name="title" required minLength={3} maxLength={160} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-2">{t("selectCollege")}</label>
-          <select name="college_id" required className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none bg-white">
+          <select name="college_id" required onChange={(event) => loadCatalog("college", event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none bg-white">
             <option value="">...</option>
-            {colleges.map(c => <option key={c.id} value={c.id}>{c.name_ar}</option>)}
+            {colleges.map(c => <option key={c.id} value={c.id}>{optionName(c)}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">{t("selectMajor")}</label>
+          <select name="major_id" required disabled={!majors.length || catalogLoading} onChange={(event) => loadCatalog("major", event.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none bg-white disabled:bg-slate-100">
+            <option value="">...</option>
+            {majors.map(major => <option key={major.id} value={major.id}>{optionName(major)}</option>)}
           </select>
         </div>
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-2">{t("selectCourse")}</label>
-          <select name="course_id" required className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none bg-white">
+          <select name="course_id" required disabled={!courses.length || catalogLoading} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none bg-white disabled:bg-slate-100">
             <option value="">...</option>
-            {courses.map(c => <option key={c.id} value={c.id}>{c.name_ar}</option>)}
+            {courses.map(c => <option key={c.id} value={c.id}>{c.code} — {optionName(c)}</option>)}
           </select>
         </div>
       </div>
