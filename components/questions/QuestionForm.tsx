@@ -6,8 +6,10 @@ import { useRouter } from "@/i18n/routing";
 import { createQuestion } from "@/lib/actions/questions";
 import type { QuestionError } from "@/lib/questions/validation";
 import { Send, LoaderCircle } from "lucide-react";
+import CoursePicker from "@/components/catalog/CoursePicker";
+import type { CatalogOption } from "@/lib/catalog/types";
 
-export default function QuestionForm({ courses }: { courses: { id: string; name_ar: string; name_en: string }[] }) {
+export default function QuestionForm({ colleges }: { colleges: CatalogOption[] }) {
   const t = useTranslations("Questions");
   const locale = useLocale();
   const router = useRouter();
@@ -32,11 +34,7 @@ export default function QuestionForm({ courses }: { courses: { id: string; name_
   return <form onSubmit={submit} className="space-y-6">
     <div><label htmlFor="question-title" className="mb-2 block text-sm font-bold">{t("formTitle")}</label>
       <input id="question-title" name="title" required minLength={5} maxLength={160} disabled={busy || submitted} aria-describedby="question-hint" className={fieldStyle} /></div>
-    <div><label htmlFor="question-course" className="mb-2 block text-sm font-bold">{t("course")}</label>
-      <select id="question-course" name="course_id" disabled={busy || submitted} className={fieldStyle}>
-        <option value="">{t("general")}</option>
-        {courses.map(course => <option key={course.id} value={course.id}>{locale === "ar" ? course.name_ar : course.name_en}</option>)}
-      </select></div>
+    <CoursePicker colleges={colleges} locale={locale} label={t("course")} emptyLabel={t("general")} disabled={busy || submitted} />
     <div><label htmlFor="question-body" className="mb-2 block text-sm font-bold">{t("formBody")}</label>
       <textarea id="question-body" name="body" rows={8} required minLength={10} maxLength={8000} disabled={busy || submitted} aria-describedby="question-hint" className={`${fieldStyle} resize-y`} />
       <p id="question-hint" className="mt-2 text-xs leading-6 text-slate-500">{t("questionHint")}</p></div>

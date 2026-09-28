@@ -3,7 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link, redirect } from "@/i18n/routing";
 import { createClient } from "@/lib/supabase/server";
-import { getCourses } from "@/lib/data/catalog";
+import { getColleges, getCourseSelection } from "@/lib/data/catalog";
 import ClientMessages from "@/components/shared/ClientMessages";
 import QuestionEditForm from "@/components/questions/QuestionEditForm";
 
@@ -13,16 +13,17 @@ export default async function EditQuestionPage({ params }: { params: Promise<{ i
   const { data: { user }, error: authError } = await client.auth.getUser();
   if (authError || !user) return redirect({ href: "/auth/login", locale });
 
-  const [{ data: question, error }, { data: profile }, courses] = await Promise.all([
+  const [{ data: question, error }, { data: profile }, colleges] = await Promise.all([
     client.from("questions").select("id, author_id, title, body, course_id").eq("id", route.id).maybeSingle(),
     client.from("profiles").select("role").eq("id", user.id).maybeSingle(),
-    getCourses(),
+    getColleges(),
   ]);
   if (error) throw new Error("Question unavailable");
   if (!question || (question.author_id !== user.id && profile?.role !== "admin")) notFound();
+  const initialCourse = await getCourseSelection(question.course_id);
 
   return <ClientMessages namespace="Questions"><section className="min-h-screen bg-slate-50 px-4 py-10"><div className="mx-auto max-w-3xl space-y-6">
     <Link href={`/questions/${question.id}`} className="text-sm font-bold text-teal-700">{t("backToQuestion")}</Link>
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"><h1 className="mb-6 text-2xl font-extrabold text-slate-900">{t("editQuestion")}</h1><QuestionEditForm question={question} courses={courses} /></div>
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"><h1 className="mb-6 text-2xl font-extrabold text-slate-900">{t("editQuestion")}</h1><QuestionEditForm question={question} colleges={colleges} initialCourse={initialCourse} /></div>
   </div></section></ClientMessages>;
 }

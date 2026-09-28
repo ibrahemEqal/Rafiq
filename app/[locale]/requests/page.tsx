@@ -2,7 +2,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { BookOpen, CheckCircle2, Clock3, FileStack, HandHeart, MessageCircleHeart, Plus, Search, Sparkles, User, WandSparkles } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { createPublicClient } from "@/lib/supabase/public";
-import { getCourses } from "@/lib/data/catalog";
+import { getColleges, getCourseSelection, getEquivalentCourseIds } from "@/lib/data/catalog";
+import CoursePicker from "@/components/catalog/CoursePicker";
 import { oneRelation } from "@/lib/data/relations";
 import { parseRequestFilters } from "@/lib/requests/validation";
 
@@ -22,7 +23,8 @@ function responseCount(value: unknown) {
 
 export default async function RequestsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const filtersPromise = searchParams.then(parseRequestFilters);
-  const requestsPromise = filtersPromise.then(filters => {
+  const selectionPromise = filtersPromise.then(filters => getCourseSelection(filters.course));
+  const requestsPromise = filtersPromise.then(async filters => {
     const client = createPublicClient();
     let query = client.from("requests").select(`
       id, title, description, type, status, created_at,
@@ -33,13 +35,13 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
     if (filters.q) query = query.textSearch("search_vector", filters.q, { config: "simple", type: "websearch" });
     if (filters.type) query = query.eq("type", filters.type);
     if (filters.status) query = query.eq("status", filters.status);
-    if (filters.course) query = query.eq("course_id", filters.course);
+    if (filters.course) query = query.in("course_id", await getEquivalentCourseIds(filters.course));
     return query.order("created_at", { ascending: false }).order("id", { ascending: false })
       .range((filters.page - 1) * PAGE_SIZE, filters.page * PAGE_SIZE);
   });
 
-  const [t, locale, filters, courses, result] = await Promise.all([
-    getTranslations("Requests"), getLocale(), filtersPromise, getCourses(), requestsPromise,
+  const [t, locale, filters, colleges, initialCourse, result] = await Promise.all([
+    getTranslations("Requests"), getLocale(), filtersPromise, getColleges(), selectionPromise, requestsPromise,
   ]);
   const rows = (result.data ?? []).slice(0, PAGE_SIZE);
   const more = (result.data?.length ?? 0) > PAGE_SIZE;
@@ -81,15 +83,13 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
     </section>
 
     <div className="mx-auto max-w-6xl space-y-7 px-4 py-8 sm:py-12">
-      <form method="get" className="relative -mt-16 grid gap-3 rounded-3xl border border-white/80 bg-white/95 p-4 shadow-xl shadow-violet-200/30 backdrop-blur sm:grid-cols-[1fr_auto_auto] sm:p-5">
+      <form method="get" className="relative -mt-16 grid gap-4 rounded-3xl border border-white/80 bg-white/95 p-4 shadow-xl shadow-violet-200/30 backdrop-blur sm:grid-cols-[minmax(0,1fr)_auto] sm:p-5">
         <label htmlFor="request-search" className="sr-only">{t("search")}</label>
         <div className="relative"><Search size={19} className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input id="request-search" type="search" name="q" defaultValue={filters.q} maxLength={80} placeholder={t("searchPlaceholder")} className="w-full rounded-2xl border border-slate-200 py-3.5 pe-4 ps-12 outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100" />
         </div>
-        <select name="course" defaultValue={filters.course ?? ""} aria-label={t("course")} className="min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 outline-none focus:border-violet-400">
-          <option value="">{t("allCourses")}</option>{courses.map(course => <option key={course.id} value={course.id}>{locale === "ar" ? course.name_ar : course.name_en}</option>)}
-        </select>
         <button type="submit" className="rounded-2xl bg-violet-700 px-6 py-3.5 font-extrabold text-white transition hover:bg-violet-800">{t("search")}</button>
+        <div className="sm:col-span-2"><CoursePicker key={filters.course ?? "all"} colleges={colleges} locale={locale} name="course" label={t("course")} emptyLabel={t("allCourses")} initial={initialCourse} /></div>
         {filters.type && <input type="hidden" name="type" value={filters.type} />}
         {filters.status && <input type="hidden" name="status" value={filters.status} />}
       </form>

@@ -81,6 +81,11 @@
     }
   },
   "Resources": {
+    "universityRequirements": "University requirements",
+    "universityRequirementsHint": "One shared space for all colleges and majors: English, Arabic, Palestinian Studies and the other university requirements, without repetition.",
+    "requirementVariants": "Choose the course code in your study plan. Codes may differ between plans, so files for different codes stay separate.",
+    "sharedFilesHint": "Approved resources from all majors studying this course code at the university appear here, without duplicate files.",
+    "noCatalogCourses": "This course is not available in the imported catalog yet.",
     "title": "Educational Resources",
     "libraryBadge": "Rafiq Academic Library",
     "catalogSubtitle": "Choose your college, major, and course to find exactly what you need without the clutter.",
