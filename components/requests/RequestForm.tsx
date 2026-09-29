@@ -6,8 +6,10 @@ import { HandHeart, LoaderCircle, Send } from "lucide-react";
 import { useRouter } from "@/i18n/routing";
 import { createRequest } from "@/lib/actions/requests";
 import type { RequestActionError } from "@/lib/requests/validation";
+import CoursePicker from "@/components/catalog/CoursePicker";
+import type { CatalogOption } from "@/lib/catalog/types";
 
-export default function RequestForm({ courses }: { courses: { id: string; name_ar: string; name_en: string }[] }) {
+export default function RequestForm({ colleges }: { colleges: CatalogOption[] }) {
   const t = useTranslations("Requests");
   const locale = useLocale();
   const router = useRouter();
@@ -56,13 +58,7 @@ export default function RequestForm({ courses }: { courses: { id: string; name_a
       <input id="request-title" name="title" required minLength={5} maxLength={140} disabled={busy} placeholder={t("titlePlaceholder")} className={field} />
     </div>
 
-    <div>
-      <label htmlFor="request-course" className="mb-2 block text-sm font-extrabold text-slate-800">{t("course")}</label>
-      <select id="request-course" name="course_id" disabled={busy} className={field}>
-        <option value="">{t("general")}</option>
-        {courses.map(course => <option key={course.id} value={course.id}>{locale === "ar" ? course.name_ar : course.name_en}</option>)}
-      </select>
-    </div>
+    <CoursePicker colleges={colleges} locale={locale} label={t("course")} emptyLabel={t("general")} disabled={busy} />
 
     <div>
       <label htmlFor="request-description" className="mb-2 block text-sm font-extrabold text-slate-800">{t("formDescription")}</label>

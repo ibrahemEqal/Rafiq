@@ -3,14 +3,14 @@ import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { Link, redirect } from "@/i18n/routing";
 import { createClient } from "@/lib/supabase/server";
 import { getVerifiedIdentity } from "@/lib/auth/identity";
-import { getCourses } from "@/lib/data/catalog";
+import { getColleges } from "@/lib/data/catalog";
 import ClientMessages from "@/components/shared/ClientMessages";
 import RequestForm from "@/components/requests/RequestForm";
 
 export default async function NewRequestPage() {
   const [t, locale, client] = await Promise.all([getTranslations("Requests"), getLocale(), createClient()]);
   if (!await getVerifiedIdentity(client)) return redirect({ href: "/auth/login", locale });
-  const courses = await getCourses();
+  const colleges = await getColleges();
   const BackIcon = locale === "ar" ? ArrowRight : ArrowLeft;
 
   return <main className="min-h-screen bg-[#f8f7ff] px-4 py-10 sm:py-14">
@@ -23,7 +23,7 @@ export default async function NewRequestPage() {
             <h1 className="mt-4 text-3xl font-black">{t("newRequest")}</h1><p className="mt-3 max-w-xl text-sm leading-7 text-slate-300">{t("newSubtitle")}</p>
           </div>
         </header>
-        <div className="p-6 sm:p-10"><ClientMessages namespace="Requests"><RequestForm courses={courses} /></ClientMessages></div>
+        <div className="p-6 sm:p-10"><ClientMessages namespace="Requests"><RequestForm colleges={colleges} /></ClientMessages></div>
       </section>
     </div>
   </main>;
