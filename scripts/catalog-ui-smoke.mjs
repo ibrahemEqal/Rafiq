@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 export async function runCatalogUiSmoke(base, ids) {
   const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
   const bundledBrowser = process.env.CHROMIUM_MODULE ? (await import(process.env.CHROMIUM_MODULE)).default : null;
-  const browser = await chromium.launch({ headless: true, ...(bundledBrowser ? { executablePath: await bundledBrowser.executablePath(), args: bundledBrowser.args } : {}) });
+  const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH || (bundledBrowser ? await bundledBrowser.executablePath() : undefined);
+  const browser = await chromium.launch({ headless: true, ...(executablePath ? { executablePath, args: bundledBrowser?.args ?? [] } : {}) });
   try {
     const context = await browser.newContext();
     const page = await context.newPage();
@@ -20,6 +21,14 @@ export async function runCatalogUiSmoke(base, ids) {
       assert.equal(await page.locator('select option').count(), 3, 'No thousand-course dropdown on initial render');
       assert.equal(visitedApi.length, 0, 'No catalog HTTP calls until a category/parent is chosen');
     }
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.goto(base + '/ar/books', { waitUntil: 'networkidle' });
+    assert.equal(await page.locator('article').count(), 2, 'Book and printed-slide listings render as complete market cards');
+    assert.equal(await page.getByRole('link', { name: 'تواصل واتساب', exact: true }).count(), 2);
+    await page.getByRole('option', { name: 'كل الكليات', exact: true }).waitFor({ state: 'attached' });
+    assert.ok(await page.getByText('اعثر على نسختك التالية', { exact: true }).isVisible());
+    if (process.env.RAFIQ_BOOKS_SCREENSHOT_PATH) await page.screenshot({ path: process.env.RAFIQ_BOOKS_SCREENSHOT_PATH, fullPage: true });
+    await page.goto(base + '/en/requests', { waitUntil: 'networkidle' });
     await page.getByLabel('Course category', { exact: true }).selectOption('major');
     await page.getByLabel('College', { exact: true }).selectOption(ids.collegeId);
     await page.getByRole('option', { name: 'Computer Science', exact: true }).waitFor({ state: 'attached' });
@@ -48,7 +57,7 @@ export async function runCatalogUiSmoke(base, ids) {
     assert.equal(await page.getByRole('option', { name: /English Language II/ }).count(), 0, 'Aborted response must not overwrite the latest selection');
     await page.unroute('**/api/catalog?requirement=english-102');
     await page.getByLabel('University requirement', { exact: true }).selectOption('english-102');
-    await page.getByRole('option', { name: '11000323 — English Language II', exact: true }).waitFor({ state: 'attached' });
+    await page.getByRole('option', { name: '11000323 — English Language II — Faculty of Humanities and Educational Sciences', exact: true }).waitFor({ state: 'attached' });
     assert.equal(await page.locator('select[name="course"] option').count(), 3, 'Different course codes stay distinguishable');
 
     // Explicit retry without losing other form fields.

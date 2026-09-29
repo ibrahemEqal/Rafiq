@@ -3,11 +3,16 @@ import { createClient } from "@supabase/supabase-js";
 import { cache } from "react";
 import { z } from "zod";
 import { readCatalogPages } from "@/lib/catalog/pagination";
-import { NAJAH_SLUG, getUniversityRequirement, requirementForCode, universityRequirementCodes } from "@/lib/catalog/university-requirements";
+import { collapseUniversityCourseOptions, NAJAH_SLUG, getUniversityRequirement, requirementForCode, universityRequirementCodes } from "@/lib/catalog/university-requirements";
 import type { CatalogOption, CourseOption, CourseSelection } from "@/lib/catalog/types";
 
 export type CatalogName = CatalogOption;
 const courseColumns = "id, name_ar, name_en, slug, code, major_id, college_id, university_id, university_slug";
+const universityCourseColumns = `${courseColumns}, college_names_ar, college_names_en`;
+export const hiddenLegacyCollegeIds = [
+  "00000000-0000-0000-0000-000000000101",
+  "00000000-0000-0000-0000-000000000102",
+] as const;
 
 function client() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
@@ -17,12 +22,14 @@ function client() {
 }
 
 export async function getColleges() {
-  const { data, error } = await client().from("colleges").select("id, name_ar, name_en, slug").order("name_ar");
+  const { data, error } = await client().from("colleges").select("id, name_ar, name_en, slug")
+    .not("id", "in", `(${hiddenLegacyCollegeIds.join(",")})`).order("name_ar");
   if (error) throw new Error("College catalog unavailable");
   return (data ?? []) as CatalogName[];
 }
 
 export async function getMajors(collegeId: string) {
+  if (hiddenLegacyCollegeIds.includes(collegeId as (typeof hiddenLegacyCollegeIds)[number])) return [];
   const { data, error } = await client().from("majors").select("id, name_ar, name_en, slug").eq("college_id", collegeId).order("name_ar");
   if (error) throw new Error("Major catalog unavailable");
   return (data ?? []) as CatalogName[];
@@ -39,10 +46,10 @@ export async function getCourses(majorId: string) {
 export async function getUniversityCourses(requirementKey?: string) {
   const requirement = getUniversityRequirement(requirementKey);
   if (requirementKey && !requirement) throw new Error("Unknown university requirement");
-  const { data, error } = await client().from("course_catalog_options").select(courseColumns)
+  const { data, error } = await client().from("course_catalog_options").select(universityCourseColumns)
     .eq("university_slug", NAJAH_SLUG).in("code", requirement?.codes ?? universityRequirementCodes).order("code");
   if (error) throw new Error("University catalog unavailable");
-  return (data ?? []) as CourseOption[];
+  return collapseUniversityCourseOptions((data ?? []) as CourseOption[]);
 }
 
 export const getCourseSelection = cache(async (courseId?: string | null): Promise<CourseSelection | null> => {
@@ -53,7 +60,11 @@ export const getCourseSelection = cache(async (courseId?: string | null): Promis
   if (error) throw new Error("Course unavailable");
   if (!data) return null;
   return {
-    course: { id: data.id, code: data.code, name_ar: data.name_ar, name_en: data.name_en, slug: data.slug, major_id: data.major_id, college_id: data.college_id, university_id: data.university_id, university_slug: data.university_slug },
+    course: {
+      id: data.id, code: data.code, name_ar: data.name_ar, name_en: data.name_en, slug: data.slug,
+      major_id: data.major_id, college_id: data.college_id, university_id: data.university_id,
+      university_slug: data.university_slug, college_names_ar: data.college_name_ar, college_names_en: data.college_name_en,
+    },
     major: { id: data.major_id, name_ar: data.major_name_ar, name_en: data.major_name_en, slug: data.major_slug },
     college: { id: data.college_id, name_ar: data.college_name_ar, name_en: data.college_name_en, slug: data.college_slug },
     requirement: requirementForCode(data.code, data.university_slug)?.key ?? null,
@@ -64,8 +75,10 @@ export async function getEquivalentCourseIds(courseId: string) {
   const selection = await getCourseSelection(courseId);
   if (!selection) return [courseId]; // A missing valid UUID must match nothing, not all records.
   const catalog = client();
+  const requirement = requirementForCode(selection.course.code, selection.course.university_slug);
+  const equivalentCodes = requirement?.mode === "single" ? requirement.codes : [selection.course.code];
   const rows = await readCatalogPages<{ id: string }>((from, to) => catalog.from("course_catalog_entries").select("id")
-    .eq("university_id", selection.course.university_id).eq("code", selection.course.code).order("id").range(from, to));
+    .eq("university_id", selection.course.university_id).in("code", equivalentCodes).order("id").range(from, to));
   return rows.length ? rows.map(item => item.id) : [courseId];
 }
 

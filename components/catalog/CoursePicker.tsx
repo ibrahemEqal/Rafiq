@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import type { CatalogOption, CourseOption, CourseSelection } from "@/lib/catalog/types";
-import { universityRequirements } from "@/lib/catalog/university-requirements";
+import { requirementForCode, universityRequirements } from "@/lib/catalog/university-requirements";
 
 const labels = {
   ar: {
@@ -10,7 +10,7 @@ const labels = {
     college: "الكلية", major: "التخصص", requirement: "متطلب الجامعة", course: "المساق ورمزه",
     choose: "اختر…", loading: "جارٍ تحميل المساقات…", error: "تعذّر تحميل القائمة. حاول مرة أخرى.",
     retry: "إعادة المحاولة", empty: "لا توجد مساقات متاحة لهذا الاختيار.",
-    variants: "اختر الرمز الموجود في خطتك؛ الرموز المختلفة تبقى منفصلة.",
+    variants: "اختر الخيار المطابق لخطة كليتك؛ إنجليزي ١٠٢ مفصول حسب الكلية.",
     commonHint: "متطلبات الجامعة في قسم مستقل، وليست مكررة داخل التخصصات.",
   },
   en: {
@@ -18,7 +18,7 @@ const labels = {
     college: "College", major: "Major", requirement: "University requirement", course: "Course and code",
     choose: "Choose…", loading: "Loading courses…", error: "Could not load this list. Please try again.",
     retry: "Retry", empty: "No courses are available for this selection.",
-    variants: "Choose the code in your study plan. Different codes remain separate.",
+    variants: "Choose the option for your faculty. English 102 is separated by faculty.",
     commonHint: "University requirements have their own section, without repetition across majors.",
   },
 };
@@ -76,12 +76,18 @@ export default function CoursePicker({ colleges, locale, label, emptyLabel, name
   const courses = useCatalog(courseUrl);
   const majorOptions = majors.payload?.majors ?? (initial && collegeId === initial.college.id ? [initial.major] : []);
   let courseOptions = courses.payload?.courses ?? (initial && courseId === initial.course.id ? [initial.course] : []);
-  // Old posts may use another major's ID for the same university/code. Keep that
-  // ID on edit; do not clear it or add a second, identically named option.
+  // Preserve an old post's ID when its visible canonical option represents the
+  // same exact code or an explicitly collapsed legacy alias.
   if (initial && courseId === initial.course.id) {
-    courseOptions = courseOptions.map(item => item.code === initial.course.code && item.university_id === initial.course.university_id ? initial.course : item);
+    courseOptions = courseOptions.map(item => equivalentVisibleOption(item, initial.course) ? { ...item, id: initial.course.id } : item);
   }
   const selected = courseOptions.find(item => item.id === courseId);
+  const requirementConfig = universityRequirements.find(item => item.key === requirement);
+  const courseLabel = (item: CourseOption) => {
+    const base = `${item.code} — ${localName(item)}`;
+    const collegeNames = locale === "ar" ? item.college_names_ar : item.college_names_en;
+    return scope === "university" && requirementConfig?.mode === "college" && collegeNames ? `${base} — ${collegeNames}` : base;
+  };
   const field = "w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 disabled:opacity-60";
   function reset() { setCollegeId(""); setMajorId(""); setRequirement(""); setCourseId(""); }
 
@@ -110,7 +116,7 @@ export default function CoursePicker({ colleges, locale, label, emptyLabel, name
     {scope ? <div><label htmlFor={`${id}-course`} className="mb-1 block text-xs font-semibold text-slate-500">{copy.course}</label>
       <select id={`${id}-course`} name={name} value={courseId} required onChange={event => setCourseId(event.target.value)} aria-busy={courses.loading} aria-describedby={`${id}-hint`} className={field}>
         <option value="">{courses.loading ? copy.loading : copy.choose}</option>
-        {courseOptions.map(item => <option key={item.id} value={item.id}>{item.code} — {localName(item)}</option>)}
+        {courseOptions.map(item => <option key={item.id} value={item.id}>{courseLabel(item)}</option>)}
       </select>
       <p id={`${id}-hint`} className="mt-2 text-xs leading-6 text-slate-500">{scope === "university" ? copy.variants : copy.commonHint}</p>
     </div> : <input type="hidden" name={name} value="" />}
@@ -119,4 +125,12 @@ export default function CoursePicker({ colleges, locale, label, emptyLabel, name
     {courses.payload && !courseOptions.length && <p role="status" className="text-xs text-slate-500">{copy.empty}</p>}
     {(majors.failed || courses.failed) && <p role="alert" className="text-sm text-red-700">{copy.error} <button type="button" onClick={() => { if (majors.failed) majors.retry(); if (courses.failed) courses.retry(); }} className="font-bold underline">{copy.retry}</button></p>}
   </fieldset>;
+}
+
+function equivalentVisibleOption(option: CourseOption, selected: CourseOption) {
+  if (option.university_id !== selected.university_id) return false;
+  if (option.code === selected.code) return true;
+  const optionRequirement = requirementForCode(option.code, option.university_slug);
+  const selectedRequirement = requirementForCode(selected.code, selected.university_slug);
+  return optionRequirement?.mode === "single" && optionRequirement.key === selectedRequirement?.key;
 }

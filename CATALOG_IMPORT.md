@@ -13,9 +13,15 @@ The nine university-wide groups live in the dedicated configuration file
 library section and excluded from An-Najah's major-specific dropdowns.
 English 101 is the official `11000103` (English Language I). English 102 has
 multiple official plan codes (`11000322`–`11000330`): the UI groups them together,
-but the student still chooses the exact code. Similar names are NOT evidence
+the student still chooses the exact code, and each option lists every faculty
+that actually uses it. Similar names are NOT evidence
 that two codes have the same syllabus. Specialized medical/AI variants remain
 in their original majors unless deliberately added to the configuration.
+
+Arabic (`11000102`/`11000122`), Islamic Culture (`11000101`/`11000123`) and
+Palestinian Studies (`11000105`/`11000114`) are explicit legacy aliases. Each
+has one visible canonical option, but reads include every old ID/code so an
+existing upload, request, question or edit link is not lost.
 
 Questions, requests, editing and uploads share a lazy course selector. It starts
 with the small college list; majors and courses load only after choosing a
@@ -25,16 +31,23 @@ selections are cleared, and a failed request can be retried without losing form
 text. `/api/catalog` requires exactly one valid parent and never returns the
 entire course table.
 
-Apply **only the new additive migration** before deploying this code:
+Apply the pending catalog migrations before deploying this code:
 
 ```bash
 npx supabase db push --dry-run
-# Expect: 20260928210000_shared_course_catalog.sql
+# On a database that already has the shared views, expect only:
+# 20260929150000_normalize_catalog_colleges_and_labels.sql
 npx supabase db push
 ```
 
-This adds an index and two `security_invoker` read views. It does not delete,
-move, update, or reseed existing course/resource rows. Same university + same
+The first migration adds an index and two `security_invoker` read views. The
+second removes exactly the obsolete bootstrap college IDs ending in `101` and
+`102`. Before deleting those two college rows, it moves or merges their majors,
+remaps linked resources/questions/requests/profiles/books, and refuses to depend
+on generated UUIDs for the official destination colleges. It never truncates,
+disables RLS/triggers, or broadly deletes catalog data.
+
+Same university + same
 code produces one option, while all existing course IDs continue to work.
 Approved resources and course filters include the IDs from all majors sharing
 that code; a different university or code remains isolated. Upload moderation

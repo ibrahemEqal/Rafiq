@@ -25,14 +25,20 @@ const arabicId = 'afc00000-0000-4000-8000-000000000012';
 const oldArabicId = 'afc00000-0000-4000-8000-000000000013';
 const englishId = 'afc00000-0000-4000-8000-000000000014';
 const englishVariantId = 'afc00000-0000-4000-8000-000000000015';
+const arabicAliasId = 'afc00000-0000-4000-8000-000000000016';
 const courseBase = { major_id: majorId, college_id: collegeId, university_id: universityId, university_slug: 'an-najah-national-university', major_name_ar: 'علم الحاسوب', major_name_en: 'Computer Science', major_slug: 'computer-science', college_name_ar: 'الهندسة', college_name_en: 'Engineering', college_slug: 'engineering' };
 const catalogRows = [
   { ...courseBase, id: courseId, code: '10671212', slug: 'algorithms', name_ar: 'الخوارزميات', name_en: 'Algorithms' },
   { ...courseBase, id: sharedCourseId, major_id: secondMajorId, code: '10671212', slug: 'algorithms', name_ar: 'الخوارزميات', name_en: 'Algorithms' },
   { ...courseBase, id: arabicId, code: '11000102', slug: 'arabic', name_ar: 'لغة عربية', name_en: 'Arabic Language' },
   { ...courseBase, id: oldArabicId, major_id: secondMajorId, code: '11000102', slug: 'arabic', name_ar: 'لغة عربية', name_en: 'Arabic Language' },
-  { ...courseBase, id: englishId, code: '11000322', slug: 'english-102', name_ar: 'اللغة الانجليزية 2', name_en: 'English Language II' },
-  { ...courseBase, id: englishVariantId, code: '11000323', slug: 'english-102-other', name_ar: 'اللغة الانجليزية 2', name_en: 'English Language II' },
+  { ...courseBase, id: arabicAliasId, code: '11000122', slug: 'arabic-alias', name_ar: 'لغة عربية', name_en: 'Arabic Language' },
+  { ...courseBase, id: englishId, code: '11000322', slug: 'english-102', name_ar: 'اللغة الانجليزية 2', name_en: 'English Language II', college_names_ar: 'كلية الهندسة', college_names_en: 'Faculty of Engineering' },
+  { ...courseBase, id: englishVariantId, code: '11000323', slug: 'english-102-other', name_ar: 'اللغة الانجليزية 2', name_en: 'English Language II', college_names_ar: 'كلية العلوم الإنسانية والتربوية', college_names_en: 'Faculty of Humanities and Educational Sciences' },
+];
+const books = [
+  { id: 'afc00000-0000-4000-8000-000000000017', title: 'Calculus I', description: 'Clean copy', type: 'book', college_id: collegeId, whatsapp_number: '+970590000000', status: 'available', created_at: '2026-09-20T12:00:00Z', colleges: { name_ar: 'الهندسة', name_en: 'Engineering' } },
+  { id: 'afc00000-0000-4000-8000-000000000018', title: 'Physics slides', description: null, type: 'printed_slides', college_id: collegeId, whatsapp_number: '+970590000001', status: 'available', created_at: '2026-09-19T12:00:00Z', colleges: { name_ar: 'الهندسة', name_en: 'Engineering' } },
 ];
 const calls = [];
 const questionId = 'afc00000-0000-4000-8000-000000000006';
@@ -88,7 +94,15 @@ const mock = createServer(async (req, res) => {
     return reply(singleton(rows));
   }
   if (url.pathname === '/rest/v1/colleges') return reply(singleton([{ id: collegeId, slug: 'engineering', name_ar: 'الهندسة', name_en: 'Engineering' }]));
-  if (url.pathname === '/rest/v1/books') return reply([]);
+  if (url.pathname === '/rest/v1/books') {
+    let rows = books.filter(row => ['status', 'type', 'college_id'].every(key => {
+      const filter = url.searchParams.get(key);
+      return !filter || !filter.startsWith('eq.') || filter === `eq.${row[key]}`;
+    }));
+    const title = url.searchParams.get('title');
+    if (title?.startsWith('ilike.')) rows = rows.filter(row => row.title.toLowerCase().includes(title.slice(6).replaceAll('%', '').replaceAll('\\', '').toLowerCase()));
+    return reply(rows);
+  }
   if (url.pathname === '/rest/v1/requests') return reply([]);
   if (['/rest/v1/questions', '/rest/v1/answers'].includes(url.pathname)) {
     const table = url.pathname.endsWith('/questions') ? questions : answers;
@@ -195,7 +209,7 @@ try {
     app.once('error', fail); app.once('exit', code => { clearTimeout(timer); fail(new Error('App exited '+code+' '+logs)); });
   });
   const metrics = { fixtureLatencyMs: latency, samplesPerRoute: 5, mode: baseline ? 'baseline' : 'optimized', routes: {} };
-  for (const path of ['/en', '/en/resources/new', '/en/questions', '/en/requests']) {
+  for (const path of ['/en', '/en/books', '/en/resources/new', '/en/questions', '/en/requests']) {
     const first = await visit(path); assert.equal(first.status, 200);
     const samples = [];
     for (let i=0; i<5; i++) {
@@ -222,6 +236,10 @@ try {
       if (['/en/questions', '/en/requests'].includes(path)) {
         assert.ok((first.body.match(/<option\b/g) || []).length < 20, 'Initial listing must not contain hundreds of course options');
         assert.ok(first.htmlBytes < 200000, 'Catalog must not inflate listing HTML');
+      }
+      if (path === '/en/books') {
+        assert.ok(first.body.includes('Calculus I') && first.body.includes('Physics slides'));
+        assert.ok(first.body.includes('All colleges') && first.body.includes('Contact via WhatsApp'));
       }
     }
   }
@@ -367,7 +385,7 @@ try {
       const legacy = await visit(`${prefix}/resources?college=${collegeId}&major=${secondMajorId}&course=${oldArabicId}`, null);
       assert.equal(legacy.status, 200); assert.ok(legacy.body.includes('scope=university'));
       const sharedRead = calls.filter(call => call.path === '/rest/v1/resources' && call.course?.includes(arabicId)).at(-1);
-      assert.equal(sharedRead?.course, `in.(${arabicId},${oldArabicId})`, 'The resource read must include both existing IDs for that university/code');
+      assert.equal(sharedRead?.course, `in.(${arabicId},${oldArabicId},${arabicAliasId})`, 'The resource read must include exact-code duplicates and the collapsed legacy alias');
       const listing = await visit(`${prefix}/requests`, null); assert.equal(listing.status, 200);
       assert.ok((listing.body.match(/<option\b/g) || []).length < 20);
     }

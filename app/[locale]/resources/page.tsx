@@ -29,6 +29,11 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Pr
   const major = universityScope ? null : path.major;
   const course = universityScope ? (selection?.requirement ? selection.course : null) : path.course;
   const localName = (item: { name_ar: string; name_en: string }) => locale === "ar" ? item.name_ar : item.name_en;
+  const universityCourseName = (item: { name_ar: string; name_en: string; college_names_ar?: string; college_names_en?: string }) => {
+    const name = localName(item);
+    const colleges = locale === "ar" ? item.college_names_ar : item.college_names_en;
+    return requirement?.mode === "college" && colleges ? `${name} — ${colleges}` : name;
+  };
 
   const [colleges, majors, courses, commonCourses, resources] = await Promise.all([
     !universityScope && !college ? getColleges() : [],
@@ -76,7 +81,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Pr
         })}
       </CatalogGrid>}
       {universityScope && !course && requirement && <CatalogGrid title={localName(requirement)} subtitle={t("requirementVariants")} icon={<BookOpen size={24} />}>
-        {commonCourses.map(item => <CatalogLink key={item.id} href={`/resources?scope=university&requirement=${requirement.key}&course=${item.id}`} title={localName(item)} eyebrow={item.code} icon={<FolderOpen size={23} />} />)}
+        {commonCourses.map(item => <CatalogLink key={item.id} href={`/resources?scope=university&requirement=${requirement.key}&course=${item.id}`} title={universityCourseName(item)} eyebrow={item.code} icon={<FolderOpen size={23} />} />)}
         {!commonCourses.length && <p role="status" className="col-span-full rounded-2xl bg-white p-6 text-slate-600">{t("noCatalogCourses")}</p>}
       </CatalogGrid>}
 
