@@ -63,7 +63,7 @@ export default async function AdminDashboard({ searchParams }: {
   const dateFormat = new Intl.DateTimeFormat(locale === "ar" ? "ar-PS" : "en-US", { dateStyle: "medium", timeZone: "UTC" });
 
   const overview = [
-    { label: t("overview.users"), count: profilesCount.count ?? 0, href: "/profile", icon: Users },
+    { label: t("overview.users"), count: profilesCount.count ?? 0, href: "/dashboard/users", icon: Users },
     { label: t("overview.books"), count: booksCount.count ?? 0, href: "/books", icon: BookOpen },
     { label: t("overview.requests"), count: requestsCount.count ?? 0, href: "/requests", icon: HandHeart },
     { label: t("overview.questions"), count: questionsCount.count ?? 0, href: "/questions", icon: MessageCircleQuestion },
