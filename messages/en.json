@@ -122,15 +122,35 @@
     "chooseFile": "Choose File (PDF, DOCX, ZIP)",
     "uploading": "Uploading...",
     "submitUpload": "Publish File",
-    "uploadSuccess": "File uploaded successfully, pending review!"
+    "uploadSuccess": "File uploaded successfully, pending review!",
+    "sourceType": "Resource source",
+    "uploadFileOption": "Upload a file",
+    "driveLinkOption": "Add a Google Drive link",
+    "driveLinkLabel": "Google Drive or Google Docs link",
+    "driveLinkHint": "Make sure anyone with the link can open it, otherwise students will not be able to access the resource.",
+    "externalResource": "External link",
+    "openDrive": "Open resource",
+    "backToResources": "Back to resources"
   },
   "Admin": {
     "title": "Educational resource review",
     "subtitle": "Inspect each file before approval. Pending files are hidden from other students; approval makes them publicly available.",
     "adminOnly": "Administration",
     "filters": "Filter by review status",
-    "statuses": { "pending": "Pending review", "approved": "Approved", "rejected": "Rejected", "removed": "Unpublished" },
-    "types": { "previous_exam": "Past exam", "summary": "Summary", "lecture": "Lecture", "assignment": "Assignment", "notes": "Notes", "other": "Other" },
+    "statuses": {
+      "pending": "Pending review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "removed": "Unpublished"
+    },
+    "types": {
+      "previous_exam": "Past exam",
+      "summary": "Summary",
+      "lecture": "Lecture",
+      "assignment": "Assignment",
+      "notes": "Notes",
+      "other": "Other"
+    },
     "total": "Files: {count}",
     "page": "Page {page} of {total}",
     "inspect": "Download to inspect",
@@ -145,16 +165,31 @@
     "metadataError": "Some uploader or course names could not be loaded.",
     "unknownUser": "Unknown uploader",
     "unknownCourse": "Unknown course",
-    "uploader": "Uploader", "course": "Course", "file": "File type and size", "uploaded": "Upload date",
-    "pagination": "File pagination", "previous": "Previous", "next": "Next",
+    "uploader": "Uploader",
+    "course": "Course",
+    "file": "File type and size",
+    "uploaded": "Upload date",
+    "pagination": "File pagination",
+    "previous": "Previous",
+    "next": "Next",
     "openReports": "Open content reports",
     "reports": "Content reports",
     "reportsTitle": "Report review",
     "reportsSubtitle": "Review the reason and open the target before deciding. Marking a report reviewed does not delete content automatically.",
     "resourceReviews": "Back to resource review",
     "reportFilters": "Filter reports by status",
-    "reportStatuses": { "pending": "Pending", "reviewed": "Reviewed", "dismissed": "Dismissed" },
-    "targetTypes": { "question": "Question", "answer": "Answer", "resource": "Resource", "book_offer": "Book offer", "request": "Request" },
+    "reportStatuses": {
+      "pending": "Pending",
+      "reviewed": "Reviewed",
+      "dismissed": "Dismissed"
+    },
+    "targetTypes": {
+      "question": "Question",
+      "answer": "Answer",
+      "resource": "Resource",
+      "book_offer": "Book offer",
+      "request": "Request"
+    },
     "reportsTotal": "Reports: {count}",
     "reportsEmpty": "No reports with this status.",
     "reportsLoadError": "Reports could not be loaded. Reload the page.",
@@ -171,6 +206,19 @@
       "conflict": "This file changed or no longer exists. Check its current status before retrying.",
       "failed": "Saving the decision could not be confirmed. Reload and check its status and your permissions.",
       "previewFailed": "A review download link could not be generated. Try again."
+    },
+    "siteTitle": "Rafeeq administration",
+    "siteSubtitle": "A system-wide view with direct access to resources, students, books, requests, questions, and reports.",
+    "externalLink": "External link",
+    "overview": {
+      "title": "Site overview",
+      "subtitle": "Live counts and shortcuts to Rafeeq's main areas.",
+      "openSite": "Open site",
+      "users": "Students",
+      "books": "Books & prints",
+      "requests": "Requests",
+      "questions": "Questions",
+      "reports": "Reports"
     }
   },
   "Questions": {
@@ -269,8 +317,16 @@
     "allCourses": "All courses",
     "general": "General request",
     "allTypes": "All",
-    "types": { "book": "Book", "resource": "File or slides", "other": "Something else" },
-    "statuses": { "open": "Needs help", "fulfilled": "Fulfilled", "closed": "Closed" },
+    "types": {
+      "book": "Book",
+      "resource": "File or slides",
+      "other": "Something else"
+    },
+    "statuses": {
+      "open": "Needs help",
+      "fulfilled": "Fulfilled",
+      "closed": "Closed"
+    },
     "formType": "What kind of item do you need?",
     "formTitle": "Summarize your request clearly",
     "titlePlaceholder": "Example: I need the Computer Networks textbook",
