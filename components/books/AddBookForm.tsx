@@ -59,32 +59,32 @@ export default function AddBookForm({ colleges }: { colleges: College[] }) {
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-2">{t("formTitle")}</label>
-        <input type="text" name="title" required className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 outline-none transition-colors" />
+        <label className="block text-base font-bold text-slate-700 mb-2">{t("formTitle")}</label>
+        <input type="text" name="title" required className="w-full px-4 py-3.5 text-base rounded-xl border border-slate-200 focus:border-indigo-500 outline-none transition-colors" />
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-2">{t("formCollege")}</label>
-        <select name="college_id" required className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 outline-none bg-white transition-colors">
+        <label className="block text-base font-bold text-slate-700 mb-2">{t("formCollege")}</label>
+        <select name="college_id" required className="w-full px-4 py-3.5 text-base rounded-xl border border-slate-200 focus:border-indigo-500 outline-none bg-white transition-colors">
           <option value="">...</option>
           {colleges.map(c => <option key={c.id} value={c.id}>{c.name_ar}</option>)}
         </select>
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-2">{t("formWhatsapp")}</label>
-        <input type="tel" name="whatsapp_number" dir="ltr" placeholder={t("whatsappPlaceholder")} required className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 outline-none transition-colors" />
+        <label className="block text-base font-bold text-slate-700 mb-2">{t("formWhatsapp")}</label>
+        <input type="tel" name="whatsapp_number" dir="ltr" placeholder={t("whatsappPlaceholder")} required className="w-full px-4 py-3.5 text-base rounded-xl border border-slate-200 focus:border-indigo-500 outline-none transition-colors" />
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-2">{t("formDesc")}</label>
-        <textarea name="description" rows={3} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 outline-none transition-colors resize-none"></textarea>
+        <label className="block text-base font-bold text-slate-700 mb-2">{t("formDesc")}</label>
+        <textarea name="description" rows={3} className="w-full px-4 py-3.5 text-base rounded-xl border border-slate-200 focus:border-indigo-500 outline-none transition-colors resize-none"></textarea>
       </div>
 
       <button 
         type="submit" 
         disabled={loading}
-        className="w-full py-4 bg-slate-900 text-white font-bold rounded-xl shadow-md hover:bg-slate-800 disabled:opacity-70 transition-all flex justify-center items-center gap-2"
+        className="w-full py-4 text-lg bg-slate-900 text-white font-bold rounded-xl shadow-md hover:bg-slate-800 disabled:opacity-70 transition-all flex justify-center items-center gap-2"
       >
         {loading ? <span className="animate-pulse">{t("submitting")}</span> : <><Send size={20} /> {t("submitBook")}</>}
       </button>

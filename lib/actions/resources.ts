@@ -22,25 +22,41 @@ export async function createResourceRecord(input: ResourceInput) {
   if (!identity) return { error: "Unauthorized." };
 
   if (
-    !parsed.data.storage_path.startsWith(identity.id + "/") ||
-    parsed.data.storage_path.includes("://")
+    parsed.data.source_type === "upload" &&
+    (!parsed.data.storage_path.startsWith(identity.id + "/") ||
+      parsed.data.storage_path.includes("://"))
   ) {
     return { error: "Invalid storage path." };
   }
 
-  const { error } = await supabase.from("resources").insert({
-    title: parsed.data.title,
-    type: parsed.data.type,
-    course_id: parsed.data.course_id,
-    storage_path: parsed.data.storage_path,
-    file_size: parsed.data.file_size,
-    mime_type: parsed.data.mime_type,
-    uploader_id: identity.id,
-    status: "pending",
-  });
+  const insertResult = parsed.data.source_type === "upload"
+    ? await supabase.from("resources").insert({
+        title: parsed.data.title,
+        type: parsed.data.type,
+        course_id: parsed.data.course_id,
+        source_type: "upload",
+        storage_path: parsed.data.storage_path,
+        external_url: null,
+        file_size: parsed.data.file_size,
+        mime_type: parsed.data.mime_type,
+        uploader_id: identity.id,
+        status: "pending",
+      })
+    : await supabase.from("resources").insert({
+        title: parsed.data.title,
+        type: parsed.data.type,
+        course_id: parsed.data.course_id,
+        source_type: "external",
+        storage_path: null,
+        external_url: parsed.data.external_url,
+        file_size: null,
+        mime_type: null,
+        uploader_id: identity.id,
+        status: "pending",
+      });
 
-  if (error) {
-    console.error("Resource insert failed:", error.code);
+  if (insertResult.error) {
+    console.error("Resource insert failed:", insertResult.error.code);
     return { error: "Failed to save the resource." };
   }
 

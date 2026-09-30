@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { isAllowedExternalResourceUrl } from "@/lib/validation/resource";
 
 export async function createResourceDownload(resourceId: string) {
   const parsedId = z.string().uuid().safeParse(resourceId);
@@ -10,11 +11,22 @@ export async function createResourceDownload(resourceId: string) {
   const supabase = await createClient();
   const { data: resource, error } = await supabase
     .from("resources")
-    .select("id, storage_path, title")
+    .select("id, source_type, storage_path, external_url, title")
     .eq("id", parsedId.data)
+    .eq("status", "approved")
     .single();
 
   if (error || !resource) return { error: "Resource not found." };
+
+  if (resource.source_type === "external") {
+    if (!resource.external_url || !isAllowedExternalResourceUrl(resource.external_url)) {
+      return { error: "External resource link is unavailable." };
+    }
+    await supabase.rpc("increment_resource_download", { resource_id: parsedId.data });
+    return { url: resource.external_url };
+  }
+
+  if (!resource.storage_path) return { error: "Download is unavailable." };
 
   const extension = resource.storage_path.split(".").pop()?.replace(/[^a-zA-Z0-9]/g, "");
   const downloadName = extension ? resource.title + "." + extension : resource.title;

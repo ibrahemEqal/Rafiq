@@ -7,7 +7,7 @@ interface ResourceType {
   id: string;
   title: string;
   type: string; 
-  file_size: number;
+  file_size: number | null;
   download_count: number;
   view_count: number;
   created_at: string;
@@ -21,8 +21,8 @@ export default function ResourceCard({ resource }: { resource: ResourceType }) {
   const course = oneRelation(resource.courses);
   const profile = oneRelation(resource.profiles);
 
-  const formatSize = (bytes: number) => {
-    if (bytes === 0) return '0 B';
+  const formatSize = (bytes: number | null) => {
+    if (!bytes) return locale === "ar" ? "رابط خارجي" : "External link";
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));

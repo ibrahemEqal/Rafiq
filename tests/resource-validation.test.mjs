@@ -8,6 +8,7 @@ import {
 } from "../lib/validation/resource.ts";
 
 const valid = {
+  source_type: "upload",
   title: "Algorithms summary",
   type: "summary",
   college_id: "afc00000-0000-4000-8000-000000000001",
@@ -84,4 +85,40 @@ test("arbitrary MIME types are still rejected on the server", () => {
 
 test("the obsolete exam enum value remains rejected", () => {
   assert.equal(resourceSchema.safeParse({ ...valid, type: "exam" }).success, false);
+});
+
+test("Google Drive and Google Docs links are accepted as external resources", () => {
+  for (const external_url of [
+    "https://drive.google.com/file/d/example/view",
+    "https://docs.google.com/document/d/example/edit",
+  ]) {
+    assert.equal(resourceSchema.safeParse({
+      source_type: "external",
+      title: "Shared notes",
+      type: "notes",
+      college_id: valid.college_id,
+      course_id: valid.course_id,
+      storage_path: null,
+      external_url,
+      file_size: null,
+      mime_type: null,
+    }).success, true);
+  }
+});
+
+test("arbitrary external URLs and insecure Drive URLs are rejected", () => {
+  for (const external_url of [
+    "https://example.com/file.pdf",
+    "http://drive.google.com/file/d/example/view",
+    "https://drive.google.com.evil.example/file",
+  ]) {
+    assert.equal(resourceSchema.safeParse({
+      source_type: "external",
+      title: "Shared notes",
+      type: "notes",
+      college_id: valid.college_id,
+      course_id: valid.course_id,
+      external_url,
+    }).success, false);
+  }
 });

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { getVerifiedIdentity } from "../auth/identity.ts";
+import { isAllowedExternalResourceUrl } from "../validation/resource.ts";
 
 export const resourceStatuses = ["pending", "approved", "rejected", "removed"] as const;
 export type ResourceStatus = (typeof resourceStatuses)[number];
@@ -53,9 +54,7 @@ export async function moderateResourceWithClient(
       .select("id, status")
       .maybeSingle();
     if (error) return { error: "failed" };
-    // An atomic old-status filter prevents overwriting another admin's review.
     if (!updated) return { error: "conflict" };
-    // Do not report success if a database trigger reverted the requested status.
     if (updated.status !== status) return { error: "failed" };
     return { success: true };
   } catch {
@@ -72,13 +71,20 @@ export async function createAdminPreviewWithClient(
     const id = z.guid().safeParse(input);
     if (!id.success) return { error: "invalid" };
     const { data: resource, error } = await client.from("resources")
-      .select("storage_path").eq("id", id.data).maybeSingle();
+      .select("source_type, storage_path, external_url").eq("id", id.data).maybeSingle();
     if (error || !resource) return { error: "previewFailed" };
-    // Force attachment download; do not embed untrusted uploads in the dashboard.
+
+    if (resource.source_type === "external") {
+      if (!resource.external_url || !isAllowedExternalResourceUrl(resource.external_url)) {
+        return { error: "previewFailed" };
+      }
+      return { url: resource.external_url };
+    }
+
+    if (!resource.storage_path) return { error: "previewFailed" };
     const { data, error: signingError } = await client.storage.from("resources")
       .createSignedUrl(resource.storage_path, 60, { download: true });
     if (signingError || !data?.signedUrl) return { error: "previewFailed" };
-    // Review downloads intentionally do not increment the public download counter.
     return { url: data.signedUrl };
   } catch {
     return { error: "previewFailed" };

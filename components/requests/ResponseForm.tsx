@@ -40,23 +40,23 @@ export default function ResponseForm({ requestId }: { requestId: string }) {
     }
   }
 
-  const field = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:opacity-60";
+  const field = "w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-base outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 disabled:opacity-60";
   return <form onSubmit={submit} className="space-y-5">
     <div className="flex items-start gap-3">
       <span className="rounded-2xl bg-emerald-100 p-3 text-emerald-700"><HandHeart size={22} /></span>
-      <div><h2 className="font-extrabold text-slate-900">{t("canHelp")}</h2><p className="mt-1 text-sm leading-6 text-slate-500">{t("responseSubtitle")}</p></div>
+      <div><h2 className="font-extrabold text-slate-900">{t("canHelp")}</h2><p className="mt-1 text-base leading-7 text-slate-500">{t("responseSubtitle")}</p></div>
     </div>
     <div>
-      <label htmlFor="response-body" className="mb-2 block text-sm font-bold text-slate-700">{t("responseBody")}</label>
+      <label htmlFor="response-body" className="mb-2 block text-base font-bold text-slate-700">{t("responseBody")}</label>
       <textarea id="response-body" name="body" required minLength={2} maxLength={1000} rows={5} disabled={busy || done} placeholder={t("responsePlaceholder")} className={`${field} resize-y`} />
     </div>
     <div>
-      <label htmlFor="response-whatsapp" className="mb-2 block text-sm font-bold text-slate-700">{t("whatsappOptional")}</label>
+      <label htmlFor="response-whatsapp" className="mb-2 block text-base font-bold text-slate-700">{t("whatsappOptional")}</label>
       <input id="response-whatsapp" name="whatsapp_number" type="tel" inputMode="tel" maxLength={20} disabled={busy || done} placeholder="+970 59 000 0000" className={field} />
-      <p className="mt-2 text-xs leading-6 text-slate-500">{t("privacyHint")}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-500">{t("privacyHint")}</p>
     </div>
-    {done && <p role="status" className="rounded-2xl bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{t("responseSuccess")}</p>}
-    {error && <p role="alert" className="rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">{t(`errors.${error}`)}</p>}
+    {done && <p role="status" className="rounded-2xl bg-emerald-50 p-4 text-base font-bold text-emerald-700">{t("responseSuccess")}</p>}
+    {error && <p role="alert" className="rounded-2xl bg-red-50 p-4 text-base font-semibold text-red-700">{t(`errors.${error}`)}</p>}
     <button type="submit" disabled={busy || done} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3.5 font-extrabold text-white transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60">
       {busy ? <LoaderCircle size={18} className="animate-spin" /> : <MessageCircleHeart size={18} />}{busy ? t("sendingResponse") : t("sendResponse")}
     </button>
