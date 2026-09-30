@@ -219,7 +219,12 @@
       "requests": "Requests",
       "questions": "Questions",
       "reports": "Reports"
-    }
+    },
+    "usersTitle": "User management",
+    "usersSubtitle": "Review the latest Rafeeq accounts and their roles from the admin area.",
+    "backToDashboard": "Back to dashboard",
+    "usersLoadError": "Users could not be loaded.",
+    "usersEmpty": "No user accounts to display."
   },
   "Questions": {
     "title": "Questions & answers",
