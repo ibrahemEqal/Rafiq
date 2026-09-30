@@ -122,15 +122,35 @@
     "chooseFile": "اختر الملف (PDF, DOCX, ZIP)",
     "uploading": "جاري الرفع...",
     "submitUpload": "نشر الملف",
-    "uploadSuccess": "تم رفع الملف بنجاح بانتظار المراجعة!"
+    "uploadSuccess": "تم رفع الملف بنجاح بانتظار المراجعة!",
+    "sourceType": "طريقة إضافة المصدر",
+    "uploadFileOption": "رفع ملف من جهازك",
+    "driveLinkOption": "إضافة رابط Google Drive",
+    "driveLinkLabel": "رابط Google Drive أو Google Docs",
+    "driveLinkHint": "تأكد أن صلاحية الرابط تسمح لأي شخص لديه الرابط بفتحه، وإلا لن يستطيع الطلاب الوصول للمصدر.",
+    "externalResource": "رابط خارجي",
+    "openDrive": "فتح المصدر",
+    "backToResources": "العودة للمصادر"
   },
   "Admin": {
     "title": "مراجعة المصادر التعليمية",
     "subtitle": "افحص الملف قبل الموافقة. الملفات المعلّقة لا تظهر للطلاب الآخرين، والموافقة تجعلها متاحة للجميع.",
     "adminOnly": "لوحة الإدارة",
     "filters": "تصفية حسب حالة المراجعة",
-    "statuses": { "pending": "بانتظار المراجعة", "approved": "معتمد", "rejected": "مرفوض", "removed": "مسحوب من النشر" },
-    "types": { "previous_exam": "امتحان سابق", "summary": "ملخص", "lecture": "محاضرة", "assignment": "واجب", "notes": "ملاحظات", "other": "أخرى" },
+    "statuses": {
+      "pending": "بانتظار المراجعة",
+      "approved": "معتمد",
+      "rejected": "مرفوض",
+      "removed": "مسحوب من النشر"
+    },
+    "types": {
+      "previous_exam": "امتحان سابق",
+      "summary": "ملخص",
+      "lecture": "محاضرة",
+      "assignment": "واجب",
+      "notes": "ملاحظات",
+      "other": "أخرى"
+    },
     "total": "عدد الملفات: {count}",
     "page": "الصفحة {page} من {total}",
     "inspect": "تنزيل للفحص",
@@ -145,16 +165,31 @@
     "metadataError": "تعذّر تحميل بعض أسماء الناشرين أو المساقات.",
     "unknownUser": "ناشر غير معروف",
     "unknownCourse": "مساق غير معروف",
-    "uploader": "الناشر", "course": "المساق", "file": "نوع الملف وحجمه", "uploaded": "تاريخ الرفع",
-    "pagination": "صفحات الملفات", "previous": "السابق", "next": "التالي",
+    "uploader": "الناشر",
+    "course": "المساق",
+    "file": "نوع الملف وحجمه",
+    "uploaded": "تاريخ الرفع",
+    "pagination": "صفحات الملفات",
+    "previous": "السابق",
+    "next": "التالي",
     "openReports": "فتح بلاغات المحتوى",
     "reports": "بلاغات المحتوى",
     "reportsTitle": "مراجعة البلاغات",
     "reportsSubtitle": "راجع سبب البلاغ وافتح المحتوى قبل اتخاذ القرار. تعليم البلاغ كمراجع لا يحذف المحتوى تلقائيًا.",
     "resourceReviews": "العودة إلى مراجعة المصادر",
     "reportFilters": "تصفية البلاغات حسب الحالة",
-    "reportStatuses": { "pending": "بانتظار المراجعة", "reviewed": "تمت المراجعة", "dismissed": "مرفوض" },
-    "targetTypes": { "question": "سؤال", "answer": "إجابة", "resource": "مصدر", "book_offer": "عرض كتاب", "request": "طلب" },
+    "reportStatuses": {
+      "pending": "بانتظار المراجعة",
+      "reviewed": "تمت المراجعة",
+      "dismissed": "مرفوض"
+    },
+    "targetTypes": {
+      "question": "سؤال",
+      "answer": "إجابة",
+      "resource": "مصدر",
+      "book_offer": "عرض كتاب",
+      "request": "طلب"
+    },
     "reportsTotal": "عدد البلاغات: {count}",
     "reportsEmpty": "لا توجد بلاغات بهذه الحالة.",
     "reportsLoadError": "تعذر تحميل البلاغات. أعد تحميل الصفحة.",
@@ -171,6 +206,19 @@
       "conflict": "الملف تغيّر أو لم يعد موجودًا. راجع الحالة الجديدة قبل المحاولة.",
       "failed": "لم يتم تأكيد حفظ القرار. أعد تحميل الصفحة وتحقق من الحالة والصلاحيات.",
       "previewFailed": "تعذّر تجهيز رابط الملف للفحص. أعد المحاولة."
+    },
+    "siteTitle": "إدارة رفيق",
+    "siteSubtitle": "نظرة شاملة على نشاط الموقع مع وصول مباشر إلى المصادر والطلاب والكتب والطلبات والأسئلة والبلاغات.",
+    "externalLink": "رابط خارجي",
+    "overview": {
+      "title": "نظرة عامة على الموقع",
+      "subtitle": "إحصائيات مباشرة واختصارات لأقسام رفيق الأساسية.",
+      "openSite": "فتح الموقع",
+      "users": "الطلاب",
+      "books": "الكتب والملازم",
+      "requests": "الطلبات",
+      "questions": "الأسئلة",
+      "reports": "البلاغات"
     }
   },
   "Questions": {
@@ -269,8 +317,16 @@
     "allCourses": "كل المساقات",
     "general": "طلب عام",
     "allTypes": "الكل",
-    "types": { "book": "كتاب", "resource": "ملف أو سلايدات", "other": "طلب آخر" },
-    "statuses": { "open": "يحتاج مساعدة", "fulfilled": "تمت تلبيته", "closed": "مغلق" },
+    "types": {
+      "book": "كتاب",
+      "resource": "ملف أو سلايدات",
+      "other": "طلب آخر"
+    },
+    "statuses": {
+      "open": "يحتاج مساعدة",
+      "fulfilled": "تمت تلبيته",
+      "closed": "مغلق"
+    },
     "formType": "ما نوع الشيء الذي تحتاجه؟",
     "formTitle": "اختصر طلبك بعنوان واضح",
     "titlePlaceholder": "مثال: أحتاج كتاب شبكات الحاسوب",
