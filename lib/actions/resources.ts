@@ -29,8 +29,8 @@ export async function createResourceRecord(input: ResourceInput) {
     return { error: "Invalid storage path." };
   }
 
-  const row = parsed.data.source_type === "upload"
-    ? {
+  const insertResult = parsed.data.source_type === "upload"
+    ? await supabase.from("resources").insert({
         title: parsed.data.title,
         type: parsed.data.type,
         course_id: parsed.data.course_id,
@@ -41,8 +41,8 @@ export async function createResourceRecord(input: ResourceInput) {
         mime_type: parsed.data.mime_type,
         uploader_id: identity.id,
         status: "pending",
-      }
-    : {
+      })
+    : await supabase.from("resources").insert({
         title: parsed.data.title,
         type: parsed.data.type,
         course_id: parsed.data.course_id,
@@ -53,12 +53,10 @@ export async function createResourceRecord(input: ResourceInput) {
         mime_type: null,
         uploader_id: identity.id,
         status: "pending",
-      };
+      });
 
-  const { error } = await supabase.from("resources").insert(row);
-
-  if (error) {
-    console.error("Resource insert failed:", error.code);
+  if (insertResult.error) {
+    console.error("Resource insert failed:", insertResult.error.code);
     return { error: "Failed to save the resource." };
   }
 
