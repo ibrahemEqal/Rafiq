@@ -27,7 +27,7 @@ export default async function Navbar({ locale }: { locale: string }) {
         </Link>
 
         {/* روابط التنقل */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden xl:flex items-center gap-1">
           <Link href="/resources" className="px-4 py-2.5 rounded-full text-slate-600 font-medium hover:text-slate-900 hover:bg-slate-100/80 transition-all duration-300">
             {t("resources")}
           </Link>
@@ -40,7 +40,9 @@ export default async function Navbar({ locale }: { locale: string }) {
           <Link href="/requests" className="px-4 py-2.5 rounded-full text-slate-600 font-medium hover:text-violet-800 hover:bg-violet-50 transition-all duration-300">
             {t("requests")}
           </Link>
-        </nav>
+          <Link href="/offers" className="inline-flex items-center gap-2 rounded-full bg-lime-50 px-4 py-2.5 font-bold text-slate-800 hover:bg-lime-100">{t("offers")}<span className="rounded-full bg-lime-200 px-2 py-0.5 text-xs text-slate-800">{t("comingSoon")}</span></Link>
+          <Link href="/offers" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-lime-50 px-3 py-2 text-sm font-bold text-slate-800">{t("offers")}<span className="rounded-full bg-lime-200 px-2 py-0.5 text-xs">{t("comingSoon")}</span></Link>
+      </nav>
 
         {/* الأزرار / حساب المستخدم */}
         <div className="flex items-center gap-4">
@@ -58,11 +60,12 @@ export default async function Navbar({ locale }: { locale: string }) {
           />
         </div>
       </div>
-      <nav aria-label={t("mobileNavigation")} className="md:hidden flex items-center gap-1 overflow-x-auto border-t border-slate-100 px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav aria-label={t("mobileNavigation")} className="xl:hidden flex items-center gap-1 overflow-x-auto border-t border-slate-100 px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Link href="/resources" className="shrink-0 rounded-full px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100">{t("resources")}</Link>
         <Link href="/books" className="shrink-0 rounded-full px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100">{t("books")}</Link>
         <Link href="/questions" className="shrink-0 rounded-full px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100">{t("questions")}</Link>
         <Link href="/requests" className="shrink-0 rounded-full bg-violet-50 px-3 py-2 text-xs font-extrabold text-violet-700">{t("requests")}</Link>
+        <Link href="/offers" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-lime-50 px-3 py-2 text-sm font-bold text-slate-800">{t("offers")}<span className="rounded-full bg-lime-200 px-2 py-0.5 text-xs">{t("comingSoon")}</span></Link>
       </nav>
     </header>
   );
