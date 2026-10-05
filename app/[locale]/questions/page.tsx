@@ -2,7 +2,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { BookOpen, Clock3, MessageCircle, MessagesSquare, Plus, Search, Sparkles, UserRound } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { createPublicClient } from "@/lib/supabase/public";
-import { getCourses } from "@/lib/data/catalog";
+import { getColleges, getCourseSelection, getEquivalentCourseIds } from "@/lib/data/catalog";
+import CoursePicker from "@/components/catalog/CoursePicker";
 import { oneRelation } from "@/lib/data/relations";
 import { parseQuestionFilters } from "@/lib/questions/validation";
 
@@ -14,15 +15,16 @@ function nestedCount(value: unknown) {
 }
 export default async function QuestionsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const filtersPromise = searchParams.then(parseQuestionFilters);
-  const questionsPromise = filtersPromise.then(filters => {
+  const selectionPromise = filtersPromise.then(filters => getCourseSelection(filters.course));
+  const questionsPromise = filtersPromise.then(async filters => {
     const client = createPublicClient();
     let query = client.from("questions").select("id, title, body, created_at, courses(name_ar, name_en), profiles!questions_author_id_fkey(full_name, username), answers(count)");
     if (filters.q) query = query.textSearch("search_vector", filters.q, { config: "simple", type: "websearch" });
-    if (filters.course) query = query.eq("course_id", filters.course);
+    if (filters.course) query = query.in("course_id", await getEquivalentCourseIds(filters.course));
     return query.order("created_at", { ascending: false }).order("id", { ascending: false }).range((filters.page - 1) * PAGE_SIZE, filters.page * PAGE_SIZE);
   });
-  const [t, locale, { q, course, page }, courses, { data, error }] = await Promise.all([
-    getTranslations("Questions"), getLocale(), filtersPromise, getCourses(), questionsPromise,
+  const [t, locale, { q, course, page }, colleges, initialCourse, { data, error }] = await Promise.all([
+    getTranslations("Questions"), getLocale(), filtersPromise, getColleges(), selectionPromise, questionsPromise,
   ]);
   const rows = (data ?? []).slice(0, PAGE_SIZE);
   const more = (data?.length ?? 0) > PAGE_SIZE;
@@ -36,10 +38,10 @@ export default async function QuestionsPage({ searchParams }: { searchParams: Pr
     </section>
 
     <div className="mx-auto max-w-6xl space-y-7 px-4 py-8 sm:py-12">
-      <form method="get" className="relative -mt-16 grid gap-3 rounded-3xl border border-white/80 bg-white/95 p-4 shadow-xl shadow-violet-200/30 backdrop-blur sm:grid-cols-[1fr_auto_auto] sm:p-5">
+      <form method="get" className="relative -mt-16 grid gap-4 rounded-3xl border border-white/80 bg-white/95 p-4 shadow-xl shadow-violet-200/30 backdrop-blur sm:grid-cols-[minmax(0,1fr)_auto] sm:p-5">
         <label htmlFor="question-search" className="sr-only">{t("search")}</label><div className="relative"><Search size={19} className="absolute start-4 top-1/2 -translate-y-1/2 text-slate-400" /><input id="question-search" type="search" name="q" defaultValue={q} maxLength={80} placeholder={t("searchPlaceholder")} className="w-full rounded-2xl border border-slate-200 py-3.5 pe-4 ps-12 text-base outline-none transition focus:border-violet-400 focus:ring-4 focus:ring-violet-100" /></div>
-        <label htmlFor="question-course-filter" className="sr-only">{t("course")}</label><select id="question-course-filter" name="course" defaultValue={course ?? ""} className="min-w-0 rounded-2xl border border-slate-200 bg-white px-4 py-3.5 outline-none focus:border-violet-400"><option value="">{t("allCourses")}</option>{courses.map(item => <option key={item.id} value={item.id}>{locale === "ar" ? item.name_ar : item.name_en}</option>)}</select>
         <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-violet-700 px-6 py-3.5 font-extrabold text-white hover:bg-violet-800"><Search size={17} />{t("search")}</button>
+        <div className="sm:col-span-2"><CoursePicker key={course ?? "all"} colleges={colleges} locale={locale} name="course" label={t("course")} emptyLabel={t("allCourses")} initial={initialCourse} /></div>
       </form>
 
       {error ? <p role="alert" className="rounded-2xl bg-red-50 p-5 font-semibold text-red-700">{t("loadError")}</p> : !rows.length ? <section className="rounded-[2rem] border-2 border-dashed border-violet-200 bg-white p-12 text-center"><MessagesSquare size={44} className="mx-auto text-violet-300" /><h2 className="mt-4 text-xl font-black text-slate-700">{t("empty")}</h2><Link href={pageHref(1)} className="mt-5 inline-block font-extrabold text-violet-700">{t("latest")}</Link></section> : <div className="space-y-4">{rows.map((question, index) => {
