@@ -10,7 +10,9 @@
     "signUp": "Sign Up",
     "profile": "Profile",
     "dashboard": "Dashboard",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "offers": "Offers",
+    "comingSoon": "Soon"
   },
   "HomePage": {
     "title": "Home",
@@ -427,5 +429,30 @@
     "views": "Views",
     "noBooks": "You haven't added any books yet.",
     "noResources": "You haven't uploaded any resources yet."
+  },
+  "Offers": {
+    "title": "Student offers & announcements",
+    "eyebrow": "A new corner of Rafeeq",
+    "soon": "Coming soon",
+    "headline": "Being a student",
+    "headlineAccent": "should come with perks.",
+    "description": "Student offers, opportunities, and things that make university life easier. A new corner of Rafeeq. The good stuff is still to come.",
+    "promise": "Stay close. You’ll know when it opens.",
+    "explore": "Until then, explore your course resources",
+    "ticketLabel": "STUDENTS",
+    "ticketHeadline": "Good things ahead.",
+    "ticketHint": "We’re keeping a few details under wraps. But this space is made for you.",
+    "ticketFooter": "Details? All in good time.",
+    "peek": "Curious? Take a little peek",
+    "peekHint": "Here’s what we want to bring together for students:",
+    "categories": {
+      "stationery": "Bookshops & student services",
+      "workshops": "Workshops & learning",
+      "work": "Work & opportunities"
+    },
+    "noOffers": "A glimpse of the idea. No offers are published yet.",
+    "closing": "Some surprises are worth keeping.",
+    "bannerTitle": "Student life, with perks.",
+    "bannerHint": "A new space for student offers and opportunities. Curious?"
   }
 }
