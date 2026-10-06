@@ -384,10 +384,12 @@
     }
   },
   "Footer": {
-    "rights": "All rights reserved © Rafeeq 2026",
-    "terms": "Terms",
+    "rights": "© 2026 Rafeeq — All rights reserved",
+    "terms": "Terms of use",
     "privacy": "Privacy",
-    "contact": "Contact"
+    "contact": "Contact us",
+    "copyright": "Copyright",
+    "instagram": "Instagram"
   },
   "Books": {
     "title": "Books & Prints Market",
@@ -454,5 +456,90 @@
     "closing": "Some surprises are worth keeping.",
     "bannerTitle": "Student life, with perks.",
     "bannerHint": "A new space for student offers and opportunities. Curious?"
+  },
+  "Legal": {
+    "terms": {
+      "label": "Usage policy",
+      "title": "Rafeeq terms of use",
+      "intro": "By using Rafeeq, you agree to use the platform respectfully and for legitimate educational and community purposes. These terms explain your responsibilities and the limits of the service.",
+      "updated": "Last updated: October 6, 2026",
+      "backHome": "Back to home",
+      "sections": [
+        {
+          "heading": "1. Using the platform",
+          "body": "Rafeeq helps An-Najah students share resources, exchange books, post requests, and ask questions. Keep your information and posts accurate, and never use the platform to break the law or harm others."
+        },
+        {
+          "heading": "2. Content you post",
+          "body": "You are responsible for every file, link, text, or image you publish. Do not share content you have no right to distribute, private material, passwords, or another person’s personal data. We may remove violations and suspend accounts when necessary."
+        },
+        {
+          "heading": "3. Resources and external links",
+          "body": "Resources are reviewed before public display, but Rafeeq does not guarantee the accuracy of user-submitted content. Google Drive links and other external services follow their own terms and privacy policies."
+        },
+        {
+          "heading": "4. Books, listings, and requests",
+          "body": "Rafeeq helps students connect but does not guarantee any sale, handover, or book condition. Verify details yourself and do not send money or sensitive information before checking the other party."
+        },
+        {
+          "heading": "5. Changes and contact",
+          "body": "We may update the platform or these terms as the service improves. For content reports or account questions, contact us on Instagram: @rafeeq_nnu."
+        }
+      ]
+    },
+    "privacy": {
+      "label": "Privacy",
+      "title": "Privacy policy",
+      "intro": "We aim to collect only the data needed to operate Rafeeq and protect the student community. This policy explains what we use and why.",
+      "updated": "Last updated: October 6, 2026",
+      "backHome": "Back to home",
+      "sections": [
+        {
+          "heading": "1. Data we need",
+          "body": "We may process your email, name, username, college, major, and content you choose to publish. We use it to create your account, display content, and associate posts with their author."
+        },
+        {
+          "heading": "2. How we use data",
+          "body": "We use data to operate sign-in, protect the platform from abuse, display resources and requests, and enable contact you choose to share. We do not sell student data or use it for targeted advertising."
+        },
+        {
+          "heading": "3. Public content",
+          "body": "Questions, answers, requests, and resources you publish may be visible to other users. Do not put your phone number or sensitive information in a public post."
+        },
+        {
+          "heading": "4. Storage and security",
+          "body": "Account data and content are stored through the infrastructure services used to operate Rafeeq. We apply access controls and resource review, but no online service is risk-free."
+        },
+        {
+          "heading": "5. Your requests and rights",
+          "body": "You can request corrections, ask to remove content you own, or ask about your account through Instagram: @rafeeq_nnu. We may retain records needed for security and abuse prevention."
+        }
+      ]
+    },
+    "copyright": {
+      "label": "Copyright",
+      "title": "Copyright and intellectual property",
+      "intro": "We respect authors, students, and content owners. Rafeeq is for responsible sharing, not for distributing pirated material.",
+      "updated": "Last updated: October 6, 2026",
+      "backHome": "Back to home",
+      "sections": [
+        {
+          "heading": "1. Rafeeq property",
+          "body": "The Rafeeq name, logo, design, software, and original platform content belong to Rafeeq or are used with permission. Do not copy or commercially reuse them without permission."
+        },
+        {
+          "heading": "2. Content you own",
+          "body": "You retain your rights in content you publish. By uploading content, you grant Rafeeq a limited license to store, display, and distribute it within the service for the purpose you shared it."
+        },
+        {
+          "heading": "3. Reports",
+          "body": "If you own rights and believe a resource or post infringes them, send the content link and a clear explanation to @rafeeq_nnu. We will review the report and may remove the content or request more evidence."
+        },
+        {
+          "heading": "4. User responsibility",
+          "body": "Do not upload books, slides, exams, or images you have no right to share. Having a file on your device does not mean you have the right to publish it online."
+        }
+      ]
+    }
   }
 }

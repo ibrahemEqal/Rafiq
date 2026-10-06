@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 
 export default function Footer() {
   const t = useTranslations("Footer");
@@ -20,11 +21,12 @@ export default function Footer() {
           {t("rights")}
         </p>
 
-        <div className="flex gap-6 text-sm font-medium text-slate-400">
-          <a href="#" className="hover:text-blue-600 transition-colors">{t("terms")}</a>
-          <a href="#" className="hover:text-blue-600 transition-colors">{t("privacy")}</a>
-          <a href="#" className="hover:text-blue-600 transition-colors">{t("contact")}</a>
-        </div>
+        <nav aria-label="Footer" className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm font-medium text-slate-400">
+          <Link href="/terms" className="transition-colors hover:text-blue-600">{t("terms")}</Link>
+          <Link href="/privacy" className="transition-colors hover:text-blue-600">{t("privacy")}</Link>
+          <Link href="/copyright" className="transition-colors hover:text-blue-600">{t("copyright")}</Link>
+          <a href="https://www.instagram.com/rafeeq_nnu/" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-pink-600">{t("instagram")} @rafeeq_nnu</a>
+        </nav>
       </div>
     </footer>
   );
