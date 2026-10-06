@@ -18,6 +18,28 @@ const resourceId = 'afc00000-0000-4000-8000-000000000003';
 const courseId = 'afc00000-0000-4000-8000-000000000004';
 const collegeId = 'afc00000-0000-4000-8000-000000000005';
 const majorId = 'afc00000-0000-4000-8000-000000000008';
+const secondMajorId = 'afc00000-0000-4000-8000-000000000009';
+const universityId = 'afc00000-0000-4000-8000-000000000010';
+const sharedCourseId = 'afc00000-0000-4000-8000-000000000011';
+const arabicId = 'afc00000-0000-4000-8000-000000000012';
+const oldArabicId = 'afc00000-0000-4000-8000-000000000013';
+const englishId = 'afc00000-0000-4000-8000-000000000014';
+const englishVariantId = 'afc00000-0000-4000-8000-000000000015';
+const arabicAliasId = 'afc00000-0000-4000-8000-000000000016';
+const courseBase = { major_id: majorId, college_id: collegeId, university_id: universityId, university_slug: 'an-najah-national-university', major_name_ar: 'علم الحاسوب', major_name_en: 'Computer Science', major_slug: 'computer-science', college_name_ar: 'الهندسة', college_name_en: 'Engineering', college_slug: 'engineering' };
+const catalogRows = [
+  { ...courseBase, id: courseId, code: '10671212', slug: 'algorithms', name_ar: 'الخوارزميات', name_en: 'Algorithms' },
+  { ...courseBase, id: sharedCourseId, major_id: secondMajorId, code: '10671212', slug: 'algorithms', name_ar: 'الخوارزميات', name_en: 'Algorithms' },
+  { ...courseBase, id: arabicId, code: '11000102', slug: 'arabic', name_ar: 'لغة عربية', name_en: 'Arabic Language' },
+  { ...courseBase, id: oldArabicId, major_id: secondMajorId, code: '11000102', slug: 'arabic', name_ar: 'لغة عربية', name_en: 'Arabic Language' },
+  { ...courseBase, id: arabicAliasId, code: '11000122', slug: 'arabic-alias', name_ar: 'لغة عربية', name_en: 'Arabic Language' },
+  { ...courseBase, id: englishId, code: '11000322', slug: 'english-102', name_ar: 'اللغة الانجليزية 2', name_en: 'English Language II', college_names_ar: 'كلية الهندسة', college_names_en: 'Faculty of Engineering' },
+  { ...courseBase, id: englishVariantId, code: '11000323', slug: 'english-102-other', name_ar: 'اللغة الانجليزية 2', name_en: 'English Language II', college_names_ar: 'كلية العلوم الإنسانية والتربوية', college_names_en: 'Faculty of Humanities and Educational Sciences' },
+];
+const books = [
+  { id: 'afc00000-0000-4000-8000-000000000017', title: 'Calculus I', description: 'Clean copy', type: 'book', college_id: collegeId, whatsapp_number: '+970590000000', status: 'available', created_at: '2026-09-20T12:00:00Z', colleges: { name_ar: 'الهندسة', name_en: 'Engineering' } },
+  { id: 'afc00000-0000-4000-8000-000000000018', title: 'Physics slides', description: null, type: 'printed_slides', college_id: collegeId, whatsapp_number: '+970590000001', status: 'available', created_at: '2026-09-19T12:00:00Z', colleges: { name_ar: 'الهندسة', name_en: 'Engineering' } },
+];
 const calls = [];
 const questionId = 'afc00000-0000-4000-8000-000000000006';
 const answerId = 'afc00000-0000-4000-8000-000000000007';
@@ -48,12 +70,40 @@ const mock = createServer(async (req, res) => {
   res.setHeader('content-type', 'application/json');
   const reply = data => res.end(JSON.stringify(data));
   const singleton = data => req.headers.accept?.includes('vnd.pgrst.object') ? data[0] : data;
+  if (['/rest/v1/course_catalog_entries', '/rest/v1/course_catalog_options'].includes(url.pathname)) {
+    let rows = catalogRows;
+    if (url.pathname.endsWith('course_catalog_options')) rows = rows.filter((row, i, all) => all.findIndex(other => other.code === row.code && other.university_id === row.university_id) === i);
+    rows = rows.filter(row => ['id', 'major_id', 'university_id', 'university_slug', 'code'].every(key => {
+      const filter = url.searchParams.get(key);
+      if (!filter) return true;
+      if (filter.startsWith('eq.')) return filter === `eq.${row[key]}`;
+      if (filter.startsWith('in.(')) return filter.slice(4, -1).split(',').map(value => value.replaceAll('"', '')).includes(row[key]);
+      return false;
+    }));
+    const offset = Number(url.searchParams.get('offset') || 0), limit = Number(url.searchParams.get('limit') || 1000);
+    return reply(singleton(rows.slice(offset, offset + limit)));
+  }
   if (url.pathname === '/auth/v1/user') return reply({ id, aud: 'authenticated', role: 'authenticated', email: `${id}@example.invalid`, app_metadata: {}, user_metadata: {}, created_at: '2026-09-15T12:00:00Z' });
   if (url.pathname === '/rest/v1/profiles') return reply(singleton([{ id: url.searchParams.get('id')?.replace('eq.', '') || studentId, role: id === adminId ? 'admin' : 'student', full_name: 'QA Student', username: 'qa_student' }]));
   if (url.pathname === '/rest/v1/courses') return reply(singleton([{ id: courseId, major_id: majorId, code: '10671212', slug: 'algorithms', name_ar: 'الخوارزميات', name_en: 'Algorithms' }]));
-  if (url.pathname === '/rest/v1/majors') return reply(singleton([{ id: majorId, college_id: collegeId, slug: 'computer-science', name_ar: 'علم الحاسوب', name_en: 'Computer Science' }]));
+  if (url.pathname === '/rest/v1/majors') {
+    const rows = [
+      { id: majorId, college_id: collegeId, slug: 'computer-science', name_ar: 'علم الحاسوب', name_en: 'Computer Science' },
+      { id: secondMajorId, college_id: collegeId, slug: 'software', name_ar: 'هندسة البرمجيات', name_en: 'Software Engineering' },
+    ].filter(row => !url.searchParams.has('id') || url.searchParams.get('id') === `eq.${row.id}`);
+    return reply(singleton(rows));
+  }
   if (url.pathname === '/rest/v1/colleges') return reply(singleton([{ id: collegeId, slug: 'engineering', name_ar: 'الهندسة', name_en: 'Engineering' }]));
-  if (url.pathname === '/rest/v1/books') return reply([]);
+  if (url.pathname === '/rest/v1/books') {
+    let rows = books.filter(row => ['status', 'type', 'college_id'].every(key => {
+      const filter = url.searchParams.get(key);
+      return !filter || !filter.startsWith('eq.') || filter === `eq.${row[key]}`;
+    }));
+    const title = url.searchParams.get('title');
+    if (title?.startsWith('ilike.')) rows = rows.filter(row => row.title.toLowerCase().includes(title.slice(6).replaceAll('%', '').replaceAll('\\', '').toLowerCase()));
+    return reply(rows);
+  }
+  if (url.pathname === '/rest/v1/requests') return reply([]);
   if (['/rest/v1/questions', '/rest/v1/answers'].includes(url.pathname)) {
     const table = url.pathname.endsWith('/questions') ? questions : answers;
     if (req.method === 'POST') {
@@ -159,7 +209,7 @@ try {
     app.once('error', fail); app.once('exit', code => { clearTimeout(timer); fail(new Error('App exited '+code+' '+logs)); });
   });
   const metrics = { fixtureLatencyMs: latency, samplesPerRoute: 5, mode: baseline ? 'baseline' : 'optimized', routes: {} };
-  for (const path of ['/en', '/en/resources/new']) {
+  for (const path of ['/en', '/en/books', '/en/resources/new', '/en/questions', '/en/requests']) {
     const first = await visit(path); assert.equal(first.status, 200);
     const samples = [];
     for (let i=0; i<5; i++) {
@@ -182,6 +232,14 @@ try {
       if (path.endsWith('/new')) {
         assert.equal(metrics.routes[path].warmCatalogRequests, 0, 'Warm public catalog should not refetch');
         assert.ok(first.body.includes('Select Course'), 'Upload translations must render');
+      }
+      if (['/en/questions', '/en/requests'].includes(path)) {
+        assert.ok((first.body.match(/<option\b/g) || []).length < 20, 'Initial listing must not contain hundreds of course options');
+        assert.ok(first.htmlBytes < 200000, 'Catalog must not inflate listing HTML');
+      }
+      if (path === '/en/books') {
+        assert.ok(first.body.includes('Calculus I') && first.body.includes('Physics slides'));
+        assert.ok(first.body.includes('All colleges') && first.body.includes('Contact via WhatsApp'));
       }
     }
   }
@@ -252,7 +310,7 @@ try {
       const filtered = await visit(`${prefix}/questions?q=BFS&course=${courseId}&page=2`, null); assert.equal(filtered.status, 200);
       const query = calls.slice(start).filter(c => c.path === '/rest/v1/questions' && c.offset === '20').at(-1);
       if (query) {
-        assert.equal(query.course, `eq.${courseId}`); assert.ok(query.search.startsWith('wfts(simple).'));
+        assert.equal(query.course, `in.(${courseId},${sharedCourseId})`); assert.ok(query.search.startsWith('wfts(simple).'));
       }
       const missingSearch = await visit(`${prefix}/questions?q=absent-fixture-term`, null);
       assert.ok(missingSearch.body.includes(prefix ? 'No matching questions' : 'لا توجد أسئلة'));
@@ -308,6 +366,35 @@ try {
     const malformed = await visit('/en/questions/not-a-guid', null);
     assert.ok(malformed.status === 404 || malformed.body.includes('noindex'));
     console.log('PASS: Arabic/English Q&A pages, filters, verified CRUD/report actions, admin review, public reads and escaped bodies');
+  }
+  if (!baseline) {
+    for (const path of ['/api/catalog', '/api/catalog?major_id=nope', `/api/catalog?major_id=${majorId}&college_id=${collegeId}`, '/api/catalog?requirement=unknown']) {
+      const result = await visit(path, null); assert.equal(result.status, 400); assert.match(result.headers['cache-control'], /no-store/);
+    }
+    const major = JSON.parse((await visit(`/api/catalog?major_id=${majorId}`, null)).body);
+    assert.deepEqual(major.courses.map(row => row.code), ['10671212']);
+    const common = await visit('/api/catalog?requirement=arabic-language', null);
+    assert.equal(common.status, 200); assert.match(common.headers['cache-control'], /s-maxage=3600/);
+    assert.deepEqual(JSON.parse(common.body).courses.map(row => row.id), [arabicId]);
+    const variants = JSON.parse((await visit('/api/catalog?requirement=english-102', null)).body);
+    assert.equal(variants.courses.length, 2, 'Different English 102 codes must not be merged');
+    const beforeDefault = calls.length;
+    for (const prefix of ['', '/en']) {
+      const commonPage = await visit(`${prefix}/resources?scope=university`, null);
+      assert.equal(commonPage.status, 200); assert.ok(commonPage.body.includes('english-102'));
+      const legacy = await visit(`${prefix}/resources?college=${collegeId}&major=${secondMajorId}&course=${oldArabicId}`, null);
+      assert.equal(legacy.status, 200); assert.ok(legacy.body.includes('scope=university'));
+      const sharedRead = calls.filter(call => call.path === '/rest/v1/resources' && call.course?.includes(arabicId)).at(-1);
+      assert.equal(sharedRead?.course, `in.(${arabicId},${oldArabicId},${arabicAliasId})`, 'The resource read must include exact-code duplicates and the collapsed legacy alias');
+      const listing = await visit(`${prefix}/requests`, null); assert.equal(listing.status, 200);
+      assert.ok((listing.body.match(/<option\b/g) || []).length < 20);
+    }
+    assert.ok(calls.slice(beforeDefault).filter(call => /course_catalog/.test(call.path)).every(call => call.anonymous), 'Catalog views must use anonymous, RLS-limited reads');
+    if (process.env.RAFIQ_BROWSER_TESTS === '1') {
+      const { runCatalogUiSmoke } = await import('./catalog-ui-smoke.mjs');
+      await runCatalogUiSmoke('http://localhost:4100', { collegeId, majorId, secondMajorId, courseId, arabicId, oldArabicId, englishId, englishVariantId, cookie: cookie(studentId), questionId });
+    }
+    console.log('PASS: bounded catalog API, unique university requirements, code variants, shared course filters and legacy course links');
   }
   console.log(JSON.stringify(metrics, null, 2));
   console.log('PASS: Arabic/English SSR, translated forms, escaped titles, admin/student isolation and anonymous upload redirect');
