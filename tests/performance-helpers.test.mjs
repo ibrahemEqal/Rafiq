@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import { pickClientMessages } from '../lib/i18n/client-messages.ts';
 import { oneRelation } from '../lib/data/relations.ts';
 
-for (const namespace of ['Resources', 'Books', 'Admin', 'Questions', 'Requests']) {
+for (const namespace of ['Resources', 'Books', 'Admin', 'Questions', 'Requests', 'Study']) {
   test(`only ${namespace} messages are passed to its interactive section`, () => {
-    const messages = { Resources: { download: 'Download' }, Books: { title: 'Books' }, Admin: { approve: 'Approve' }, Questions: { publish: 'Publish' }, Requests: { publish: 'Publish request' }, Auth: { password: 'Password' } };
+    const messages = { Resources: { download: 'Download' }, Books: { title: 'Books' }, Admin: { approve: 'Approve' }, Questions: { publish: 'Publish' }, Requests: { publish: 'Publish request' }, Study: { title: 'Study sets' }, Auth: { password: 'Password' } };
     const selected = pickClientMessages(messages, namespace);
     assert.deepEqual(Object.keys(selected), [namespace]);
     assert.equal(selected[namespace], messages[namespace]);
     assert.equal('Auth' in selected, false);
-    assert.equal(Object.keys(messages).length, 6);
+    assert.equal(Object.keys(messages).length, 7);
   });
 }
 test('missing message namespace fails explicitly', () => assert.throws(() => pickClientMessages({}, 'Admin'), /Missing/));

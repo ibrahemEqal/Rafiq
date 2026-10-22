@@ -82,3 +82,11 @@ case spelling of each, and a genuinely new address. Existing addresses must not
 reach Auth signup or trigger another signup email. New addresses must still
 receive their normal confirmation flow. Real delivery requires checking the
 production email configuration separately.
+
+## Manual study sets and flashcards
+
+Apply `supabase/migrations/20261023030000_study_sets_and_flashcards.sql` to
+activate the new Study sets navigation entry. It adds owner-only sets, manual
+cards, source links, revocable read-only sharing and personal review progress.
+There are no AI services or additional environment variables. See
+`STUDY_SETS.md` for permissions, limits and two-account launch checks.
