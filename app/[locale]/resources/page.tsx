@@ -6,7 +6,9 @@ import { Link } from "@/i18n/routing";
 import UniversityResources from "@/components/resources/UniversityResources";
 import ResourceCard from "@/components/resources/ResourceCard";
 import ResourceFilters from "@/components/resources/ResourceFilters";
-import { getCatalogPath, getColleges, getCourses, getMajors } from "@/lib/data/catalog";
+import { getCatalogPath, getColleges, getCourses, getMajors, searchCourses } from "@/lib/data/catalog";
+import { courseSearchTerm } from "@/lib/data/course-search";
+import { oneRelation } from "@/lib/data/relations";
 import { createPublicClient } from "@/lib/supabase/public";
 
 const uuid = z.uuid();
@@ -19,6 +21,8 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Pr
   const courseId = uuid.safeParse(params.course).success ? params.course : undefined;
   const type = resourceTypes.has(params.type ?? "") ? params.type : undefined;
   const q = params.q?.trim().slice(0, 80) ?? "";
+  const courseQuery = courseSearchTerm(params.courseQuery);
+  const matchingCourses = await searchCourses(courseQuery);
   const path = await getCatalogPath(collegeId, majorId, courseId);
   const college = path.college;
   const major = path.major;
@@ -42,6 +46,30 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Pr
           </div>
           <Link href="/resources/new" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-teal-400 px-6 py-3.5 font-black text-slate-950 hover:bg-teal-300"><Plus size={20} />{t("uploadResource")}</Link>
         </div>
+      </section>
+
+      <section aria-labelledby="course-search-heading" className="mb-8 rounded-3xl border border-slate-200 bg-white p-5 sm:p-7">
+        <h2 id="course-search-heading" className="text-xl font-black text-slate-900">{t("directCourseSearch")}</h2>
+        <p className="mb-4 mt-2 text-sm leading-7 text-slate-500">{t("directCourseSearchHint")}</p>
+        <form method="get" className="flex flex-col gap-3 sm:flex-row">
+          <label htmlFor="course-search" className="sr-only">{t("directCourseSearch")}</label>
+          <input id="course-search" name="courseQuery" type="search" minLength={2} maxLength={80} defaultValue={courseQuery} placeholder={t("courseSearchPlaceholder")} className="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-3 focus:outline-teal-600" />
+          <button className="rounded-xl bg-slate-950 px-6 py-3 font-bold text-white">{t("search")}</button>
+        </form>
+        {courseQuery.length >= 2 && <div className="mt-5">
+          <p role="status" className="mb-3 text-sm font-semibold text-slate-600">{matchingCourses.length ? t("courseSearchLimit") : t("noMatchingCourses")}</p>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {matchingCourses.map(item => {
+              const resultMajor = oneRelation(item.majors);
+              const resultCollege = oneRelation(resultMajor?.colleges);
+              if (!resultMajor || !resultCollege) return null;
+              return <li key={item.id}><Link href={`/resources?college=${resultCollege.id}&major=${resultMajor.id}&course=${item.id}`} className="block rounded-2xl border border-slate-200 p-4 hover:border-teal-400 hover:bg-teal-50">
+                <span className="block font-bold text-slate-900">{item.code} — {localName(item)}</span>
+                <span className="mt-1 block text-sm leading-6 text-slate-500">{localName(resultCollege)} / {localName(resultMajor)}</span>
+              </Link></li>;
+            })}
+          </ul>
+        </div>}
       </section>
 
       {!college && <UniversityResources />}
@@ -85,7 +113,8 @@ async function loadResources(courseId: string, type?: string, q?: string) {
   let query = createPublicClient().from("resources").select(`id, title, type, file_size, download_count, view_count, created_at, courses (name_ar, name_en), profiles!resources_uploader_id_fkey (full_name)`).eq("status", "approved").eq("course_id", courseId);
   if (type) query = query.eq("type", type);
   if (q) query = query.textSearch("search_vector", q, { config: "simple", type: "websearch" });
-  const { data } = await query.order("created_at", { ascending: false }).order("id", { ascending: false }).limit(30);
+  const { data, error } = await query.order("created_at", { ascending: false }).order("id", { ascending: false }).limit(30);
+  if (error) throw new Error("Resources could not be loaded");
   return data ?? [];
 }
 

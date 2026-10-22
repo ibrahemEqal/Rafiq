@@ -5,6 +5,7 @@ import { createServer, request } from 'node:http';
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
+import { createHash } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
@@ -33,6 +34,8 @@ const answers = Array.from({ length: 21 }, (_, i) => ({
   body: `QA answer ${i}: use a queue.\n<script>alert(1)</script>`, created_at: new Date(Date.UTC(2026, 8, 15, 12, 1, i)).toISOString(), profiles: { full_name: 'QA Student', username: 'qa_student' },
 }));
 const reports = [];
+const recoveryRequests = [];
+const passwordUpdates = [];
 const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
 function cookie(id) {
   const now = Math.floor(Date.now()/1000);
@@ -48,9 +51,42 @@ const mock = createServer(async (req, res) => {
   res.setHeader('content-type', 'application/json');
   const reply = data => res.end(JSON.stringify(data));
   const singleton = data => req.headers.accept?.includes('vnd.pgrst.object') ? data[0] : data;
+  if (url.pathname === '/auth/v1/recover') {
+    let body = ''; for await (const chunk of req) body += chunk;
+    recoveryRequests.push({ ...JSON.parse(body), redirectTo: url.searchParams.get('redirect_to') });
+    return reply({});
+  }
+  if (url.pathname === '/auth/v1/logout') return reply({});
+  if (url.pathname === '/auth/v1/user' && req.method === 'PUT') {
+    let body = ''; for await (const chunk of req) body += chunk;
+    passwordUpdates.push({ ...JSON.parse(body), id });
+    return reply({ id, aud: 'authenticated', role: 'authenticated', email: `${id}@example.invalid`, app_metadata: {}, user_metadata: {}, created_at: '2026-09-15T12:00:00Z' });
+  }
   if (url.pathname === '/auth/v1/user') return reply({ id, aud: 'authenticated', role: 'authenticated', email: `${id}@example.invalid`, app_metadata: {}, user_metadata: {}, created_at: '2026-09-15T12:00:00Z' });
   if (url.pathname === '/rest/v1/profiles') return reply(singleton([{ id: url.searchParams.get('id')?.replace('eq.', '') || studentId, role: id === adminId ? 'admin' : 'student', full_name: 'QA Student', username: 'qa_student' }]));
-  if (url.pathname === '/rest/v1/courses') return reply(singleton([{ id: courseId, major_id: majorId, code: '10671212', slug: 'algorithms', name_ar: 'الخوارزميات', name_en: 'Algorithms' }]));
+  if (url.pathname === '/rest/v1/courses') {
+    if (url.searchParams.get('or')?.includes('absent-course-fixture')) return reply([]);
+    const row = { id: courseId, major_id: majorId, code: '10671212', slug: 'algorithms', name_ar: 'الخوارزميات', name_en: 'Algorithms' };
+    if (url.searchParams.get('select')?.includes('majors!inner')) row.majors = { id: majorId, name_ar: 'علم الحاسوب', name_en: 'Computer Science', college_id: collegeId, colleges: { id: collegeId, name_ar: 'الهندسة', name_en: 'Engineering' } };
+    return reply(singleton([row]));
+  }
+  if (url.pathname === '/auth/v1/token' && url.searchParams.get('grant_type') === 'pkce') {
+    let body = ''; for await (const chunk of req) body += chunk;
+    const input = JSON.parse(body);
+    const challenge = input.code_verifier && createHash('sha256').update(input.code_verifier).digest('base64url');
+    if (input.auth_code !== 'valid-pkce-fixture' || challenge !== recoveryRequests.at(-1)?.code_challenge) {
+      res.statusCode = 400; return reply({ code: 'bad_code_verifier', msg: 'Invalid fixture verifier' });
+    }
+    return reply(JSON.parse(Buffer.from(cookie(studentId).split('base64-')[1], 'base64url')));
+  }
+  if (url.pathname === '/auth/v1/verify') {
+    let body = ''; for await (const chunk of req) body += chunk;
+    const input = JSON.parse(body);
+    if (input.token_hash !== 'valid-recovery-fixture' || input.type !== 'recovery') {
+      res.statusCode = 403; return reply({ code: 'otp_expired', msg: 'Expired fixture token' });
+    }
+    return reply(JSON.parse(Buffer.from(cookie(studentId).split('base64-')[1], 'base64url')));
+  }
   if (url.pathname === '/rest/v1/majors') return reply(singleton([{ id: majorId, college_id: collegeId, slug: 'computer-science', name_ar: 'علم الحاسوب', name_en: 'Computer Science' }]));
   if (url.pathname === '/rest/v1/colleges') return reply(singleton([{ id: collegeId, slug: 'engineering', name_ar: 'الهندسة', name_en: 'Engineering' }]));
   if (url.pathname === '/rest/v1/books') return reply([]);
@@ -115,6 +151,9 @@ const mock = createServer(async (req, res) => {
     return reply(singleton(rows));
   }
   if (url.pathname === '/rest/v1/resources') {
+    if (url.searchParams.get('search_vector')?.includes('resource-failure-fixture')) {
+      res.statusCode = 503; return reply({ code: 'fixture_unavailable', message: 'Private database fixture error' });
+    }
     const row = { id: resourceId, title: 'QA resource <script>alert(1)</script>', type: 'summary', status: url.searchParams.get('status')?.replace('eq.', '') || 'approved', file_size: 1024, download_count: 0, view_count: 0, created_at: '2026-09-15T12:00:00Z', course_id: courseId, uploader_id: studentId, courses: { name_ar: 'الخوارزميات', name_en: 'Algorithms' }, profiles: { full_name: 'QA Student' } };
     res.setHeader('content-range', '0-0/1');
     return reply(singleton([row]));
@@ -129,10 +168,10 @@ function runBuild() {
     child.once('error', fail); child.once('exit', code => code === 0 ? done() : fail(new Error(log)));
   });
 }
-function visit(path, user = adminId) {
+function visit(path, user = adminId, cookieOverride) {
   const start = performance.now();
   return new Promise((done, fail) => {
-    const req = request(`http://localhost:4100${path}`, { headers: { ...(user ? { cookie: cookie(user) } : {}), 'accept-encoding': 'identity', 'user-agent': 'Mozilla/5.0 PerformanceSmoke' } }, res => {
+    const req = request(`http://localhost:4100${path}`, { headers: { ...(cookieOverride ? { cookie: cookieOverride } : user ? { cookie: cookie(user) } : {}), 'accept-encoding': 'identity', 'user-agent': 'Mozilla/5.0 PerformanceSmoke' } }, res => {
       let body = '', firstByteMs, mainReadyMs;
       const marker = path.endsWith('/resources/new') ? 'name="course_id"' : '<h1';
       res.on('data', b => {
@@ -209,6 +248,31 @@ try {
     const dashboard = await visit(`${prefix}/dashboard`); assert.equal(dashboard.status, 200);
     assert.ok(dashboard.body.includes(prefix ? 'Approve and publish' : 'موافقة ونشر'));
   }
+  if (!baseline) for (const prefix of ['', '/en']) {
+    const login = await visit(`${prefix}/auth/login`, null);
+    assert.ok(login.body.includes(`${prefix}/auth/forgot-password`), 'Login must expose password recovery');
+    const forgot = await visit(`${prefix}/auth/forgot-password`, null);
+    assert.equal(forgot.status, 200); assert.ok(forgot.body.includes('name="email"'));
+    const reset = await visit(`${prefix}/auth/reset-password`, null);
+    assert.ok(reset.body.includes(prefix ? 'The reset link is invalid' : 'رابط الاستعادة غير صالح'));
+    assert.ok(!reset.body.includes('name="confirmPassword"'), 'Anonymous sessions must not see a reset form');
+    const expired = await visit(`${prefix}/auth/callback?type=recovery&token_hash=expired-fixture`, null);
+    assert.equal(expired.status, 307);
+    assert.ok(expired.headers.location.endsWith(`${prefix}/auth/forgot-password?result=expired`));
+    const recovery = await visit(`${prefix}/auth/callback?type=recovery&token_hash=valid-recovery-fixture&next=https://evil.example`, null);
+    assert.equal(recovery.status, 307);
+    assert.ok(recovery.headers.location.endsWith(`${prefix}/auth/reset-password`));
+    assert.ok(recovery.headers['set-cookie']?.some(value => value.includes('auth-token')), 'Verified recovery must persist the session');
+    const resetForm = await visit(`${prefix}/auth/reset-password`, studentId);
+    assert.ok(resetForm.body.includes('name="confirmPassword"'));
+    const search = await visit(`${prefix}/resources?courseQuery=Algorithms`, null);
+    assert.equal(search.status, 200);
+    assert.ok(search.body.includes(`college=${collegeId}&amp;major=${majorId}&amp;course=${courseId}`), 'Search result must link directly to its valid catalog path');
+    assert.ok(search.body.includes(prefix ? 'Computer Science' : 'علم الحاسوب'));
+    const empty = await visit(`${prefix}/resources?courseQuery=absent-course-fixture`, null);
+    assert.ok(empty.body.includes(prefix ? 'No matching courses' : 'لا توجد مساقات مطابقة'));
+  }
+  console.log('PASS: recovery callbacks, expired tokens, locale-aware forms and direct course search');
   const before = calls.length;
   const student = await visit('/en/dashboard', studentId);
   assert.ok(!student.body.includes('QA resource &lt;script&gt;'));
@@ -234,14 +298,47 @@ try {
     async function action(path, name, input, user) {
       const entry = Object.entries(manifest.node).find(([, info]) => info.exportedName === name);
       assert.ok(entry, `Missing compiled action ${name}`);
-      const body = await encodeReply([input]);
-      assert.equal(typeof body, 'string', 'Fixture inputs must use simple Flight JSON');
+      const encoded = await encodeReply([input]);
+      let body = encoded, contentType = 'text/plain;charset=UTF-8';
+      if (typeof encoded !== 'string') {
+        const envelope = new Request('http://fixture.invalid', { method: 'POST', body: encoded });
+        body = Buffer.from(await envelope.arrayBuffer());
+        contentType = envelope.headers.get('content-type');
+      }
       return new Promise((done, fail) => {
-        const req = request(`http://localhost:4100${path}`, { method: 'POST', headers: { ...(user ? { cookie: cookie(user) } : {}), 'Next-Action': entry[0], accept: 'text/x-component', origin: 'http://localhost:4100', 'content-type': 'text/plain;charset=UTF-8' } }, res => {
-          let response = ''; res.on('data', b => response += b); res.on('end', () => done({ status: res.statusCode, body: response }));
+        const req = request(`http://localhost:4100${path}`, { method: 'POST', headers: { ...(user ? { cookie: cookie(user) } : {}), 'Next-Action': entry[0], accept: 'text/x-component', origin: 'http://localhost:4100', 'content-type': contentType } }, res => {
+          let response = ''; res.on('data', b => response += b); res.on('end', () => done({ status: res.statusCode, headers: res.headers, body: response }));
         }); req.setTimeout(15000, () => req.destroy(Error('Action check timed out'))); req.on('error', fail); req.end(body);
       });
     }
+    for (const prefix of ['', '/en']) {
+      const locale = prefix ? 'en' : 'ar';
+      const forgotForm = new FormData(); forgotForm.set('locale', locale); forgotForm.set('email', 'fixture@example.invalid');
+      const sent = await action(`${prefix}/auth/forgot-password`, 'requestPasswordReset', forgotForm, null);
+      assert.ok((sent.headers['x-action-redirect'] || sent.body).includes(`${prefix}/auth/forgot-password?result=sent`));
+      assert.equal(recoveryRequests.at(-1).email, 'fixture@example.invalid');
+      assert.equal(recoveryRequests.at(-1).redirectTo, `http://localhost:4100${prefix}/auth/callback?next=/auth/reset-password`);
+      assert.ok(recoveryRequests.at(-1).code_challenge, 'Recovery requests must use PKCE');
+      const verifierCookie = sent.headers['set-cookie']?.filter(value => value.includes('code-verifier')).map(value => value.split(';')[0]).join('; ');
+      assert.ok(verifierCookie, 'Recovery must persist the PKCE verifier cookie');
+      const exchanged = await visit(`${prefix}/auth/callback?code=valid-pkce-fixture&next=/auth/reset-password`, null, verifierCookie);
+      assert.equal(exchanged.status, 307);
+      assert.ok(exchanged.headers.location.endsWith(`${prefix}/auth/reset-password`), 'Default email flow must exchange its code and reach the password form');
+      assert.ok(exchanged.headers['set-cookie']?.some(value => value.includes('auth-token')), 'PKCE exchange must persist the verified session');
+      const updateForm = new FormData(); updateForm.set('locale', locale); updateForm.set('password', 'fixture-new-password'); updateForm.set('confirmPassword', 'fixture-new-password');
+      const beforeUpdates = passwordUpdates.length;
+      const denied = await action(`${prefix}/auth/reset-password`, 'updatePassword', updateForm, null);
+      assert.ok((denied.headers['x-action-redirect'] || denied.body).includes('error=expired'));
+      assert.equal(passwordUpdates.length, beforeUpdates, 'Anonymous users cannot update a password');
+      const updated = await action(`${prefix}/auth/reset-password`, 'updatePassword', updateForm, studentId);
+      assert.ok((updated.headers['x-action-redirect'] || updated.body).includes(`${prefix}/auth/login?password_updated=true`));
+      assert.equal(passwordUpdates.at(-1).id, studentId);
+      assert.equal(passwordUpdates.at(-1).password, 'fixture-new-password');
+      const failedResources = await visit(`${prefix}/resources?college=${collegeId}&major=${majorId}&course=${courseId}&q=resource-failure-fixture`, null);
+      assert.ok(!failedResources.body.includes('<h2 class="text-xl font-black text-slate-900">'), 'Database failures must not render the empty-course heading');
+      assert.ok(!failedResources.body.includes('Private database fixture error'), 'Database error details must not leak into the page');
+    }
+    console.log('PASS: recovery Server Actions, verified password updates and resource query failures');
     for (const prefix of ['', '/en']) {
       const start = calls.length;
       const list = await visit(`${prefix}/questions`, null); assert.equal(list.status, 200);

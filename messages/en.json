@@ -80,7 +80,23 @@
       "rate_limited": "Too many attempts were made. Wait a moment and try again.",
       "failed": "We could not create the account. Try again, or contact support if the problem continues.",
       "config": "The site URL is not configured correctly. Please contact support."
-    }
+    },
+    "forgotPassword": "Forgot password?",
+    "resetInstructions": "Enter your account email to receive a password reset link. Open it in the same browser where you requested it.",
+    "resetSent": "If this email is associated with an account, you will receive a password reset email. Check your spam folder too.",
+    "resetRateLimited": "Too many requests. Please wait a little and try again.",
+    "resetExpired": "The reset link is invalid, expired, or was opened in another browser. Request a new link and open it in the same browser.",
+    "resetInvalidEmail": "Enter a valid email address.",
+    "resetFailed": "This operation could not be completed. Please try again shortly.",
+    "sendResetLink": "Send reset link",
+    "sendingResetLink": "Sending link…",
+    "backToLogin": "Back to login",
+    "newPasswordTitle": "Set a new password",
+    "newPasswordInstructions": "Choose a new password of 8–72 characters and enter it twice.",
+    "resetInvalidPassword": "Passwords must match, contain 8–72 characters, differ from your old password, and meet security requirements.",
+    "saveNewPassword": "Save password",
+    "savingNewPassword": "Saving…",
+    "passwordUpdated": "Your password has been changed. Sign in with your new password."
   },
   "Resources": {
     "title": "Educational Resources",
@@ -132,7 +148,12 @@
     "driveLinkHint": "Make sure anyone with the link can open it, otherwise students will not be able to access the resource.",
     "externalResource": "External link",
     "openDrive": "Open resource",
-    "backToResources": "Back to resources"
+    "backToResources": "Back to resources",
+    "directCourseSearch": "Find a course directly",
+    "directCourseSearchHint": "Search by course name or code without browsing colleges and majors. Choose the result for your major.",
+    "courseSearchPlaceholder": "For example: Arabic, Algorithms, or a course code",
+    "courseSearchLimit": "Showing up to 20 matches. Refine your search if your course is missing.",
+    "noMatchingCourses": "No matching courses. Try part of the name or the course code."
   },
   "Admin": {
     "title": "Educational resource review",
