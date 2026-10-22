@@ -6,7 +6,7 @@ const signupSchema = z.object({
   locale: localeSchema,
   full_name: z.string().trim().min(2).max(100),
   username: z.string().trim().regex(/^[a-zA-Z0-9_]{3,30}$/),
-  email: z.string().trim().max(254).pipe(z.email()),
+  email: z.string().trim().toLowerCase().max(254).pipe(z.email()),
   password: z.string().min(8).max(72),
   confirmPassword: z.string(),
 }).refine(input => input.password === input.confirmPassword, { path: ["confirmPassword"] });
@@ -48,6 +48,16 @@ export async function signUpWithClient(client: SupabaseClient, input: unknown, o
   if (!parsed.success) return { code: "invalid" };
   const { locale, full_name, username, email, password } = parsed.data;
   try {
+    // Supabase can resend confirmation for an unconfirmed existing account,
+    // returning non-empty identities. Check existence before calling signUp.
+    const lookup = await client.rpc("signup_email_exists", { candidate_email: email });
+    const migrationPending = lookup.error?.code === "PGRST202" || lookup.error?.code === "42883";
+    // Roll out code before the additive migration without taking signup down.
+    // Auth still enforces uniqueness; the exact unconfirmed-email check starts
+    // working once the migration is applied. All other lookup failures stop.
+    if (lookup.error && !migrationPending) return { code: "failed" };
+    if (lookup.data === true) return { code: "email_exists" };
+    if (!migrationPending && lookup.data !== false) return { code: "failed" };
     const { data, error } = await client.auth.signUp({
       email,
       password,
@@ -60,7 +70,8 @@ export async function signUpWithClient(client: SupabaseClient, input: unknown, o
     // With email enumeration protection Supabase can return a fake user with
     // no identities for an existing address. Do not claim an email was sent.
     if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) return { code: "email_exists" };
-    if (data.session) return { code: "account_ready" };
+    if (data.session && data.user) return { code: "account_ready" };
+    if (!data.user || !Array.isArray(data.user.identities) || !data.user.identities.length) return { code: "failed" };
     return { code: "check_email" };
   } catch {
     return { code: "failed" };

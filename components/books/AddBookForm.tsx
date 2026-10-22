@@ -1,93 +1,54 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/routing";
 import { createBookRecord } from "@/lib/actions/books";
-import { BookOpen, Copy, Send } from "lucide-react";
+import { BookOpen, Copy, LoaderCircle, Send } from "lucide-react";
 
-type College = {
-  id: string | number;
-  name_ar: string;
-};
+type College = { id: string; name_ar: string; name_en: string };
 
 export default function AddBookForm({ colleges }: { colleges: College[] }) {
   const t = useTranslations("Books");
+  const locale = useLocale();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [type, setType] = useState("book"); // الافتراضي: كتاب
+  const [type, setType] = useState("book");
+  const [error, setError] = useState<string | null>(null);
+  const fieldClass = "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-base text-slate-900 outline-none transition focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-50";
+  const labelClass = "mb-2 block text-sm font-bold text-slate-800";
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    const formData = new FormData(e.currentTarget);
-    formData.append("type", type); // إضافة النوع بناءً على اختيار المستخدم
-
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (loading) return;
+    setLoading(true); setError(null);
+    const formData = new FormData(event.currentTarget);
+    formData.set("type", type);
     try {
       const result = await createBookRecord(formData);
-      if (result.success) {
-        router.push("/books");
-      } else {
-        alert("حدث خطأ أثناء الإضافة.");
-      }
-    } finally {
-      setLoading(false);
-    }
+      if (result.success) { router.push("/books"); router.refresh(); }
+      else setError(t(result.error === "invalid" ? "invalidBook" : result.error === "unauthorized" ? "loginRequired" : "publishFailed"));
+    } catch { setError(t("publishFailed")); }
+    finally { setLoading(false); }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* اختيار النوع بأزرار أنيقة بدلاً من قائمة منسدلة */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <button
-          type="button"
-          onClick={() => setType("book")}
-          className={`flex items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all ${type === 'book' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-100 hover:border-slate-200 text-slate-500'}`}
-        >
-          <BookOpen size={20} />
-          {t("bookType")}
-        </button>
-        <button
-          type="button"
-          onClick={() => setType("printed_slides")}
-          className={`flex items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all ${type === 'printed_slides' ? 'border-orange-500 bg-orange-50 text-orange-700 font-bold' : 'border-slate-100 hover:border-slate-200 text-slate-500'}`}
-        >
-          <Copy size={20} />
-          {t("slidesType")}
-        </button>
+  return <form onSubmit={handleSubmit} className="space-y-6">
+    {error && <p role="alert" className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm leading-7 text-red-700">{error}</p>}
+    <fieldset disabled={loading} className="space-y-6 disabled:opacity-70">
+      <legend className={labelClass}>{t("listingType")}</legend>
+      <div className="grid grid-cols-2 gap-3">
+        {[["book", "bookType"], ["printed_slides", "slidesType"]].map(([value, label]) => <button key={value} type="button" aria-pressed={type === value} onClick={() => setType(value)} className={`flex min-h-16 items-center justify-center gap-2 rounded-2xl border-2 p-3 text-sm font-bold transition ${type === value ? "border-teal-600 bg-teal-50 text-teal-800" : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"}`}>
+          {value === "book" ? <BookOpen size={20} aria-hidden="true" /> : <Copy size={20} aria-hidden="true" />}{t(label)}
+        </button>)}
       </div>
-
-      <div>
-        <label className="block text-base font-bold text-slate-700 mb-2">{t("formTitle")}</label>
-        <input type="text" name="title" required className="w-full px-4 py-3.5 text-base rounded-xl border border-slate-200 focus:border-indigo-500 outline-none transition-colors" />
-      </div>
-
-      <div>
-        <label className="block text-base font-bold text-slate-700 mb-2">{t("formCollege")}</label>
-        <select name="college_id" required className="w-full px-4 py-3.5 text-base rounded-xl border border-slate-200 focus:border-indigo-500 outline-none bg-white transition-colors">
-          <option value="">...</option>
-          {colleges.map(c => <option key={c.id} value={c.id}>{c.name_ar}</option>)}
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-base font-bold text-slate-700 mb-2">{t("formWhatsapp")}</label>
-        <input type="tel" name="whatsapp_number" dir="ltr" placeholder={t("whatsappPlaceholder")} required className="w-full px-4 py-3.5 text-base rounded-xl border border-slate-200 focus:border-indigo-500 outline-none transition-colors" />
-      </div>
-
-      <div>
-        <label className="block text-base font-bold text-slate-700 mb-2">{t("formDesc")}</label>
-        <textarea name="description" rows={3} className="w-full px-4 py-3.5 text-base rounded-xl border border-slate-200 focus:border-indigo-500 outline-none transition-colors resize-none"></textarea>
-      </div>
-
-      <button 
-        type="submit" 
-        disabled={loading}
-        className="w-full py-4 text-lg bg-slate-900 text-white font-bold rounded-xl shadow-md hover:bg-slate-800 disabled:opacity-70 transition-all flex justify-center items-center gap-2"
-      >
-        {loading ? <span className="animate-pulse">{t("submitting")}</span> : <><Send size={20} /> {t("submitBook")}</>}
+      <div><label htmlFor="listing-title" className={labelClass}>{t("formTitle")}</label><input id="listing-title" type="text" name="title" required minLength={2} maxLength={160} placeholder={t("titleExample")} className={fieldClass} /></div>
+      <div><label htmlFor="listing-college" className={labelClass}>{t("formCollege")}</label><select id="listing-college" name="college_id" required className={fieldClass}><option value="">{t("chooseCollege")}</option>{colleges.map(college => <option key={college.id} value={college.id}>{locale === "ar" ? college.name_ar : college.name_en}</option>)}</select></div>
+      <div><label htmlFor="listing-whatsapp" className={labelClass}>{t("formWhatsapp")}</label><input id="listing-whatsapp" type="tel" name="whatsapp_number" autoComplete="tel" dir="ltr" maxLength={25} placeholder={t("whatsappPlaceholder")} required aria-describedby="listing-whatsapp-hint" className={fieldClass} /><p id="listing-whatsapp-hint" className="mt-2 text-xs leading-6 text-slate-500">{t("whatsappHint")}</p></div>
+      <div><label htmlFor="listing-description" className={labelClass}>{t("formDesc")}</label><textarea id="listing-description" name="description" rows={4} maxLength={2000} placeholder={t("descriptionExample")} className={`${fieldClass} resize-y`} /></div>
+      <p className="rounded-xl bg-teal-50 p-4 text-sm leading-7 text-teal-900">{t("publishHint")}</p>
+      <button type="submit" disabled={loading} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-4 font-bold text-white hover:bg-teal-700 disabled:cursor-wait">
+        {loading ? <LoaderCircle size={19} aria-hidden="true" className="animate-spin" /> : <Send size={19} aria-hidden="true" />}{t(loading ? "submitting" : "submitBook")}
       </button>
-    </form>
-  );
+    </fieldset>
+  </form>;
 }
