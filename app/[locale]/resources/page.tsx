@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { z } from "zod";
 import { BookOpen, Building2, ChevronLeft, FolderOpen, GraduationCap, Plus, Search } from "lucide-react";
 import { Link } from "@/i18n/routing";
+import UniversityResources from "@/components/resources/UniversityResources";
 import ResourceCard from "@/components/resources/ResourceCard";
 import ResourceFilters from "@/components/resources/ResourceFilters";
 import { getCatalogPath, getColleges, getCourses, getMajors } from "@/lib/data/catalog";
@@ -42,6 +43,8 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Pr
           <Link href="/resources/new" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-teal-400 px-6 py-3.5 font-black text-slate-950 hover:bg-teal-300"><Plus size={20} />{t("uploadResource")}</Link>
         </div>
       </section>
+
+      {!college && <UniversityResources />}
 
       <nav className="mb-8 flex flex-wrap items-center gap-2 text-sm font-bold text-slate-500" aria-label={t("catalogPath")}>
         <Link href="/resources" className="rounded-xl bg-white px-3 py-2 hover:text-teal-700">{t("colleges")}</Link>
