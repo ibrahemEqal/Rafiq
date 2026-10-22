@@ -36,6 +36,16 @@ const answers = Array.from({ length: 21 }, (_, i) => ({
 const reports = [];
 const recoveryRequests = [];
 const passwordUpdates = [];
+const signupRequests = [];
+const marketBooks = Array.from({ length: 14 }, (_, index) => ({
+  id: `afc00000-0000-4000-8000-${String(index + 600).padStart(12, '0')}`,
+  title: index === 0 ? 'Calculus 1 — حساب التفاضل والتكامل' : index === 1 ? 'Printed network notes' : `University textbook ${index}`,
+  description: 'نسخة نظيفة، متاحة للاستلام داخل الجامعة. <script>alert(1)</script>',
+  type: index === 1 ? 'printed_slides' : 'book', college_id: collegeId,
+  whatsapp_number: '0599123456', status: 'available',
+  created_at: new Date(Date.UTC(2026, 9, 22, 12, 0, 59 - index)).toISOString(),
+  colleges: { name_ar: 'الهندسة', name_en: 'Engineering' },
+}));
 const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
 function cookie(id) {
   const now = Math.floor(Date.now()/1000);
@@ -89,7 +99,28 @@ const mock = createServer(async (req, res) => {
   }
   if (url.pathname === '/rest/v1/majors') return reply(singleton([{ id: majorId, college_id: collegeId, slug: 'computer-science', name_ar: 'علم الحاسوب', name_en: 'Computer Science' }]));
   if (url.pathname === '/rest/v1/colleges') return reply(singleton([{ id: collegeId, slug: 'engineering', name_ar: 'الهندسة', name_en: 'Engineering' }]));
-  if (url.pathname === '/rest/v1/books') return reply([]);
+  if (url.pathname === '/rest/v1/rpc/signup_email_exists') {
+    let body = ''; for await (const chunk of req) body += chunk;
+    const input = JSON.parse(body);
+    return reply(['existing@example.invalid', 'unconfirmed@example.invalid'].includes(input.candidate_email));
+  }
+  if (url.pathname === '/auth/v1/signup') {
+    let body = ''; for await (const chunk of req) body += chunk;
+    const input = JSON.parse(body); signupRequests.push(input);
+    return reply({ id: studentId, email: input.email, aud: 'authenticated', role: 'authenticated', identities: [{ id: 'new-fixture-identity', provider: 'email' }], created_at: new Date().toISOString() });
+  }
+  if (url.pathname === '/rest/v1/books') {
+    let rows = marketBooks.filter(row => row.status === 'available');
+    if (url.searchParams.has('type')) rows = rows.filter(row => `eq.${row.type}` === url.searchParams.get('type'));
+    if (url.searchParams.has('college_id')) rows = rows.filter(row => `eq.${row.college_id}` === url.searchParams.get('college_id'));
+    if (url.searchParams.has('title')) {
+      const term = url.searchParams.get('title').replace(/^ilike\.%/, '').replace(/%$/, '').toLowerCase();
+      rows = rows.filter(row => row.title.toLowerCase().includes(term));
+    }
+    if (url.searchParams.get('order')?.startsWith('created_at.asc')) rows.reverse();
+    const offset = Number(url.searchParams.get('offset') || 0), limit = Number(url.searchParams.get('limit') || rows.length);
+    return reply(rows.slice(offset, offset + limit));
+  }
   if (['/rest/v1/questions', '/rest/v1/answers'].includes(url.pathname)) {
     const table = url.pathname.endsWith('/questions') ? questions : answers;
     if (req.method === 'POST') {
@@ -311,6 +342,38 @@ try {
         }); req.setTimeout(15000, () => req.destroy(Error('Action check timed out'))); req.on('error', fail); req.end(body);
       });
     }
+    for (const prefix of ['', '/en']) {
+      for (const email of ['existing@example.invalid', 'unconfirmed@example.invalid']) {
+        const form = new FormData();
+        Object.entries({ locale: prefix ? 'en' : 'ar', full_name: 'Signup Fixture', username: 'signup_fixture', email, password: 'fixture-password', confirmPassword: 'fixture-password' }).forEach(([key, value]) => form.set(key, value));
+        const beforeSignup = signupRequests.length;
+        const result = await action(`${prefix}/auth/register`, 'signUp', form, null);
+        assert.ok((result.headers['x-action-redirect'] || result.body).includes(`${prefix}/auth/register?error=email_exists`));
+        assert.equal(signupRequests.length, beforeSignup, 'Registered emails must not reach the Auth signup endpoint');
+      }
+      const freshForm = new FormData();
+      Object.entries({ locale: prefix ? 'en' : 'ar', full_name: 'New Signup Fixture', username: 'new_signup_fixture', email: `new-${prefix ? 'en' : 'ar'}@example.invalid`, password: 'fixture-password', confirmPassword: 'fixture-password' }).forEach(([key, value]) => freshForm.set(key, value));
+      const freshSignup = await action(`${prefix}/auth/register`, 'signUp', freshForm, null);
+      assert.ok((freshSignup.headers['x-action-redirect'] || freshSignup.body).includes(`${prefix}/auth/login?check_email=true`), 'A genuinely new email must still complete normal signup');
+      const duplicatePage = await visit(`${prefix}/auth/register?error=email_exists`, null);
+      assert.ok(duplicatePage.body.includes(prefix ? 'This email is already registered' : 'هذا البريد مسجّل بالفعل'));
+      assert.ok(duplicatePage.body.includes(`${prefix}/auth/forgot-password`));
+      const market = await visit(`${prefix}/books`, null);
+      assert.equal(market.status, 200);
+      assert.ok(market.body.includes('Calculus 1') && market.body.includes('https://wa.me/970599123456'));
+      assert.ok(market.body.includes(prefix ? 'Engineering' : 'الهندسة'), 'Object-shaped college relations must render');
+      assert.ok(market.body.includes('page=2'), 'A full page must link to more results');
+      assert.ok(!market.body.includes('<script>alert(1)</script>'), 'Descriptions must be escaped');
+      const bookSearch = await visit(`${prefix}/books?q=Calculus&type=book&college=${collegeId}`, null);
+      assert.ok(bookSearch.body.includes('Calculus 1') && !bookSearch.body.includes('University textbook 2'));
+      const slides = await visit(`${prefix}/books?type=printed_slides`, null);
+      assert.ok(slides.body.includes('Printed network notes') && !slides.body.includes('Calculus 1'));
+      const secondPage = await visit(`${prefix}/books?page=2`, null);
+      assert.ok(secondPage.body.includes('University textbook 12') && !secondPage.body.includes('Calculus 1'));
+      const emptyBooks = await visit(`${prefix}/books?q=absent-book-fixture`, null);
+      assert.ok(emptyBooks.body.includes(prefix ? 'No matching listings' : 'ما لقينا إعلانات مطابقة'));
+    }
+    console.log('PASS: duplicate confirmed/unconfirmed signup rejection and book market search/filter/pagination');
     for (const prefix of ['', '/en']) {
       const locale = prefix ? 'en' : 'ar';
       const forgotForm = new FormData(); forgotForm.set('locale', locale); forgotForm.set('email', 'fixture@example.invalid');

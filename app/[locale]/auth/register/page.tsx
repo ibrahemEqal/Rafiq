@@ -20,8 +20,12 @@ export default async function RegisterPage({
       </div>
 
       {errorKey && (
-        <div className="mb-6 p-4 bg-red-50 text-red-600 text-sm font-semibold rounded-xl border border-red-100">
+        <div role="alert" className="mb-6 p-4 bg-red-50 text-red-600 text-sm font-semibold rounded-xl border border-red-100">
           {t(`signupErrors.${errorKey}`)}
+          {errorKey === "email_exists" && <div className="mt-3 flex flex-wrap gap-4">
+            <Link href="/auth/login" className="font-bold underline">{t("signInBtn")}</Link>
+            <Link href="/auth/forgot-password" className="font-bold underline">{t("forgotPassword")}</Link>
+          </div>}
         </div>
       )}
 

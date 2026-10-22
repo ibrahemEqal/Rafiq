@@ -64,3 +64,21 @@ The curated 61-link section remains available as repository-managed content.
 It was intentionally not imported into student-owned database rows without an
 explicit uploader and course mapping. It still opens original external links;
 its records do not participate in the database moderation/download counters.
+
+## Duplicate email signup check (23 October 2026)
+
+Apply `supabase/migrations/20261023020000_signup_email_lookup.sql` before
+using the updated registration form. It adds an exact, case-insensitive boolean
+lookup for confirmed and unconfirmed email accounts. The form intentionally
+reports registered emails and links to login/password recovery; the lookup
+returns no user IDs, email lists, or other auth rows. No new secret environment
+variables are required. Until this additive migration is applied, the form uses
+Supabase Auth's existing signup behavior to avoid an outage during deployment.
+The exact check for previously unconfirmed accounts requires this migration;
+deploying code alone does not complete that fix.
+
+Test an existing confirmed address, an existing unconfirmed address, a different
+case spelling of each, and a genuinely new address. Existing addresses must not
+reach Auth signup or trigger another signup email. New addresses must still
+receive their normal confirmation flow. Real delivery requires checking the
+production email configuration separately.
