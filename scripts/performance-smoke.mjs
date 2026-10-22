@@ -46,6 +46,20 @@ const marketBooks = Array.from({ length: 14 }, (_, index) => ({
   created_at: new Date(Date.UTC(2026, 9, 22, 12, 0, 59 - index)).toISOString(),
   colleges: { name_ar: 'الهندسة', name_en: 'Engineering' },
 }));
+const ownStudyId = 'afc00000-0000-4000-8000-000000002000';
+const sharedStudyId = 'afc00000-0000-4000-8000-000000002001';
+const sharedStudyToken = 'afc00000-0000-4000-8000-000000002101';
+const studySets = [
+  { id: ownStudyId, owner_id: studentId, title: 'Networks — midterm', subject: 'Computer Networks', description: 'Private study notes', visibility: 'private', share_token: 'afc00000-0000-4000-8000-000000002100', updated_at: '2026-10-23T10:00:00Z' },
+  { id: sharedStudyId, owner_id: adminId, title: 'Shared TCP revision', subject: 'Computer Networks', description: 'Read-only shared set', visibility: 'shared', share_token: sharedStudyToken, updated_at: '2026-10-23T10:00:00Z' },
+];
+const studyCards = [
+  { id: 'afc00000-0000-4000-8000-000000002200', set_id: ownStudyId, front: 'How do TCP and UDP differ?', back: 'TCP is reliable. UDP sends datagrams. <script>alert(1)</script>' },
+  { id: 'afc00000-0000-4000-8000-000000002201', set_id: ownStudyId, front: 'What is DNS?', back: 'Domain Name System.' },
+  { id: 'afc00000-0000-4000-8000-000000002202', set_id: sharedStudyId, front: 'What is a TCP handshake?', back: 'SYN, SYN-ACK, ACK.' },
+];
+const studyMaterials = [{ id: 'afc00000-0000-4000-8000-000000002300', set_id: ownStudyId, title: 'Network lecture notes', url: 'https://example.com/networks' }];
+const studyReviews = [];
 const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
 function cookie(id) {
   const now = Math.floor(Date.now()/1000);
@@ -99,6 +113,58 @@ const mock = createServer(async (req, res) => {
   }
   if (url.pathname === '/rest/v1/majors') return reply(singleton([{ id: majorId, college_id: collegeId, slug: 'computer-science', name_ar: 'علم الحاسوب', name_en: 'Computer Science' }]));
   if (url.pathname === '/rest/v1/colleges') return reply(singleton([{ id: collegeId, slug: 'engineering', name_ar: 'الهندسة', name_en: 'Engineering' }]));
+  if (url.pathname === '/rest/v1/rpc/get_shared_study_set') {
+    let body = ''; for await (const chunk of req) body += chunk;
+    const input = JSON.parse(body);
+    const set = studySets.find(row => row.share_token === input.token && row.visibility === 'shared');
+    return reply(set ? { id: set.id, title: set.title, subject: set.subject, description: set.description, visibility: set.visibility,
+      cards: studyCards.filter(card => card.set_id === set.id).map(({id,front,back}) => ({id,front,back})),
+      materials: studyMaterials.filter(item => item.set_id === set.id).map(({id,title,url}) => ({id,title,url})) } : null);
+  }
+  if (url.pathname === '/rest/v1/rpc/review_study_card') {
+    let body = ''; for await (const chunk of req) body += chunk;
+    const input = JSON.parse(body), card = studyCards.find(row => row.id === input.target_card), set = studySets.find(row => row.id === card?.set_id);
+    if (!id || !set || !(set.owner_id === id || set.visibility === 'shared' && input.access_token === set.share_token)) { res.statusCode = 403; return reply({ code: '42501' }); }
+    let review = studyReviews.find(row => row.user_id === id && row.card_id === card.id);
+    if (!review) { review = { user_id: id, card_id: card.id, set_id: set.id }; studyReviews.push(review); }
+    Object.assign(review, { remembered: input.knew, next_review_at: new Date(Date.now() + (input.knew ? 86400000 : 600000)).toISOString() });
+    return reply({ card_id: review.card_id, remembered: review.remembered, next_review_at: review.next_review_at });
+  }
+  if (['/rest/v1/study_sets', '/rest/v1/study_cards', '/rest/v1/study_materials', '/rest/v1/study_card_reviews'].includes(url.pathname)) {
+    const table = url.pathname.split('/').at(-1);
+    const list = table === 'study_sets' ? studySets : table === 'study_cards' ? studyCards : table === 'study_materials' ? studyMaterials : studyReviews;
+    const owned = row => table === 'study_sets' ? row.owner_id === id : table === 'study_card_reviews' ? row.user_id === id : studySets.some(set => set.id === row.set_id && set.owner_id === id);
+    const matches = row => ['id', 'set_id', 'owner_id'].every(key => !url.searchParams.has(key) || url.searchParams.get(key) === `eq.${row[key]}`);
+    if (req.method === 'POST') {
+      let body = ''; for await (const chunk of req) body += chunk;
+      const input = JSON.parse(body);
+      if (!id || table === 'study_card_reviews' || table === 'study_sets' && input.owner_id !== id || table !== 'study_sets' && !studySets.some(set => set.id === input.set_id && set.owner_id === id)) { res.statusCode = 403; return reply({ code: '42501' }); }
+      const row = { ...input, id: nextId(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+      if (table === 'study_sets') Object.assign(row, { share_token: nextId() });
+      list.push(row); return reply(singleton([row]));
+    }
+    if (req.method === 'PATCH' || req.method === 'DELETE') {
+      const row = list.find(row => owned(row) && matches(row));
+      if (!row) return reply(singleton([]));
+      if (req.method === 'PATCH') {
+        let body = ''; for await (const chunk of req) body += chunk;
+        const input = JSON.parse(body);
+        if (table === 'study_sets' && row.visibility === 'shared' && input.visibility === 'private') row.share_token = nextId();
+        Object.assign(row, input, { updated_at: new Date().toISOString() });
+      } else {
+        list.splice(list.indexOf(row), 1);
+        if (table === 'study_sets') {
+          for (const child of [studyCards, studyMaterials, studyReviews]) for (let i = child.length - 1; i >= 0; i--) if (child[i].set_id === row.id) child.splice(i, 1);
+        }
+        if (table === 'study_cards') for (let i = studyReviews.length - 1; i >= 0; i--) if (studyReviews[i].card_id === row.id) studyReviews.splice(i, 1);
+      }
+      return reply(singleton([{ id: row.id }]));
+    }
+    let rows = id ? list.filter(row => owned(row) && matches(row)) : [];
+    if (table === 'study_sets') rows = rows.map(row => ({ id:row.id,title:row.title,subject:row.subject,description:row.description,visibility:row.visibility,share_token:row.share_token,updated_at:row.updated_at, study_cards: [{count:studyCards.filter(card=>card.set_id===row.id).length}], study_materials:[{count:studyMaterials.filter(item=>item.set_id===row.id).length}] }));
+    const offset = Number(url.searchParams.get('offset') || 0), limit = Number(url.searchParams.get('limit') || rows.length);
+    return reply(singleton(rows.slice(offset, offset + limit)));
+  }
   if (url.pathname === '/rest/v1/rpc/signup_email_exists') {
     let body = ''; for await (const chunk of req) body += chunk;
     const input = JSON.parse(body);
@@ -326,10 +392,10 @@ try {
   if (!baseline) {
     const manifest = JSON.parse(await readFile(resolve(project, '.next/server/server-reference-manifest.json'), 'utf8'));
     const { encodeReply } = createRequire(resolve(project, 'package.json'))('next/dist/compiled/react-server-dom-turbopack/client.node.js');
-    async function action(path, name, input, user) {
+    async function action(path, name, input, user, remaining = []) {
       const entry = Object.entries(manifest.node).find(([, info]) => info.exportedName === name);
       assert.ok(entry, `Missing compiled action ${name}`);
-      const encoded = await encodeReply([input]);
+      const encoded = await encodeReply([input, ...remaining]);
       let body = encoded, contentType = 'text/plain;charset=UTF-8';
       if (typeof encoded !== 'string') {
         const envelope = new Request('http://fixture.invalid', { method: 'POST', body: encoded });
@@ -374,6 +440,64 @@ try {
       assert.ok(emptyBooks.body.includes(prefix ? 'No matching listings' : 'ما لقينا إعلانات مطابقة'));
     }
     console.log('PASS: duplicate confirmed/unconfirmed signup rejection and book market search/filter/pagination');
+    for (const prefix of ['', '/en']) {
+      const guest = await visit(`${prefix}/study`, null); assert.equal(guest.status, 200);
+      assert.ok(guest.body.includes(prefix ? 'Start your first study set' : 'ابدأ حقيبتك الأولى'));
+      const own = await visit(`${prefix}/study`, studentId); assert.equal(own.status, 200);
+      assert.ok(own.body.includes('Networks — midterm') && !own.body.includes('Shared TCP revision'));
+      const admin = await visit(`${prefix}/study`, adminId);
+      assert.ok(admin.body.includes('Shared TCP revision') && !admin.body.includes('Private study notes'));
+      const detail = await visit(`${prefix}/study/${ownStudyId}`, studentId); assert.equal(detail.status, 200);
+      assert.ok(detail.body.includes('How do TCP and UDP differ?') && detail.body.includes('&lt;script&gt;'));
+      const forbidden = await visit(`${prefix}/study/${ownStudyId}`, adminId);
+      assert.ok(forbidden.status === 404 || forbidden.body.includes('noindex'));
+      assert.ok(!forbidden.body.includes('Private study notes'));
+      const shared = await visit(`${prefix}/study/shared/${sharedStudyToken}`, null);
+      assert.equal(shared.status, 200); assert.ok(shared.body.includes('Shared TCP revision'));
+      assert.ok(!shared.body.includes('id="edit-title"'), 'Shared readers must not receive an edit form');
+      const sharedReview = await visit(`${prefix}/study/shared/${sharedStudyToken}/review`, null); assert.equal(sharedReview.status, 200);
+      assert.ok(sharedReview.body.includes(prefix ? 'Guest progress lasts' : 'مراجعتك كضيف'));
+      const badToken = await visit(`${prefix}/study/shared/afc00000-0000-4000-8000-000000009999`, null);
+      assert.ok(badToken.status === 404 || badToken.body.includes('noindex'));
+    }
+    const deniedSet = await action('/en/study', 'mutateStudy', 'createSet', null, [{title:'Denied set'}]);
+    assert.ok(deniedSet.body.includes('"error":"unauthorized"'));
+    const newSet = await action('/en/study', 'mutateStudy', 'createSet', studentId, [{title:'HTTP study set',owner_id:adminId}]);
+    assert.ok(newSet.body.includes('"success":true'));
+    const createdSet = studySets.at(-1); assert.equal(createdSet.owner_id, studentId); assert.equal(createdSet.visibility, 'private');
+    const newCard = await action(`/en/study/${createdSet.id}`, 'mutateStudy', 'addCard', studentId, [{set_id:createdSet.id,front:'HTTP flashcard question',back:'HTTP flashcard answer'}]);
+    assert.ok(newCard.body.includes('"success":true')); const createdCard = studyCards.at(-1);
+    const forbiddenCard = await action(`/en/study/${createdSet.id}`, 'mutateStudy', 'addCard', adminId, [{set_id:createdSet.id,front:'Hacked card',back:'Hacked answer'}]);
+    assert.ok(forbiddenCard.body.includes('"error":"notFound"'));
+    const editCard = await action(`/en/study/${createdSet.id}`, 'mutateStudy', 'updateCard', studentId, [{id:createdCard.id,set_id:createdSet.id,front:'Edited HTTP question',back:'Edited HTTP answer'}]);
+    assert.ok(editCard.body.includes('"success":true')); assert.equal(createdCard.front,'Edited HTTP question');
+    const source = await action(`/en/study/${createdSet.id}`, 'mutateStudy', 'addMaterial', studentId, [{set_id:createdSet.id,title:'HTTP lecture',url:'https://example.com/lecture'}]);
+    assert.ok(source.body.includes('"success":true')); const createdMaterial = studyMaterials.at(-1);
+    const settings = {id:createdSet.id,title:createdSet.title,subject:'Networks',description:'Shared by HTTP',visibility:'shared'};
+    const share = await action(`/en/study/${createdSet.id}`, 'mutateStudy', 'updateSet', studentId, [settings]);
+    assert.ok(share.body.includes('"success":true')); const oldToken = createdSet.share_token;
+    const beforeReview = studyReviews.length;
+    const guestRating = await action(`/en/study/shared/${oldToken}/review`, 'reviewStudyCard', {card_id:createdCard.id,remembered:true,token:oldToken}, null);
+    assert.ok(guestRating.body.includes('"error":"unauthorized"')); assert.equal(studyReviews.length,beforeReview);
+    const validRating = await action(`/en/study/shared/${oldToken}/review`, 'reviewStudyCard', {card_id:createdCard.id,remembered:false,token:oldToken,user_id:studentId}, adminId);
+    assert.ok(validRating.body.includes('"success":true')); assert.equal(studyReviews.at(-1).user_id,adminId);
+    const ownerReview = await visit(`/en/study/${createdSet.id}/review`, studentId);
+    assert.ok(!ownerReview.body.includes('"remembered":false'), 'One reader must not receive another reader progress');
+    await action(`/en/study/${createdSet.id}`, 'mutateStudy', 'updateSet', studentId, [{...settings,visibility:'private'}]);
+    const revoked = await visit(`/en/study/shared/${oldToken}`, null);
+    assert.ok(revoked.status===404||revoked.body.includes('noindex')); assert.ok(!revoked.body.includes('Edited HTTP question'));
+    const staleRating = await action(`/en/study/shared/${oldToken}/review`, 'reviewStudyCard', {card_id:createdCard.id,remembered:true,token:oldToken}, adminId);
+    assert.ok(staleRating.body.includes('"error":"notFound"'));
+    await action(`/en/study/${createdSet.id}`, 'mutateStudy', 'updateSet', studentId, [settings]);
+    assert.notEqual(createdSet.share_token,oldToken);
+    const removedSource = await action(`/en/study/${createdSet.id}`, 'mutateStudy', 'deleteMaterial', studentId, [{id:createdMaterial.id,set_id:createdSet.id}]);
+    assert.ok(removedSource.body.includes('"success":true'));
+    const removedCard = await action(`/en/study/${createdSet.id}`, 'mutateStudy', 'deleteCard', studentId, [{id:createdCard.id,set_id:createdSet.id}]);
+    assert.ok(removedCard.body.includes('"success":true')); assert.equal(studyReviews.some(row=>row.card_id===createdCard.id),false);
+    const removedSet = await action(`/en/study/${createdSet.id}`, 'mutateStudy', 'deleteSet', studentId, [{id:createdSet.id}]);
+    assert.ok(removedSet.body.includes('"success":true')); assert.equal(studySets.some(row=>row.id===createdSet.id),false);
+    console.log('PASS: study set/card/link CRUD, private isolation, capability sharing/revocation and personal reviews');
+
     for (const prefix of ['', '/en']) {
       const locale = prefix ? 'en' : 'ar';
       const forgotForm = new FormData(); forgotForm.set('locale', locale); forgotForm.set('email', 'fixture@example.invalid');

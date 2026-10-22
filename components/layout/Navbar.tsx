@@ -41,7 +41,7 @@ export default async function Navbar({ locale }: { locale: string }) {
             {t("requests")}
           </Link>
           <Link href="/offers" className="inline-flex items-center gap-2 rounded-full bg-lime-50 px-4 py-2.5 font-bold text-slate-800 hover:bg-lime-100">{t("offers")}<span className="rounded-full bg-lime-200 px-2 py-0.5 text-xs text-slate-800">{t("comingSoon")}</span></Link>
-          <Link href="/offers" className="inline-flex shrink-0 items-center gap-2 rounded-full bg-lime-50 px-3 py-2 text-sm font-bold text-slate-800">{t("offers")}<span className="rounded-full bg-lime-200 px-2 py-0.5 text-xs">{t("comingSoon")}</span></Link>
+          <Link href="/study" className="shrink-0 rounded-full bg-teal-50 px-4 py-2.5 font-bold text-teal-800 hover:bg-teal-100">{t("study")}</Link>
       </nav>
 
         {/* الأزرار / حساب المستخدم */}
@@ -62,6 +62,7 @@ export default async function Navbar({ locale }: { locale: string }) {
       </div>
       <nav aria-label={t("mobileNavigation")} className="xl:hidden flex items-center gap-1 overflow-x-auto border-t border-slate-100 px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Link href="/resources" className="shrink-0 rounded-full px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100">{t("resources")}</Link>
+        <Link href="/study" className="shrink-0 rounded-full bg-teal-50 px-3 py-2 text-xs font-bold text-teal-800">{t("study")}</Link>
         <Link href="/books" className="shrink-0 rounded-full px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100">{t("books")}</Link>
         <Link href="/questions" className="shrink-0 rounded-full px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100">{t("questions")}</Link>
         <Link href="/requests" className="shrink-0 rounded-full bg-violet-50 px-3 py-2 text-xs font-extrabold text-violet-700">{t("requests")}</Link>
