@@ -2,14 +2,17 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { isPasswordRecovery } from '@/lib/auth/password-reset'
 
 export async function GET(request: Request, { params }: { params: Promise<{ locale: string }> }) {
   const { searchParams, origin } = new URL(request.url)
   const locale = (await params).locale === 'en' ? 'en' : 'ar'
   const prefix = locale === 'en' ? '/en' : ''
   const code = searchParams.get('code')
+  const tokenHash = searchParams.get('token_hash')
+  const recovery = isPasswordRecovery(searchParams)
 
-  if (code) {
+  if (code || (tokenHash && searchParams.get('type') === 'recovery')) {
     const cookieStore = await cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,13 +32,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     )
     
     // تحويل الكود إلى جلسة صالحة
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { error } = code
+      ? await supabase.auth.exchangeCodeForSession(code)
+      : await supabase.auth.verifyOtp({ token_hash: tokenHash!, type: 'recovery' })
     
     if (!error) {
-      return NextResponse.redirect(`${origin}${prefix}/`)
+      return NextResponse.redirect(`${origin}${prefix}${recovery ? '/auth/reset-password' : '/'}`)
     }
   }
 
   // في حال فشل التأكيد
-  return NextResponse.redirect(`${origin}${prefix}/auth/login?error=true`)
+  return NextResponse.redirect(`${origin}${prefix}${recovery ? '/auth/forgot-password?result=expired' : '/auth/login?error=true'}`)
 }

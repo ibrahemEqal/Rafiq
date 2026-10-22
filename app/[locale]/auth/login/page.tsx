@@ -27,6 +27,7 @@ export default async function LoginPage({
           {t("accountReady")}
         </div>
       )}
+      {params.password_updated === "true" && <p role="status" className="mb-6 rounded-xl bg-teal-50 p-4 text-sm font-semibold text-teal-700">{t("passwordUpdated")}</p>}
       {params.error === "true" && (
         <div className="mb-6 p-4 bg-red-50 text-red-600 text-sm font-semibold rounded-xl border border-red-100">
           {t("authError")}
@@ -45,6 +46,7 @@ export default async function LoginPage({
           <input type="password" name="password" required dir="ltr" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none bg-slate-50" />
         </div>
 
+        <div className="text-end"><Link href="/auth/forgot-password" className="text-sm font-semibold text-teal-700 hover:underline">{t("forgotPassword")}</Link></div>
         <AuthSubmitButton idle={t("signInBtn")} pending={t("signingIn")} />
       </form>
       

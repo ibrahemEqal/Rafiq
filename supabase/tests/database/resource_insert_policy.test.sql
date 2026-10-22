@@ -3,7 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(8);
+select plan(17);
 
 insert into auth.users (id, email, raw_user_meta_data)
 values
@@ -77,6 +77,60 @@ select results_eq(
   array['pending'::text], 'existing moderation trigger prevents self-approval via UPDATE'
 );
 
+-- External links use the same ownership and moderation guard as uploads.
+prepare attempt_external_insert(uuid, public.resource_status, text) as
+insert into public.resources
+  (uploader_id, course_id, title, type, source_type, external_url,
+   storage_path, file_size, mime_type, status)
+values
+  ($1, 'fdc00000-0000-4000-8000-000000000013', 'External fixture', 'summary',
+   'external', $3, null, null, null, $2);
+
+select lives_ok(
+  $$execute attempt_external_insert('fdc00000-0000-4000-8000-000000000001', 'pending',
+    'https://drive.google.com/file/d/example/view')$$,
+  'pending Google Drive links can be submitted'
+);
+select lives_ok(
+  $$execute attempt_external_insert('fdc00000-0000-4000-8000-000000000001', 'pending',
+    'https://docs.google.com/document/d/example/edit')$$,
+  'pending Google Docs links can be submitted'
+);
+select throws_ok(
+  $$execute attempt_external_insert('fdc00000-0000-4000-8000-000000000001', 'approved',
+    'https://drive.google.com/file/d/example/view')$$,
+  '42501', null, 'external links cannot bypass moderation'
+);
+select throws_ok(
+  $$execute attempt_external_insert('fdc00000-0000-4000-8000-000000000002', 'pending',
+    'https://drive.google.com/file/d/example/view')$$,
+  '42501', null, 'external uploader identity cannot be forged'
+);
+select throws_ok(
+  $$execute attempt_external_insert('fdc00000-0000-4000-8000-000000000001', 'pending',
+    'https://drive.google.com.evil.example/file')$$,
+  '23514', null, 'host lookalikes fail the existing location constraint'
+);
+select throws_ok(
+  $$execute attempt_external_insert('fdc00000-0000-4000-8000-000000000001', 'pending',
+    'http://drive.google.com/file/d/example/view')$$,
+  '23514', null, 'insecure external links are rejected'
+);
+select throws_ok(
+  $$execute attempt_external_insert('fdc00000-0000-4000-8000-000000000001', 'pending',
+    'https://example.com/file.pdf')$$,
+  '23514', null, 'unsupported external hosts are rejected'
+);
+select throws_ok(
+  $$insert into public.resources (uploader_id, course_id, title, type, source_type,
+    external_url, storage_path, file_size, mime_type, status)
+    values ('fdc00000-0000-4000-8000-000000000001',
+    'fdc00000-0000-4000-8000-000000000013', 'Mixed source', 'notes', 'external',
+    'https://drive.google.com/file/d/example/view',
+    'fdc00000-0000-4000-8000-000000000001/mixed.pdf', 1, 'application/pdf', 'pending')$$,
+  '42501', null, 'external rows cannot smuggle an upload path'
+);
+
 reset role;
 select set_config('request.jwt.claim.sub', '', true);
 set local role anon;
@@ -85,7 +139,13 @@ select throws_ok(
     'fdc00000-0000-4000-8000-000000000001/anonymous.pdf')$$,
   '42501', null, 'anonymous users cannot insert resources'
 );
+select throws_ok(
+  $$execute attempt_external_insert('fdc00000-0000-4000-8000-000000000001', 'pending',
+    'https://drive.google.com/file/d/example/view')$$,
+  '42501', null, 'anonymous users cannot submit external resources'
+);
 reset role;
+deallocate attempt_external_insert;
 deallocate attempt_resource_insert;
 select * from finish();
 rollback;

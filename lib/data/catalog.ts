@@ -1,4 +1,5 @@
 import "server-only";
+import { courseSearchFilter } from "@/lib/data/course-search";
 import { createClient } from "@supabase/supabase-js";
 
 export type CatalogName = { id: string; name_ar: string; name_en: string; slug: string };
@@ -37,6 +38,9 @@ export async function getCatalogPath(collegeId?: string, majorId?: string, cours
     majorId ? catalog.from("majors").select("id, college_id, name_ar, name_en, slug").eq("id", majorId).maybeSingle() : null,
     courseId ? catalog.from("courses").select("id, major_id, code, name_ar, name_en, slug").eq("id", courseId).maybeSingle() : null,
   ]);
+  if ([collegeResult, majorResult, courseResult].some(result => result?.error)) {
+    throw new Error("Academic catalog unavailable");
+  }
   const college = collegeResult?.data ?? null;
   const major = majorResult?.data ?? null;
   const course = courseResult?.data ?? null;
@@ -45,3 +49,13 @@ export async function getCatalogPath(collegeId?: string, majorId?: string, cours
 }
 
 export async function getUploadCatalog() { return { colleges: await getColleges() }; }
+
+export async function searchCourses(value: unknown) {
+  const filter = courseSearchFilter(value);
+  if (!filter) return [];
+  const { data, error } = await client().from("courses")
+    .select("id, code, name_ar, name_en, major_id, majors!inner(id, name_ar, name_en, college_id, colleges!inner(id, name_ar, name_en))")
+    .or(filter).order("code").order("id").limit(20);
+  if (error) throw new Error("Course search unavailable");
+  return data ?? [];
+}
