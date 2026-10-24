@@ -8,7 +8,10 @@ insert into auth.users(id,email,raw_user_meta_data)values
  ('fdf00000-0000-4000-8000-000000000002','companion2@example.invalid','{"username":"companion_two"}'),
  ('fdf00000-0000-4000-8000-000000000003','companion3@example.invalid','{"username":"companion_three"}'),
  ('fdf00000-0000-4000-8000-000000000004','companion4@example.invalid','{"username":"companion_admin"}');
+-- Only the local fixture bootstrap bypasses the existing role-escalation trigger.
+alter table public.profiles disable trigger trg_profiles_prevent_role_escalation;
 update public.profiles set role='admin' where id='fdf00000-0000-4000-8000-000000000004';
+alter table public.profiles enable trigger trg_profiles_prevent_role_escalation;
 select set_config('request.jwt.claim.sub','fdf00000-0000-4000-8000-000000000001',true);
 set local role authenticated;
 select is(public.save_companion_section('tasks','[]',0)->>'version','1','first save starts at version one');
