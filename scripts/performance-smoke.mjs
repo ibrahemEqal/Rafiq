@@ -20,6 +20,10 @@ const courseId = 'afc00000-0000-4000-8000-000000000004';
 const collegeId = 'afc00000-0000-4000-8000-000000000005';
 const majorId = 'afc00000-0000-4000-8000-000000000008';
 const calls = [];
+const companionSections = [];
+const campusCircles = [];
+const circleReports = [];
+
 const questionId = 'afc00000-0000-4000-8000-000000000006';
 const answerId = 'afc00000-0000-4000-8000-000000000007';
 let sequence = 100;
@@ -87,6 +91,28 @@ const mock = createServer(async (req, res) => {
     return reply({ id, aud: 'authenticated', role: 'authenticated', email: `${id}@example.invalid`, app_metadata: {}, user_metadata: {}, created_at: '2026-09-15T12:00:00Z' });
   }
   if (url.pathname === '/auth/v1/user') return reply({ id, aud: 'authenticated', role: 'authenticated', email: `${id}@example.invalid`, app_metadata: {}, user_metadata: {}, created_at: '2026-09-15T12:00:00Z' });
+  if (url.pathname === '/rest/v1/companion_sections') return reply(id ? companionSections.filter(row => row.user_id === id) : []);
+  if (url.pathname === '/rest/v1/rpc/save_companion_section') {
+    let body = ''; for await (const chunk of req) body += chunk;
+    const input = JSON.parse(body);
+    if (!id) { res.statusCode=403; return reply({code:'42501'}); }
+    let row=companionSections.find(row=>row.user_id===id&&row.section===input.section_name);
+    if ((row?.version??0)!==input.expected_version) { res.statusCode=409;return reply({code:'P0001',message:'companion_conflict'}); }
+    if(!row){row={user_id:id,section:input.section_name};companionSections.push(row);}
+    Object.assign(row,{payload:input.content,version:input.expected_version+1});return reply({version:row.version});
+  }
+  if (url.pathname.startsWith('/rest/v1/rpc/') && ['list_campus_circles','create_campus_circle','act_campus_circle','report_campus_circle'].includes(url.pathname.split('/').at(-1))) {
+    let body='';for await(const chunk of req)body+=chunk;const input=JSON.parse(body);const operation=url.pathname.split('/').at(-1);
+    if(operation==='list_campus_circles')return reply(campusCircles.filter(row=>(!input.target_circle||row.id===input.target_circle)&&(input.only_mine?row.memberIds.includes(id):row.status==='open'||input.target_circle&&row.memberIds.includes(id))).slice(0,40).map(({host_id,memberIds,...row})=>({...row,host:'qa_student',members:memberIds.length,joined:memberIds.includes(id),is_host:host_id===id,can_moderate:id===adminId,reports:id===adminId?circleReports.filter(report=>report.id===row.id&&report.status==='pending').length:0,moderation_note:id===adminId?circleReports.find(report=>report.id===row.id&&report.status==='pending')?.reason??null:null})));
+    if(!id){res.statusCode=403;return reply({code:'42501'});}
+    if(operation==='create_campus_circle'){const row={...input.details,id:nextId(),host_id:id,memberIds:[id],status:'open'};campusCircles.push(row);return reply({id:row.id});}
+    const row=campusCircles.find(row=>row.id===input.target);if(!row){res.statusCode=404;return reply({message:'circle_notFound'});}
+    if(operation==='report_campus_circle'){if(!circleReports.some(report=>report.id===row.id&&report.reporter===id&&report.status==='pending'))circleReports.push({id:row.id,reporter:id,reason:input.report_reason,status:'pending'});return reply({id:row.id});}
+    if(input.operation==='close'||input.operation==='dismiss'){if(row.host_id!==id&&id!==adminId){res.statusCode=403;return reply({code:'42501'});}if(input.operation==='close')row.status='closed';for(const report of circleReports)if(report.id===row.id)report.status='resolved';}
+    if(input.operation==='leave')row.memberIds=row.memberIds.filter(member=>member!==id);
+    if(input.operation==='join'&&!row.memberIds.includes(id)){if(row.status!=='open'||row.memberIds.length>=row.capacity){res.statusCode=409;return reply({message:row.status!=='open'?'circle_ended':'circle_full'});}row.memberIds.push(id);}
+    return reply({id:row.id});
+  }
   if (url.pathname === '/rest/v1/profiles') return reply(singleton([{ id: url.searchParams.get('id')?.replace('eq.', '') || studentId, role: id === adminId ? 'admin' : 'student', full_name: 'QA Student', username: 'qa_student' }]));
   if (url.pathname === '/rest/v1/courses') {
     if (url.searchParams.get('or')?.includes('absent-course-fixture')) return reply([]);
@@ -408,6 +434,29 @@ try {
         }); req.setTimeout(15000, () => req.destroy(Error('Action check timed out'))); req.on('error', fail); req.end(body);
       });
     }
+    for(const prefix of ['', '/en']) {
+      const guest=await visit(`${prefix}/companion`,null);assert.equal(guest.status,200);assert.ok(guest.body.includes(prefix?'My next steps':'خطوة'));assert.ok(guest.body.includes('noindex'));
+      const signed=await visit(`${prefix}/companion`,studentId);assert.equal(signed.status,200);
+      const circles=await visit(`${prefix}/circles`,null);assert.equal(circles.status,200);assert.ok(circles.body.includes(prefix?'The first seat':'الكرسي الأول'));
+    }
+    const deniedPlan=await action('/en/companion','saveCompanion','profile',null,[{name:'Guest',intention:'steady',dailyMinutes:25},0]);assert.ok(deniedPlan.body.includes('"error":"unauthorized"'));assert.equal(companionSections.length,0);
+    const planPayload={name:'Personal companion fixture',intention:'steady',dailyMinutes:25,user_id:adminId};
+    const savedPlan=await action('/en/companion','saveCompanion','profile',studentId,[planPayload,0]);assert.ok(savedPlan.body.includes('"success":true'));assert.equal(companionSections[0].user_id,studentId);assert.equal('user_id' in companionSections[0].payload,false);
+    const stalePlan=await action('/en/companion','saveCompanion','profile',studentId,[{...planPayload,name:'Stale device'},0]);assert.ok(stalePlan.body.includes('"error":"conflict"'));assert.equal(companionSections[0].payload.name,'Personal companion fixture');
+    const ownedPlan=await visit('/en/companion',studentId);assert.ok(ownedPlan.body.includes('Personal companion fixture'));
+    const otherPlan=await visit('/en/companion',adminId);assert.ok(!otherPlan.body.includes('Personal companion fixture'));
+    const details={title:'HTTP campus gathering',description:'Revise and share ideas together. <script>alert(1)</script>',kind:'study',location:'Library public tables',starts_at:new Date(Date.now()+86400000).toISOString(),capacity:2,duration:25};
+    const deniedCircle=await action('/en/circles','mutateCircle','create',null,[details]);assert.ok(deniedCircle.body.includes('"error":"unauthorized"'));assert.equal(campusCircles.length,0);
+    const createdCircle=await action('/en/circles','mutateCircle','create',studentId,[{...details,host_id:adminId}]);assert.ok(createdCircle.body.includes('"success":true'));const circle=campusCircles[0];assert.equal(circle.host_id,studentId);
+    const publicCircle=await visit(`/en/circles?circle=${circle.id}`,null);assert.ok(publicCircle.body.includes('HTTP campus gathering')&&publicCircle.body.includes('&lt;script&gt;'));
+    const joinedCircle=await action('/en/circles','mutateCircle','act',adminId,[{id:circle.id,action:'join'}]);assert.ok(joinedCircle.body.includes('"success":true'));assert.equal(circle.memberIds.length,2);
+    const retryJoin=await action('/en/circles','mutateCircle','act',adminId,[{id:circle.id,action:'join'}]);assert.ok(retryJoin.body.includes('"success":true'));assert.equal(circle.memberIds.length,2);
+    const reportCircle=await action('/en/circles','mutateCircle','report',adminId,[{id:circle.id,reason:'Review this public gathering please'}]);assert.ok(reportCircle.body.includes('"success":true'));
+    const adminCircle=await visit(`/en/circles?circle=${circle.id}`,adminId);assert.ok(adminCircle.body.includes('Review this public gathering please'));
+    const hiddenReport=await visit(`/en/circles?circle=${circle.id}`,studentId);assert.ok(!hiddenReport.body.includes('Review this public gathering please'));
+    const closedCircle=await action('/en/circles','mutateCircle','act',studentId,[{id:circle.id,action:'close'}]);assert.ok(closedCircle.body.includes('"success":true'));
+    const closedPublic=await visit(`/en/circles?circle=${circle.id}`,null);assert.ok(!closedPublic.body.includes('HTTP campus gathering'));
+    console.log('PASS: companion/circles Arabic-English SSR, private ownership, stale-version conflicts, real Server Actions, membership retries, reports and shared links');
     for (const prefix of ['', '/en']) {
       for (const email of ['existing@example.invalid', 'unconfirmed@example.invalid']) {
         const form = new FormData();

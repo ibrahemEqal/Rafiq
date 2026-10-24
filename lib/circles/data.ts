@@ -1,0 +1,29 @@
+import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { z } from "zod";
+import {
+  circleRow,
+  circleError,
+  type CampusCircle,
+  type CircleError,
+} from "./model";
+export async function loadCircles(
+  client: SupabaseClient,
+  mine = false,
+  target: string | null = null,
+): Promise<
+  | { circles: CampusCircle[]; error?: never }
+  | { error: CircleError; circles?: never }
+> {
+  if (target !== null && !z.guid().safeParse(target).success)
+    return { error: "invalid" };
+  const { data, error } = await client.rpc("list_campus_circles", {
+    only_mine: mine,
+    target_circle: target,
+  });
+  if (error) return { error: circleError(error) };
+  const parsed = z.array(circleRow).max(40).safeParse(data);
+  return parsed.success
+    ? { circles: parsed.data }
+    : { error: "failed" as const };
+}
