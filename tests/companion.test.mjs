@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {emptySnapshot,planImports,parseSection,restoreSnapshot,databaseError} from '../lib/companion/model.ts';
 import {campusDate,campusClock,nextWindow,hasScheduleConflict,semesterProjection,walletSummary,moneyToCents,daySummary} from '../lib/companion/math.ts';
 import {saveCompanionWithClient} from '../lib/companion/mutations.ts';
-import {circleSchema,circleRow,circleError} from '../lib/circles/model.ts';
+import {circleSchema,circleRow,circleError,parseCircleList} from '../lib/circles/model.ts';
 import {mutateCircleWithClient} from '../lib/circles/mutations.ts';
 import {campusInputValue,parseCampusInput} from '../lib/circles/time.ts';
 const id='afc00000-0000-4000-8000-000000000001';
@@ -96,4 +96,11 @@ test('explicit import recovers pre-activation account data and never overwrites 
  assert.equal(imports.find(row=>row.section==='profile').payload.name,'Guest');
  target.versions.tasks=1;imports=planImports(target,local,guest);assert.equal(imports.some(row=>row.section==='tasks'),false);
  assert.equal(planImports(target,null,null).length,0);
+});
+
+test('one malformed direct-database gathering cannot break the entire public square',()=>{
+ const valid={...details,id,host:'student',members:1,joined:false,is_host:false,status:'open'};
+ assert.equal(parseCircleList([valid,{...valid,id:second,title:'\n\n\n\n\n'}]).length,1);
+ assert.equal(parseCircleList([valid,{...valid,id:second,description:'😀'.repeat(1200)}]).length,2);
+ assert.deepEqual(parseCircleList([]),[]);assert.equal(parseCircleList({}),null);assert.equal(parseCircleList(Array(41).fill(valid)),null);
 });

@@ -250,10 +250,12 @@ export default function CompanionApp({
     <div className="companion-shell min-h-screen bg-[#f6f5ef] px-4 pb-20 pt-6 sm:px-6 sm:pt-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-7 flex flex-wrap items-start justify-between gap-5">
-          <div>
+          <div className="min-w-0">
             <p className="mb-2 text-xs font-bold text-[#788477]">{dateLabel}</p>
             <h1 className="flex flex-wrap items-center gap-3 text-3xl font-bold leading-tight text-[#173b31] sm:text-4xl">
-              {t("hello", { name: data.profile.name || t("friend") })}
+              <span className="min-w-0 max-w-full [overflow-wrap:anywhere]">
+                {t("hello", { name: data.profile.name || t("friend") })}
+              </span>
               <Sun size={30} aria-hidden="true" className="text-[#c38d44]" />
             </h1>
             <p className="mt-3 max-w-xl text-sm leading-7 text-slate-500">
@@ -668,7 +670,7 @@ export default function CompanionApp({
                           >
                             {lesson.title}
                           </h3>
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="mt-1 break-words text-xs text-slate-500">
                             <span dir="ltr">
                               {lesson.start} – {lesson.end}
                             </span>

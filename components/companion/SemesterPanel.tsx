@@ -182,8 +182,8 @@ export default function SemesterPanel({
                 className="rounded-2xl border border-slate-200 p-4"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 dir="auto" className="font-bold">
+                  <div className="min-w-0 flex-1">
+                    <h4 dir="auto" className="break-words font-bold">
                       {course.title}
                     </h4>
                     <p className="mt-1 text-xs text-slate-500">

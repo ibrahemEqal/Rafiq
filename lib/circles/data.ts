@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import {
-  circleRow,
+  parseCircleList,
   circleError,
   type CampusCircle,
   type CircleError,
@@ -22,8 +22,6 @@ export async function loadCircles(
     target_circle: target,
   });
   if (error) return { error: circleError(error) };
-  const parsed = z.array(circleRow).max(40).safeParse(data);
-  return parsed.success
-    ? { circles: parsed.data }
-    : { error: "failed" as const };
+  const parsed = parseCircleList(data);
+  return parsed ? { circles: parsed } : { error: "failed" as const };
 }

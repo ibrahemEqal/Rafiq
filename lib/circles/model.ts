@@ -50,3 +50,12 @@ export function circleError(error: {
   if (error.code === "42501") return "unauthorized";
   return "failed";
 }
+
+// A malformed row submitted directly to the database must not take down the public square.
+export function parseCircleList(value: unknown): CampusCircle[] | null {
+  if (!Array.isArray(value) || value.length > 40) return null;
+  return value.flatMap((item) => {
+    const parsed = circleRow.safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
