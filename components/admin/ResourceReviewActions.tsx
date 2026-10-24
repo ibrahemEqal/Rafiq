@@ -54,11 +54,11 @@ export default function ResourceReviewActions({ resourceId, status }: {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={busy} onClick={downloadForReview} className={`${buttonStyle} border border-slate-200 bg-white text-slate-700 hover:bg-slate-50`}>
+        <button type="button" disabled={busy} onClick={downloadForReview} className={`${buttonStyle} border border-line bg-paper text-ink hover:bg-canvas`}>
           <Download size={16} />{t("inspect")}
         </button>
         {status === "pending" && <>
-          <button type="button" disabled={busy} onClick={() => review("approved")} className={`${buttonStyle} bg-teal-600 text-white hover:bg-teal-700`}>
+          <button type="button" disabled={busy} onClick={() => review("approved")} className={`${buttonStyle} bg-forest text-white hover:bg-forest`}>
             <Check size={16} />{t("approve")}
           </button>
           <button type="button" disabled={busy} onClick={() => review("rejected")} className={`${buttonStyle} bg-red-50 text-red-700 hover:bg-red-100`}>
@@ -68,10 +68,10 @@ export default function ResourceReviewActions({ resourceId, status }: {
         {status === "approved" && <button type="button" disabled={busy} onClick={() => review("removed")} className={`${buttonStyle} bg-red-50 text-red-700 hover:bg-red-100`}>
           <ShieldOff size={16} />{t("remove")}
         </button>}
-        {(status === "rejected" || status === "removed") && <button type="button" disabled={busy} onClick={() => review("pending")} className={`${buttonStyle} bg-slate-100 text-slate-700 hover:bg-slate-200`}>
+        {(status === "rejected" || status === "removed") && <button type="button" disabled={busy} onClick={() => review("pending")} className={`${buttonStyle} bg-sage-soft text-ink hover:bg-line`}>
           <RotateCcw size={16} />{t("requeue")}
         </button>}
-        {busy && <span role="status" className="inline-flex items-center gap-2 text-sm text-slate-500"><LoaderCircle size={16} className="animate-spin" />{t("working")}</span>}
+        {busy && <span role="status" className="inline-flex items-center gap-2 text-sm text-muted"><LoaderCircle size={16} className="animate-spin" />{t("working")}</span>}
       </div>
       {error && <p role="alert" className="text-sm text-red-700">{t(`errors.${error}`)}</p>}
     </div>

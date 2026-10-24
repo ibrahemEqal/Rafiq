@@ -10,9 +10,9 @@ import { ShieldCheck, FileText, User, BookOpen, Clock, MessageCircleQuestion, Ha
 const PAGE_SIZE = 20;
 const statusStyle: Record<ResourceStatus, string> = {
   pending: "bg-amber-50 text-amber-700",
-  approved: "bg-teal-50 text-teal-700",
+  approved: "bg-sage-soft text-forest",
   rejected: "bg-red-50 text-red-700",
-  removed: "bg-slate-100 text-slate-600",
+  removed: "bg-sage-soft text-muted",
 };
 
 export default async function AdminDashboard({ searchParams }: {
@@ -72,28 +72,28 @@ export default async function AdminDashboard({ searchParams }: {
 
   return (
     <ClientMessages namespace="Admin">
-      <section className="min-h-screen bg-slate-50 px-4 py-8 sm:py-12">
+      <section className="min-h-screen bg-canvas px-4 py-8 sm:py-12">
         <div className="mx-auto max-w-6xl space-y-7">
-          <header className="rounded-3xl bg-slate-900 p-6 text-white sm:p-8">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-base text-teal-200"><ShieldCheck size={18} />{t("adminOnly")}</div>
-            <h1 className="text-3xl font-extrabold sm:text-4xl">{t("siteTitle")}</h1>
-            <p className="mt-3 max-w-3xl text-base leading-8 text-slate-300">{t("siteSubtitle")}</p>
+          <header className="rounded-3xl bg-forest p-6 text-white sm:p-8">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-paper/10 px-3 py-1 text-base text-mist"><ShieldCheck size={18} />{t("adminOnly")}</div>
+            <h1 className="text-3xl font-bold sm:text-4xl">{t("siteTitle")}</h1>
+            <p className="mt-3 max-w-3xl text-base leading-8 text-mist">{t("siteSubtitle")}</p>
           </header>
 
           <section aria-labelledby="site-overview">
             <div className="mb-3 flex items-end justify-between gap-4">
               <div>
-                <h2 id="site-overview" className="text-xl font-extrabold text-slate-900">{t("overview.title")}</h2>
-                <p className="mt-1 text-base text-slate-500">{t("overview.subtitle")}</p>
+                <h2 id="site-overview" className="text-xl font-bold text-ink">{t("overview.title")}</h2>
+                <p className="mt-1 text-base text-muted">{t("overview.subtitle")}</p>
               </div>
-              <Link href="/resources" className="inline-flex items-center gap-1.5 text-base font-bold text-teal-700">{t("overview.openSite")}<ExternalLink size={16} /></Link>
+              <Link href="/resources" className="inline-flex items-center gap-1.5 text-base font-bold text-forest">{t("overview.openSite")}<ExternalLink size={16} /></Link>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {overview.map(({ label, count: itemCount, href, icon: Icon }) => (
-                <Link key={label} href={href} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-200 hover:shadow-md">
-                  <Icon size={22} className="mb-3 text-teal-600" />
-                  <p className="text-2xl font-black text-slate-900">{itemCount}</p>
-                  <p className="mt-1 text-base font-semibold text-slate-600">{label}</p>
+                <Link key={label} href={href} className="rounded-2xl border border-line bg-paper p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-line hover:shadow-md">
+                  <Icon size={22} className="mb-3 text-forest" />
+                  <p className="text-2xl font-bold text-ink">{itemCount}</p>
+                  <p className="mt-1 text-base font-semibold text-muted">{label}</p>
                 </Link>
               ))}
             </div>
@@ -101,35 +101,35 @@ export default async function AdminDashboard({ searchParams }: {
 
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-extrabold text-slate-900">{t("title")}</h2>
-              <p className="mt-1 text-base text-slate-500">{t("subtitle")}</p>
+              <h2 className="text-2xl font-bold text-ink">{t("title")}</h2>
+              <p className="mt-1 text-base text-muted">{t("subtitle")}</p>
             </div>
             <Link href="/dashboard/reports" className="rounded-xl bg-amber-50 px-4 py-2.5 text-base font-bold text-amber-800">{t("openReports")}</Link>
           </div>
 
           <nav aria-label={t("filters")} className="flex flex-wrap gap-2">
             {resourceStatuses.map((item) => <Link key={item} href={{ pathname: "/dashboard", query: { status: item } }} aria-current={status === item ? "page" : undefined}
-              className={`rounded-xl px-4 py-2.5 text-base font-bold ${status === item ? "bg-teal-600 text-white" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"}`}>
+              className={`rounded-xl px-4 py-2.5 text-base font-bold ${status === item ? "bg-forest text-white" : "border border-line bg-paper text-muted hover:bg-sage-soft"}`}>
               {t(`statuses.${item}`)}
             </Link>)}
           </nav>
 
           {error ? <p role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-5 text-base text-red-700">{t("loadError")}</p> : <>
-            <div className="flex flex-wrap items-center justify-between gap-2 text-base text-slate-500">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-base text-muted">
               <p>{t("total", { count: count ?? 0 })}</p>
               <p>{t("page", { page, total: totalPages })}</p>
             </div>
             {(courseResult.error || profileResult.error) && <p role="alert" className="text-base text-amber-700">{t("metadataError")}</p>}
 
-            {!rows.length ? <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
-              <FileText size={32} className="mx-auto mb-3 text-slate-300" /><p className="text-base text-slate-500">{t("empty")}</p>
+            {!rows.length ? <div className="rounded-3xl border border-dashed border-line bg-paper p-12 text-center">
+              <FileText size={32} className="mx-auto mb-3 text-mist" /><p className="text-base text-muted">{t("empty")}</p>
             </div> : <div className="space-y-4">
-              {rows.map((resource) => <article key={resource.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              {rows.map((resource) => <article key={resource.id} className="rounded-2xl border border-line bg-paper p-5 shadow-sm sm:p-6">
                 <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-                  <h3 className="min-w-0 break-words text-xl font-bold text-slate-900">{resource.title}</h3>
+                  <h3 className="min-w-0 break-words text-xl font-bold text-ink">{resource.title}</h3>
                   <span className={`rounded-full px-3 py-1 text-sm font-bold ${statusStyle[resource.status as ResourceStatus]}`}>{t(`statuses.${resource.status}`)}</span>
                 </div>
-                <dl className="mb-5 grid gap-3 text-base text-slate-500 sm:grid-cols-2">
+                <dl className="mb-5 grid gap-3 text-base text-muted sm:grid-cols-2">
                   <div className="flex items-center gap-2"><User size={17} /><dt className="sr-only">{t("uploader")}</dt><dd>{userById.get(resource.uploader_id) || t("unknownUser")}</dd></div>
                   <div className="flex items-center gap-2"><BookOpen size={17} /><dt className="sr-only">{t("course")}</dt><dd>{courseById.get(resource.course_id) || t("unknownCourse")}</dd></div>
                   <div className="flex items-center gap-2"><FileText size={17} /><dt className="sr-only">{t("file")}</dt><dd>{t(`types.${resource.type}`)} · {resource.source_type === "external" ? t("externalLink") : `${(Number(resource.file_size) / 1024 / 1024).toFixed(2)} MB`}</dd></div>
@@ -140,8 +140,8 @@ export default async function AdminDashboard({ searchParams }: {
             </div>}
 
             <nav aria-label={t("pagination")} className="flex items-center justify-between gap-3">
-              {page > 1 ? <Link href={{ pathname: "/dashboard", query: { status, page: page - 1 } }} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-base font-semibold">{t("previous")}</Link> : <span />}
-              {page < totalPages && <Link href={{ pathname: "/dashboard", query: { status, page: page + 1 } }} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-base font-semibold">{t("next")}</Link>}
+              {page > 1 ? <Link href={{ pathname: "/dashboard", query: { status, page: page - 1 } }} className="rounded-xl border border-line bg-paper px-4 py-2 text-base font-semibold">{t("previous")}</Link> : <span />}
+              {page < totalPages && <Link href={{ pathname: "/dashboard", query: { status, page: page + 1 } }} className="rounded-xl border border-line bg-paper px-4 py-2 text-base font-semibold">{t("next")}</Link>}
             </nav>
           </>}
         </div>

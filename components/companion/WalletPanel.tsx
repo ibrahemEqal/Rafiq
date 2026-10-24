@@ -67,7 +67,7 @@ export default function WalletPanel({
             {t("addExpense")}
           </button>
         </div>
-        <p className="mt-3 text-sm leading-7 text-slate-500">
+        <p className="mt-3 text-sm leading-7 text-muted">
           {t("walletHint")}
         </p>
         <div className="my-6 grid gap-3 sm:grid-cols-3">
@@ -80,7 +80,7 @@ export default function WalletPanel({
               key={String(label)}
               className={`rounded-2xl p-5 ${label === "remainingBudget" && Number(value) < 0 ? "bg-rose-50" : "bg-[#f4f5ee]"}`}
             >
-              <p className="text-xs font-bold text-slate-500">
+              <p className="text-xs font-bold text-muted">
                 {t(String(label))}
               </p>
               <p className="mt-3 break-words text-2xl font-bold text-[#183d34]">
@@ -91,7 +91,7 @@ export default function WalletPanel({
         </div>
         <form
           onSubmit={budget}
-          className="grid items-end gap-3 rounded-2xl border border-slate-200 p-4 sm:grid-cols-[1fr_auto]"
+          className="grid items-end gap-3 rounded-2xl border border-line p-4 sm:grid-cols-[1fr_auto]"
         >
           <Field id="monthly-budget" label={t("monthlyBudget")}>
             <input
@@ -110,7 +110,7 @@ export default function WalletPanel({
             {t("saveBudget")}
           </button>
         </form>
-        <p className="mt-3 text-xs leading-6 text-slate-500">
+        <p className="mt-3 text-xs leading-6 text-muted">
           {t("budgetMathHint", { days: summary.remainingDays })}
         </p>
       </section>
@@ -121,7 +121,7 @@ export default function WalletPanel({
             aria-label={t("expenseMonth")}
             value={month}
             onChange={(event) => setMonth(event.target.value)}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+            className="rounded-xl border border-line bg-paper px-3 py-2 text-sm"
           >
             {months.map((value) => (
               <option key={value} value={value}>
@@ -131,7 +131,7 @@ export default function WalletPanel({
           </select>
         </div>
         {history.length ? (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-line-soft">
             {[...history]
               .sort((a, b) => b.date.localeCompare(a.date))
               .map((expense) => (
@@ -143,7 +143,7 @@ export default function WalletPanel({
                     <p dir="auto" className="break-words text-sm font-bold">
                       {expense.title}
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-muted">
                       {t(`expenseCategories.${expense.category}`)} ·{" "}
                       {expense.date}
                     </p>
@@ -156,7 +156,7 @@ export default function WalletPanel({
                     disabled={busy}
                     onClick={() => remove(expense.id)}
                     aria-label={t("deleteNamed", { name: expense.title })}
-                    className="rounded-lg p-2 text-slate-400 hover:text-red-700"
+                    className="rounded-lg p-2 text-muted hover:text-red-700"
                   >
                     <Trash2 size={15} aria-hidden="true" />
                   </button>

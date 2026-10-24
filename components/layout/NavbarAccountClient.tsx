@@ -54,7 +54,7 @@ export default function NavbarAccountClient({
       <div
         aria-label="Loading account"
         aria-busy="true"
-        className="h-10 w-10 rounded-full bg-slate-100 sm:w-48 motion-safe:animate-pulse"
+        className="h-10 w-10 rounded-full bg-sage-soft sm:w-48 motion-safe:animate-pulse"
       />
     );
   }
@@ -66,39 +66,39 @@ export default function NavbarAccountClient({
           href={`${prefix}/dashboard`}
           aria-label={labels.dashboard}
           title={labels.dashboard}
-          className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700 hover:bg-blue-100"
+          className="inline-flex items-center gap-2 rounded-xl bg-sage-soft px-3 py-2 text-sm font-bold text-forest hover:bg-sage-soft"
         >
           <ShieldCheck size={18} />
           <span className="hidden sm:inline">{labels.dashboard}</span>
         </Link>
       )}
-      <div className="flex items-center gap-2 border-s border-slate-200 ps-2 sm:ps-4">
+      <div className="flex items-center gap-2 border-s border-line ps-2 sm:ps-4">
         {account ? (
           <details className="relative group">
             <summary
               aria-label={labels.profile}
-              className="flex cursor-pointer list-none items-center gap-2 rounded-full p-1.5 hover:bg-slate-100"
+              className="flex cursor-pointer list-none items-center gap-2 rounded-full p-1.5 hover:bg-sage-soft"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700 shadow-sm">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sage-soft font-bold text-forest shadow-sm">
                 {account.email.charAt(0).toUpperCase()}
               </span>
             </summary>
-            <div className="absolute end-0 top-full z-50 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-xl">
-              <div className="border-b border-slate-100 p-2">
-                <p className="truncate text-xs text-slate-500">
+            <div className="absolute end-0 top-full z-50 mt-2 w-48 rounded-xl border border-line bg-paper shadow-sm">
+              <div className="border-b border-line-soft p-2">
+                <p className="truncate text-xs text-muted">
                   {account.email}
                 </p>
               </div>
               <div className="p-1">
                 <Link
                   href={`${prefix}/profile`}
-                  className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                  className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm text-ink hover:bg-canvas"
                 >
                   <User size={16} />
                   {labels.profile}
                 </Link>
               </div>
-              <div className="border-t border-slate-100 p-1">
+              <div className="border-t border-line-soft p-1">
                 <SignOutButton
                   label={labels.signOut}
                   home={prefix || "/"}
@@ -119,7 +119,7 @@ export default function NavbarAccountClient({
             </Link>
             <Link
               href={`${prefix}/auth/register`}
-              className="hidden rounded-full border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 lg:inline-flex"
+              className="hidden rounded-full border border-line px-4 py-2.5 text-xs font-bold text-ink hover:bg-canvas lg:inline-flex"
             >
               {labels.signUp}
             </Link>

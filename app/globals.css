@@ -1,15 +1,30 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #f6f5ef;
+  --foreground: #203c31;
 }
 
 @theme inline {
+  --color-canvas: #f6f5ef;
+  --color-paper: #fffefa;
+  --color-ink: #203c31;
+  --color-muted: #687461;
+  --color-line: #dfe5d8;
+  --color-line-soft: #ebeee4;
+  --color-forest: #244638;
+  --color-forest-hover: #18382d;
+  --color-sage: #d8e8c7;
+  --color-sage-soft: #edf2e6;
+  --color-sage-ink: #41643c;
+  --color-mist: #cbd8c3;
+  --color-sand: #eee8db;
+  --color-lavender: #eee9f4;
+  --color-plum: #705b82;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-rafeeq);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: ui-monospace, SFMono-Regular, monospace;
 }
 
 html {
@@ -31,7 +46,7 @@ button {
 }
 
 ::selection {
-  background: #2563eb;
+  background: #244638;
   color: #ffffff;
 }
 
@@ -106,5 +121,12 @@ button {
   }
   .companion-moment:hover {
     transform: none;
+  }
+}
+
+@layer base {
+  :where(a, button, summary):focus-visible {
+    outline: 2px solid var(--color-forest);
+    outline-offset: 4px;
   }
 }

@@ -29,9 +29,9 @@ export default function RequestStatusActions({ requestId, status }: { requestId:
     }
   }
 
-  return <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4">
-    <p className="mb-3 text-xs font-bold leading-6 text-violet-800">{t("ownerHint")}</p>
-    <button type="button" onClick={update} disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-700 px-4 py-3 text-sm font-extrabold text-white hover:bg-violet-800 disabled:opacity-60">
+  return <div className="rounded-2xl border border-line bg-sage-soft p-4">
+    <p className="mb-3 text-xs font-bold leading-6 text-forest">{t("ownerHint")}</p>
+    <button type="button" onClick={update} disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-forest px-4 py-3 text-sm font-bold text-white hover:bg-forest-hover disabled:opacity-60">
       {busy ? <LoaderCircle size={17} className="animate-spin" /> : status === "open" ? <CheckCircle2 size={17} /> : <RotateCcw size={17} />}
       {status === "open" ? t("markFulfilled") : t("reopen")}
     </button>

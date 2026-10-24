@@ -12,7 +12,7 @@ export default function LocaleSwitch({ locale }: { locale: string }) {
           { locale: locale === "ar" ? "en" : "ar" },
         )
       }
-      className="min-h-10 rounded-full px-3 text-xs font-bold text-slate-500 hover:bg-slate-50"
+      className="min-h-10 rounded-full px-3 text-xs font-bold text-muted hover:bg-canvas"
     >
       {locale === "ar" ? "English" : "عربي"}
     </button>

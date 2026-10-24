@@ -51,13 +51,13 @@ export default async function AnswersThread({ answers, questionId, locale }: { a
     const canManage = Boolean(identity && (identity.id === answer.authorId || isAdmin));
     const canReport = Boolean(identity && identity.id !== answer.authorId && !isAdmin);
     const edited = answer.updatedAt !== answer.createdAt;
-    return <article key={answer.id} className="group overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm transition hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/60">
+    return <article key={answer.id} className="group overflow-hidden rounded-[1.75rem] border border-line bg-paper shadow-sm transition hover:border-line hover:shadow-sm hover:shadow-forest/60">
       <div className="p-6 sm:p-8">
         <header className="mb-6 flex items-start justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-sky-100 text-violet-700"><UserRound size={20} /></span><div className="min-w-0"><p className="truncate font-extrabold text-slate-900">{answer.authorName}</p><p className="mt-1 text-xs text-slate-400">{date.format(new Date(answer.createdAt))}{edited ? (locale === "ar" ? " · عُدّلت" : " · edited") : ""}</p></div></div>
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-extrabold text-emerald-700"><BadgeCheck size={14} />#{index + 1}</span>
+          <div className="flex min-w-0 items-center gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sage-soft to-sage-soft text-forest"><UserRound size={20} /></span><div className="min-w-0"><p className="truncate font-bold text-ink">{answer.authorName}</p><p className="mt-1 text-xs text-muted">{date.format(new Date(answer.createdAt))}{edited ? (locale === "ar" ? " · عُدّلت" : " · edited") : ""}</p></div></div>
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700"><BadgeCheck size={14} />#{index + 1}</span>
         </header>
-        <p dir="auto" className="whitespace-pre-wrap break-words text-[17px] leading-9 text-slate-800">{answer.body}</p>
+        <p dir="auto" className="whitespace-pre-wrap break-words text-[17px] leading-9 text-ink">{answer.body}</p>
         <AnswerInteractions answerId={answer.id} initialHelpfulCount={answer.helpfulCount} initiallyHelpful={liked.has(answer.id)} signedIn={Boolean(identity)} canReact={Boolean(identity && identity.id !== answer.authorId)} comments={commentsByAnswer.get(answer.id) ?? []} />
         <ForumPostActions target={{ target_type: "answer", target_id: answer.id }} questionId={questionId} body={answer.body} canManage={canManage} canReport={canReport} />
       </div>

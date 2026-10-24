@@ -32,11 +32,11 @@ export default function CardEditor({ setId, card }: { setId: string; card?: Stud
   }
   return <form ref={formRef} onSubmit={submit} className="space-y-4">
     {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-    {saved && <p role="status" className="text-sm font-bold text-teal-700">{t("cardSaved")}</p>}
+    {saved && <p role="status" className="text-sm font-bold text-forest">{t("cardSaved")}</p>}
     <fieldset disabled={busy} className="space-y-4 disabled:opacity-60">
-      <div><label htmlFor={`${prefix}-front`} className="mb-2 block text-sm font-bold">{t("front")}</label><textarea id={`${prefix}-front`} name="front" defaultValue={card?.front} required maxLength={800} rows={2} placeholder={t("frontExample")} className="w-full rounded-xl border border-slate-200 bg-white p-3 outline-none focus:border-teal-500" /></div>
-      <div><label htmlFor={`${prefix}-back`} className="mb-2 block text-sm font-bold">{t("back")}</label><textarea id={`${prefix}-back`} name="back" defaultValue={card?.back} required maxLength={2000} rows={3} placeholder={t("backExample")} className="w-full rounded-xl border border-slate-200 bg-white p-3 outline-none focus:border-teal-500" /></div>
-      <div className="flex flex-wrap gap-3"><button className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-teal-700 px-4 py-3 text-sm font-bold text-white hover:bg-teal-800">{card ? <Save size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}{t(busy ? "saving" : card ? "saveCard" : "addCard")}</button>{card && <button type="button" onClick={remove} className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50"><Trash2 size={16} aria-hidden="true" />{t("deleteCard")}</button>}</div>
+      <div><label htmlFor={`${prefix}-front`} className="mb-2 block text-sm font-bold">{t("front")}</label><textarea id={`${prefix}-front`} name="front" defaultValue={card?.front} required maxLength={800} rows={2} placeholder={t("frontExample")} className="w-full rounded-xl border border-line bg-paper p-3 outline-none focus:border-forest" /></div>
+      <div><label htmlFor={`${prefix}-back`} className="mb-2 block text-sm font-bold">{t("back")}</label><textarea id={`${prefix}-back`} name="back" defaultValue={card?.back} required maxLength={2000} rows={3} placeholder={t("backExample")} className="w-full rounded-xl border border-line bg-paper p-3 outline-none focus:border-forest" /></div>
+      <div className="flex flex-wrap gap-3"><button className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-forest px-4 py-3 text-sm font-bold text-white hover:bg-forest-hover">{card ? <Save size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}{t(busy ? "saving" : card ? "saveCard" : "addCard")}</button>{card && <button type="button" onClick={remove} className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50"><Trash2 size={16} aria-hidden="true" />{t("deleteCard")}</button>}</div>
     </fieldset>
   </form>;
 }

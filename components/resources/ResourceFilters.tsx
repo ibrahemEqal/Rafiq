@@ -17,10 +17,10 @@ export default async function ResourceFilters({
   const t = await getTranslations("Resources");
 
   return (
-    <form method="get" className="rounded-3xl border border-slate-200 bg-white p-6">
+    <form method="get" className="rounded-3xl border border-line bg-paper p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-slate-900">{t("filters")}</h2>
-        <Link href={`/resources?college=${collegeId}&major=${majorId}&course=${courseId}`} className="text-sm font-medium text-slate-400 hover:text-teal-600">
+        <h2 className="text-lg font-bold text-ink">{t("filters")}</h2>
+        <Link href={`/resources?college=${collegeId}&major=${majorId}&course=${courseId}`} className="text-sm font-medium text-muted hover:text-forest">
           {t("clearFilters")}
         </Link>
       </div>
@@ -29,7 +29,7 @@ export default async function ResourceFilters({
       <input type="hidden" name="major" value={majorId} />
       <input type="hidden" name="course" value={courseId} />
       <fieldset className="space-y-2">
-        <legend className="mb-3 text-sm font-bold uppercase tracking-wider text-slate-900">{t("fileType")}</legend>
+        <legend className="mb-3 text-sm font-bold uppercase tracking-wider text-ink">{t("fileType")}</legend>
         {[
           ["", t("all")],
           ["summary", t("summaries")],
@@ -37,12 +37,12 @@ export default async function ResourceFilters({
           ["lecture", t("lectures")],
         ].map(([value, label]) => (
           <label key={value} className="flex cursor-pointer items-center gap-3">
-            <input type="radio" name="type" value={value} defaultChecked={(selectedType ?? "") === value} className="h-4 w-4 accent-teal-600" />
-            <span className="text-sm font-medium text-slate-600">{label}</span>
+            <input type="radio" name="type" value={value} defaultChecked={(selectedType ?? "") === value} className="h-4 w-4 accent-forest" />
+            <span className="text-sm font-medium text-muted">{label}</span>
           </label>
         ))}
       </fieldset>
-      <button type="submit" className="mt-6 w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white hover:bg-slate-800">
+      <button type="submit" className="mt-6 w-full rounded-xl bg-forest px-4 py-3 text-sm font-bold text-white hover:bg-forest-hover">
         {t("filters")}
       </button>
     </form>

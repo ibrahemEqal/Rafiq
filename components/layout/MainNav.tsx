@@ -8,6 +8,7 @@ import {
   BookOpen,
   MessageCircleQuestion,
   HandHelping,
+  Ticket,
 } from "lucide-react";
 const links = [
   ["/companion", "companion", Sun],
@@ -17,6 +18,7 @@ const links = [
   ["/books", "books", BookOpen],
   ["/questions", "questions", MessageCircleQuestion],
   ["/requests", "requests", HandHelping],
+  ["/offers", "offers", Ticket],
 ] as const;
 export default function MainNav({
   labels,
@@ -42,7 +44,7 @@ export default function MainNav({
             key={href}
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2.5 text-xs font-bold transition ${active ? "bg-[#e4eddb] text-[#264c36]" : "text-slate-500 hover:bg-[#f2f5ed] hover:text-[#264c36]"}`}
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-2.5 text-xs font-bold transition ${active ? "bg-[#e4eddb] text-[#264c36]" : "text-muted hover:bg-[#f2f5ed] hover:text-[#264c36]"}`}
           >
             <Icon size={14} aria-hidden="true" />
             {labels[label]}

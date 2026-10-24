@@ -15,8 +15,8 @@ export default async function RegisterPage({
   return (
     <div className="w-full">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">{t("registerTitle")}</h1>
-        <p className="text-slate-500 text-sm">{t("registerSubtitle")}</p>
+        <h1 className="text-2xl font-bold text-ink mb-2">{t("registerTitle")}</h1>
+        <p className="text-muted text-sm">{t("registerSubtitle")}</p>
       </div>
 
       {errorKey && (
@@ -34,36 +34,36 @@ export default async function RegisterPage({
         {/* ... الحقول السابقة (الاسم، اسم المستخدم، الإيميل) ... */}
         
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-slate-700">{t("fullName")}</label>
-          <input type="text" name="full_name" required minLength={2} maxLength={100} autoComplete="name" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none bg-slate-50 focus:bg-white" />
+          <label className="block text-sm font-medium text-ink">{t("fullName")}</label>
+          <input type="text" name="full_name" required minLength={2} maxLength={100} autoComplete="name" className="w-full px-4 py-3 rounded-xl border border-line focus:border-forest outline-none bg-canvas focus:bg-paper" />
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-slate-700">{t("username")}</label>
-          <input type="text" name="username" required minLength={3} maxLength={30} pattern="[a-zA-Z0-9_]+" autoComplete="username" dir="ltr" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none bg-slate-50 focus:bg-white" />
+          <label className="block text-sm font-medium text-ink">{t("username")}</label>
+          <input type="text" name="username" required minLength={3} maxLength={30} pattern="[a-zA-Z0-9_]+" autoComplete="username" dir="ltr" className="w-full px-4 py-3 rounded-xl border border-line focus:border-forest outline-none bg-canvas focus:bg-paper" />
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-slate-700">{t("email")}</label>
-          <input type="email" name="email" required maxLength={254} autoComplete="email" dir="ltr" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none bg-slate-50 focus:bg-white" />
+          <label className="block text-sm font-medium text-ink">{t("email")}</label>
+          <input type="email" name="email" required maxLength={254} autoComplete="email" dir="ltr" className="w-full px-4 py-3 rounded-xl border border-line focus:border-forest outline-none bg-canvas focus:bg-paper" />
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-slate-700">{t("password")}</label>
-          <input type="password" name="password" required minLength={8} maxLength={72} autoComplete="new-password" dir="ltr" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none bg-slate-50 focus:bg-white" />
+          <label className="block text-sm font-medium text-ink">{t("password")}</label>
+          <input type="password" name="password" required minLength={8} maxLength={72} autoComplete="new-password" dir="ltr" className="w-full px-4 py-3 rounded-xl border border-line focus:border-forest outline-none bg-canvas focus:bg-paper" />
         </div>
 
         <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-slate-700">{t("confirmPassword")}</label>
-          <input type="password" name="confirmPassword" required minLength={8} maxLength={72} autoComplete="new-password" dir="ltr" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-teal-500 outline-none bg-slate-50 focus:bg-white" />
+          <label className="block text-sm font-medium text-ink">{t("confirmPassword")}</label>
+          <input type="password" name="confirmPassword" required minLength={8} maxLength={72} autoComplete="new-password" dir="ltr" className="w-full px-4 py-3 rounded-xl border border-line focus:border-forest outline-none bg-canvas focus:bg-paper" />
         </div>
 
         <AuthSubmitButton idle={t("signUpBtn")} pending={t("signingUp")} />
       </form>
 
-      <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-        <p className="text-sm text-slate-500">
-          {t("haveAccount")} <Link href="/auth/login" className="font-semibold text-teal-600">{t("signInBtn")}</Link>
+      <div className="mt-8 pt-6 border-t border-line-soft text-center">
+        <p className="text-sm text-muted">
+          {t("haveAccount")} <Link href="/auth/login" className="font-semibold text-forest">{t("signInBtn")}</Link>
         </p>
       </div>
     </div>

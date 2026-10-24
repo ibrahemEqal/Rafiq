@@ -45,47 +45,47 @@ export default async function ResourceDetailsPage({
   });
 
   return (
-    <div className="min-h-screen bg-slate-50/50 py-12">
+    <div className="min-h-screen bg-canvas/50 py-12">
       <div className="container mx-auto max-w-4xl px-4">
-        <Link href="/resources" className="mb-8 inline-flex items-center gap-2 text-base font-medium text-slate-600 transition-colors hover:text-teal-600">
+        <Link href="/resources" className="mb-8 inline-flex items-center gap-2 text-base font-medium text-muted transition-colors hover:text-forest">
           <ArrowRight size={18} />
           {t("backToResources")}
         </Link>
 
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col items-start justify-between gap-8 border-b border-slate-100 bg-gradient-to-br from-white to-slate-50 p-8 md:flex-row md:p-12">
+        <div className="overflow-hidden rounded-3xl border border-line bg-paper shadow-sm">
+          <div className="flex flex-col items-start justify-between gap-8 border-b border-line-soft bg-gradient-to-br from-white to-line-soft p-8 md:flex-row md:p-12">
             <div className="flex-1">
               <div className="mb-4 flex flex-wrap items-center gap-3">
-                <span className="rounded-lg bg-indigo-100 px-3 py-1 text-sm font-bold uppercase tracking-wider text-indigo-700">
+                <span className="rounded-lg bg-sage-soft px-3 py-1 text-sm font-bold uppercase tracking-wider text-forest">
                   {resource.type}
                 </span>
                 {course && (
-                  <span className="rounded-lg bg-teal-50 px-3 py-1 text-sm font-bold text-teal-700">
+                  <span className="rounded-lg bg-sage-soft px-3 py-1 text-sm font-bold text-forest">
                     {locale === "ar" ? course.name_ar : course.name_en}
                   </span>
                 )}
                 {resource.source_type === "external" && (
-                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1 text-sm font-bold text-blue-700">
+                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-sage-soft px-3 py-1 text-sm font-bold text-forest">
                     <Link2 size={15} />{t("externalResource")}
                   </span>
                 )}
               </div>
-              <h1 className="mb-6 text-3xl font-extrabold leading-tight text-slate-900 md:text-4xl">
+              <h1 className="mb-6 text-3xl font-bold leading-tight text-ink md:text-4xl">
                 {resource.title}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-6 text-base font-medium text-slate-600">
+              <div className="flex flex-wrap items-center gap-6 text-base font-medium text-muted">
                 <div className="flex items-center gap-2">
-                  <User size={18} className="text-slate-400" />
+                  <User size={18} className="text-muted" />
                   <span>{profile?.full_name || t("owner")}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock size={18} className="text-slate-400" />
+                  <Clock size={18} className="text-muted" />
                   <span>{uploadDate}</span>
                 </div>
                 {resource.source_type === "upload" && (
                   <div className="flex items-center gap-2">
-                    <FileText size={18} className="text-slate-400" />
+                    <FileText size={18} className="text-muted" />
                     <span dir="ltr">{formatSize(resource.file_size)}</span>
                   </div>
                 )}
@@ -94,14 +94,14 @@ export default async function ResourceDetailsPage({
           </div>
 
           <div className="flex flex-col items-center justify-between gap-8 p-8 md:flex-row md:p-12">
-            <div className="flex w-full items-center gap-8 border-b border-slate-100 pb-8 text-center md:w-auto md:border-b-0 md:border-e md:pb-0 md:pe-12">
+            <div className="flex w-full items-center gap-8 border-b border-line-soft pb-8 text-center md:w-auto md:border-b-0 md:border-e md:pb-0 md:pe-12">
               <div>
-                <p className="mb-1 text-3xl font-extrabold text-slate-900">{resource.download_count}</p>
-                <p className="text-base font-medium text-slate-500">{t("downloads")}</p>
+                <p className="mb-1 text-3xl font-bold text-ink">{resource.download_count}</p>
+                <p className="text-base font-medium text-muted">{t("downloads")}</p>
               </div>
               <div>
-                <p className="mb-1 text-3xl font-extrabold text-slate-900">{resource.view_count}</p>
-                <p className="text-base font-medium text-slate-500">{t("views")}</p>
+                <p className="mb-1 text-3xl font-bold text-ink">{resource.view_count}</p>
+                <p className="text-base font-medium text-muted">{t("views")}</p>
               </div>
             </div>
 

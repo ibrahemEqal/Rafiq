@@ -258,7 +258,7 @@ export default function CompanionApp({
               </span>
               <Sun size={30} aria-hidden="true" className="text-[#c38d44]" />
             </h1>
-            <p className="mt-3 max-w-xl text-sm leading-7 text-slate-500">
+            <p className="mt-3 max-w-xl text-sm leading-7 text-muted">
               {t(`intentions.${data.profile.intention}`)}
             </p>
           </div>
@@ -273,14 +273,14 @@ export default function CompanionApp({
               type="button"
               onClick={() => open("profile")}
               aria-label={t("editProfile")}
-              className="rounded-full border border-slate-200 bg-white p-3 text-slate-600"
+              className="rounded-full border border-line bg-paper p-3 text-muted"
             >
               <Settings2 size={17} aria-hidden="true" />
             </button>
           </div>
         </div>
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <p className="inline-flex items-center gap-2 text-xs font-bold text-slate-500">
+          <p className="inline-flex items-center gap-2 text-xs font-bold text-muted">
             {mode === "cloud" ? (
               <Cloud size={15} aria-hidden="true" />
             ) : (
@@ -298,7 +298,7 @@ export default function CompanionApp({
               type="button"
               disabled={busy}
               onClick={reload}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-muted"
             >
               <RefreshCw size={13} aria-hidden="true" />
               {t("refresh")}
@@ -314,7 +314,7 @@ export default function CompanionApp({
               type="button"
               disabled={busy}
               onClick={importGuest}
-              className="rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-emerald-900"
+              className="rounded-xl bg-paper px-4 py-2.5 text-xs font-bold text-emerald-900"
             >
               {t("importGuest")}
             </button>
@@ -330,7 +330,7 @@ export default function CompanionApp({
         )}
         <nav
           aria-label={t("workspaceTabs")}
-          className="mb-7 grid grid-cols-4 gap-1 rounded-2xl border border-[#dfe4da] bg-white p-1.5 sm:w-fit sm:gap-2"
+          className="mb-7 grid grid-cols-4 gap-1 rounded-2xl border border-[#dfe4da] bg-paper p-1.5 sm:w-fit sm:gap-2"
         >
           {tabs.map((value, index) => {
             const Icon = [Sun, GraduationCap, Wallet, Mail][index];
@@ -340,7 +340,7 @@ export default function CompanionApp({
                 type="button"
                 aria-current={tab === value ? "page" : undefined}
                 onClick={() => go(value)}
-                className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-2 py-3 text-xs font-bold transition sm:px-6 sm:text-sm ${tab === value ? "bg-[#1c4337] text-white shadow-sm" : "text-slate-500 hover:bg-[#f3f5ee]"}`}
+                className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-2 py-3 text-xs font-bold transition sm:px-6 sm:text-sm ${tab === value ? "bg-[#1c4337] text-white shadow-sm" : "text-muted hover:bg-canvas"}`}
               >
                 <Icon size={16} aria-hidden="true" />
                 <span>{t(`tabs.${value}`)}</span>
@@ -403,7 +403,7 @@ export default function CompanionApp({
                   {moment && (
                     <div
                       role="status"
-                      className="mt-5 rounded-2xl bg-white/65 p-4 text-sm leading-8 text-[#344e3c]"
+                      className="mt-5 rounded-2xl bg-paper/65 p-4 text-sm leading-8 text-[#344e3c]"
                     >
                       {moment === "free"
                         ? gap.current
@@ -444,7 +444,7 @@ export default function CompanionApp({
                       <p className="text-2xl font-bold text-[#1d3b31]">
                         {String(count)}
                       </p>
-                      <p className="mt-1 text-[11px] font-bold text-slate-500 sm:text-xs">
+                      <p className="mt-1 text-[11px] font-bold text-muted sm:text-xs">
                         {t(String(label))}
                       </p>
                     </div>
@@ -471,7 +471,7 @@ export default function CompanionApp({
                     {todayTasks.map((task) => (
                       <li
                         key={task.id}
-                        className={`flex items-start gap-3 rounded-2xl border p-3.5 ${task.doneAt ? "border-transparent bg-[#f4f6ef]" : "border-slate-200 bg-white"}`}
+                        className={`flex items-start gap-3 rounded-2xl border p-3.5 ${task.doneAt ? "border-transparent bg-[#f4f6ef]" : "border-line bg-paper"}`}
                       >
                         <input
                           type="checkbox"
@@ -484,11 +484,11 @@ export default function CompanionApp({
                         <div className="min-w-0 flex-1">
                           <p
                             dir="auto"
-                            className={`break-words text-sm font-bold leading-7 ${task.doneAt ? "text-slate-400 line-through" : "text-slate-800"}`}
+                            className={`break-words text-sm font-bold leading-7 ${task.doneAt ? "text-muted line-through" : "text-ink"}`}
                           >
                             {task.title}
                           </p>
-                          <p className="mt-1 text-[11px] text-slate-500">
+                          <p className="mt-1 text-[11px] text-muted">
                             {t(`taskKinds.${task.kind}`)} ·{" "}
                             {t("minutes", { count: task.minutes })}
                             {task.date < today && !task.doneAt
@@ -501,7 +501,7 @@ export default function CompanionApp({
                           disabled={busy}
                           onClick={() => editTask(task)}
                           aria-label={t("editNamed", { name: task.title })}
-                          className="rounded-lg p-2 text-slate-400 hover:text-emerald-800"
+                          className="rounded-lg p-2 text-muted hover:text-emerald-800"
                         >
                           <Pencil size={15} aria-hidden="true" />
                         </button>
@@ -510,7 +510,7 @@ export default function CompanionApp({
                           disabled={busy}
                           onClick={() => removeTask(task.id)}
                           aria-label={t("deleteNamed", { name: task.title })}
-                          className="rounded-lg p-2 text-slate-400 hover:text-red-700"
+                          className="rounded-lg p-2 text-muted hover:text-red-700"
                         >
                           <Trash2 size={15} aria-hidden="true" />
                         </button>
@@ -531,7 +531,7 @@ export default function CompanionApp({
                   (item) => !item.doneAt && item.date > today,
                 ) && (
                   <details className="mt-5 rounded-xl bg-[#f6f7f2] p-4">
-                    <summary className="cursor-pointer text-xs font-bold text-slate-600">
+                    <summary className="cursor-pointer text-xs font-bold text-muted">
                       {t("upcomingTasks")}
                     </summary>
                     <ul className="mt-3 space-y-3">
@@ -547,7 +547,7 @@ export default function CompanionApp({
                               <p dir="auto" className="break-words font-medium">
                                 {task.title}
                               </p>
-                              <p className="text-xs text-slate-500">
+                              <p className="text-xs text-muted">
                                 {task.date} · {t(`taskKinds.${task.kind}`)}
                               </p>
                             </div>
@@ -556,7 +556,7 @@ export default function CompanionApp({
                               disabled={busy}
                               onClick={() => editTask(task)}
                               aria-label={t("editNamed", { name: task.title })}
-                              className="rounded-lg p-2 text-slate-400 hover:text-emerald-800"
+                              className="rounded-lg p-2 text-muted hover:text-emerald-800"
                             >
                               <Pencil size={15} aria-hidden="true" />
                             </button>
@@ -567,7 +567,7 @@ export default function CompanionApp({
                               aria-label={t("deleteNamed", {
                                 name: task.title,
                               })}
-                              className="p-2 text-slate-400"
+                              className="p-2 text-muted"
                             >
                               <Trash2 size={14} aria-hidden="true" />
                             </button>
@@ -580,8 +580,8 @@ export default function CompanionApp({
                   (item) =>
                     item.doneAt && campusDate(Date.parse(item.doneAt)) < today,
                 ) && (
-                  <details className="mt-5 rounded-xl border border-slate-100 p-4">
-                    <summary className="cursor-pointer text-xs font-bold text-slate-500">
+                  <details className="mt-5 rounded-xl border border-line-soft p-4">
+                    <summary className="cursor-pointer text-xs font-bold text-muted">
                       {t("completedArchive")}
                     </summary>
                     <ul className="mt-3 space-y-2">
@@ -597,7 +597,7 @@ export default function CompanionApp({
                           <li
                             key={item.id}
                             dir="auto"
-                            className="text-xs leading-7 text-slate-500"
+                            className="text-xs leading-7 text-muted"
                           >
                             ✓ {item.title}
                           </li>
@@ -650,7 +650,7 @@ export default function CompanionApp({
                       type="button"
                       onClick={() => setSelectedDay(day)}
                       aria-pressed={selectedDay === day}
-                      className={`min-h-11 rounded-xl px-1 py-2 text-[10px] font-bold sm:text-xs ${selectedDay === day ? "bg-[#dfead8] text-emerald-900" : "bg-slate-50 text-slate-500"}`}
+                      className={`min-h-11 rounded-xl px-1 py-2 text-[10px] font-bold sm:text-xs ${selectedDay === day ? "bg-[#dfead8] text-emerald-900" : "bg-canvas text-muted"}`}
                     >
                       {weekday(day)}
                     </button>
@@ -670,7 +670,7 @@ export default function CompanionApp({
                           >
                             {lesson.title}
                           </h3>
-                          <p className="mt-1 break-words text-xs text-slate-500">
+                          <p className="mt-1 break-words text-xs text-muted">
                             <span dir="ltr">
                               {lesson.start} – {lesson.end}
                             </span>
@@ -682,7 +682,7 @@ export default function CompanionApp({
                           disabled={busy}
                           onClick={() => editLesson(lesson)}
                           aria-label={t("editNamed", { name: lesson.title })}
-                          className="p-2 text-slate-400 hover:text-emerald-800"
+                          className="p-2 text-muted hover:text-emerald-800"
                         >
                           <Pencil size={15} aria-hidden="true" />
                         </button>
@@ -701,7 +701,7 @@ export default function CompanionApp({
                               );
                           }}
                           aria-label={t("deleteNamed", { name: lesson.title })}
-                          className="p-2 text-slate-400 hover:text-red-700"
+                          className="p-2 text-muted hover:text-red-700"
                         >
                           <Trash2 size={15} aria-hidden="true" />
                         </button>
@@ -731,12 +731,12 @@ export default function CompanionApp({
                   <Heart size={14} aria-hidden="true" />
                   {t("dailyIntention")}
                 </p>
-                <p className="my-4 text-sm font-bold leading-8 text-slate-700">
+                <p className="my-4 text-sm font-bold leading-8 text-ink">
                   {summary.completed
                     ? t("progressNudge", { count: summary.completed })
                     : t("gentleNudge")}
                 </p>
-                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-2 overflow-hidden rounded-full bg-sage-soft">
                   <div
                     className="h-full rounded-full bg-[#7c9f69]"
                     style={{
@@ -744,7 +744,7 @@ export default function CompanionApp({
                     }}
                   />
                 </div>
-                <p className="mt-2 text-[11px] text-slate-500">
+                <p className="mt-2 text-[11px] text-muted">
                   {t("focusGoal", {
                     done: summary.focusMinutes,
                     goal: data.profile.dailyMinutes,
@@ -791,7 +791,7 @@ export default function CompanionApp({
                       currency: "ILS",
                     }).format(budget.daily / 100)}
                   </p>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-muted">
                     {t("walletQuickHint")}
                   </p>
                 </button>
@@ -829,7 +829,7 @@ export default function CompanionApp({
             }
           />
         )}
-        <p className="mt-10 text-center text-[11px] leading-7 text-slate-400">
+        <p className="mt-10 text-center text-[11px] leading-7 text-muted">
           {t("yourSpaceHint")}
         </p>
         {editor && (
@@ -1085,7 +1085,7 @@ export default function CompanionApp({
                         className={fieldClass}
                       />
                     </Field>
-                    <p className="text-xs leading-6 text-slate-500">
+                    <p className="text-xs leading-6 text-muted">
                       {t("capsulePrivacy")}
                     </p>
                   </>

@@ -186,7 +186,7 @@ export default function CircleBoard({
             className="absolute -end-12 -top-16 size-72 rounded-full border-[50px] border-[#ccdbac]/10"
           />
           <div className="relative max-w-3xl">
-            <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2 text-xs font-bold text-[#d5e3c1]">
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-paper/10 px-3 py-2 text-xs font-bold text-[#d5e3c1]">
               <Users size={15} aria-hidden="true" />
               {t("eyebrow")}
             </p>
@@ -237,7 +237,7 @@ export default function CircleBoard({
                 type="button"
                 onClick={() => setKind(value)}
                 aria-pressed={kind === value}
-                className={`min-h-11 rounded-full border px-4 py-2 text-xs font-bold ${kind === value ? "border-[#2c4c3b] bg-[#2c4c3b] text-white" : "border-slate-200 bg-white text-slate-600"}`}
+                className={`min-h-11 rounded-full border px-4 py-2 text-xs font-bold ${kind === value ? "border-[#2c4c3b] bg-[#2c4c3b] text-white" : "border-line bg-paper text-muted"}`}
               >
                 {t(`kinds.${value}`)}
               </button>
@@ -250,7 +250,7 @@ export default function CircleBoard({
                 disabled={busy}
                 onClick={() => toggleMine(!mine)}
                 aria-pressed={mine}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-600"
+                className="rounded-full border border-line bg-paper px-4 py-2 text-xs font-bold text-muted"
               >
                 {t(mine ? "showEveryone" : "myCircles")}
               </button>
@@ -270,7 +270,7 @@ export default function CircleBoard({
                   setBusy(false);
                 }
               }}
-              className="rounded-full border border-slate-200 bg-white p-3 text-slate-600"
+              className="rounded-full border border-line bg-paper p-3 text-muted"
             >
               <RefreshCw size={16} aria-hidden="true" />
             </button>
@@ -306,7 +306,7 @@ export default function CircleBoard({
           </p>
         )}
         {fallback && (
-          <label className="mt-5 block text-xs font-bold text-slate-600">
+          <label className="mt-5 block text-xs font-bold text-muted">
             {t("copyManually")}
             <input
               readOnly
@@ -325,7 +325,7 @@ export default function CircleBoard({
               className="mx-auto mb-4 text-emerald-700"
             />
             <h2 className="text-xl font-bold">{t("activatingTitle")}</h2>
-            <p className="mx-auto mt-3 max-w-lg text-sm leading-8 text-slate-500">
+            <p className="mx-auto mt-3 max-w-lg text-sm leading-8 text-muted">
               {t("activatingHint")}
             </p>
           </section>
@@ -350,11 +350,11 @@ export default function CircleBoard({
                   <div
                     className={`flex items-center justify-between gap-3 border-b border-black/5 p-5 ${circle.kind === "study" ? "bg-[#e9f0df]" : circle.kind === "exchange" ? "bg-[#eee8f4]" : "bg-[#f1e7d9]"}`}
                   >
-                    <span className="inline-flex items-center gap-2 text-xs font-bold text-slate-700">
+                    <span className="inline-flex items-center gap-2 text-xs font-bold text-ink">
                       <Icon size={19} aria-hidden="true" />
                       {t(`kinds.${circle.kind}`)}
                     </span>
-                    <span className="rounded-full bg-white/80 px-2.5 py-1.5 text-[11px] font-bold text-slate-600">
+                    <span className="rounded-full bg-paper/80 px-2.5 py-1.5 text-[11px] font-bold text-muted">
                       {t(ended ? "closed" : full ? "full" : "seatsLeft", {
                         count: circle.capacity - circle.members,
                       })}
@@ -363,17 +363,17 @@ export default function CircleBoard({
                   <div className="flex flex-1 flex-col p-5 sm:p-6">
                     <h2
                       dir="auto"
-                      className="break-words text-xl font-bold leading-8 text-slate-900"
+                      className="break-words text-xl font-bold leading-8 text-ink"
                     >
                       {circle.title}
                     </h2>
                     <p
                       dir="auto"
-                      className="my-4 whitespace-pre-wrap break-words text-sm leading-7 text-slate-500"
+                      className="my-4 whitespace-pre-wrap break-words text-sm leading-7 text-muted"
                     >
                       {circle.description}
                     </p>
-                    <div className="mt-auto space-y-3 pt-2 text-xs leading-6 text-slate-500">
+                    <div className="mt-auto space-y-3 pt-2 text-xs leading-6 text-muted">
                       <p className="flex items-start gap-2">
                         <CalendarDays
                           size={16}
@@ -411,13 +411,13 @@ export default function CircleBoard({
                       </p>
                       <p>{t("hostedBy", { name: circle.host })}</p>
                     </div>
-                    <div className="mt-5 flex gap-2 border-t border-slate-100 pt-4">
+                    <div className="mt-5 flex gap-2 border-t border-line-soft pt-4">
                       {circle.is_host || circle.can_moderate ? (
                         <button
                           type="button"
                           disabled={busy || ended}
                           onClick={() => act(circle.id, "close")}
-                          className="min-h-11 flex-1 rounded-xl bg-slate-100 px-3 py-3 text-xs font-bold text-slate-700 disabled:opacity-50"
+                          className="min-h-11 flex-1 rounded-xl bg-sage-soft px-3 py-3 text-xs font-bold text-ink disabled:opacity-50"
                         >
                           {t(ended ? "hostBadge" : "closeCircle")}
                         </button>
@@ -452,7 +452,7 @@ export default function CircleBoard({
                         type="button"
                         onClick={() => copy(circle.id)}
                         aria-label={t("copyInvite")}
-                        className="rounded-xl border border-slate-200 px-3 text-slate-500"
+                        className="rounded-xl border border-line px-3 text-muted"
                       >
                         {copied === circle.id ? (
                           <Check size={16} aria-hidden="true" />
@@ -490,7 +490,7 @@ export default function CircleBoard({
                           setReportId(circle.id);
                           setReported(false);
                         }}
-                        className="mt-3 inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-amber-800"
+                        className="mt-3 inline-flex items-center gap-1 text-[11px] text-muted hover:text-amber-800"
                       >
                         <Flag size={12} aria-hidden="true" />
                         {t("reportCircle")}
@@ -511,12 +511,12 @@ export default function CircleBoard({
             <h2 className="text-xl font-bold">
               {t(target ? "missingCircle" : "emptyTitle")}
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-8 text-slate-500">
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-8 text-muted">
               {t(target ? "missingHint" : "emptyHint")}
             </p>
           </section>
         )}
-        <p className="mx-auto mt-7 flex max-w-3xl items-start justify-center gap-2 text-xs leading-7 text-slate-500">
+        <p className="mx-auto mt-7 flex max-w-3xl items-start justify-center gap-2 text-xs leading-7 text-muted">
           <Flag size={14} aria-hidden="true" className="mt-1.5 shrink-0" />
           {t("communityHint")}
         </p>
@@ -543,7 +543,7 @@ export default function CircleBoard({
                   className={fieldClass}
                 />
               </Field>
-              <p className="text-xs leading-7 text-slate-500">
+              <p className="text-xs leading-7 text-muted">
                 {t("reportPrivate")}
               </p>
               <button disabled={busy} className={saveClass}>
@@ -652,7 +652,7 @@ export default function CircleBoard({
                     />
                   </Field>
                 </div>
-                <p className="text-xs leading-7 text-slate-500">
+                <p className="text-xs leading-7 text-muted">
                   {t("createHint")}
                 </p>
                 <button className={`${saveClass} w-full`}>

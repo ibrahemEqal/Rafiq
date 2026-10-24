@@ -36,7 +36,7 @@ export default function DownloadButton({
         type="button"
         onClick={handleDownload}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-teal-600 px-8 py-4 text-lg font-bold text-white shadow-lg transition-colors hover:bg-teal-700 disabled:cursor-wait disabled:opacity-70 sm:w-auto"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-forest px-8 py-4 text-lg font-bold text-white shadow-sm transition-colors hover:bg-forest-hover disabled:cursor-wait disabled:opacity-70 sm:w-auto"
       >
         <Download size={24} />
         {loading ? "جاري التجهيز..." : buttonText}

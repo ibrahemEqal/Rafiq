@@ -15,12 +15,13 @@ export default async function Navbar({ locale }: { locale: string }) {
       "books",
       "questions",
       "requests",
+      "offers",
       "mobileNavigation",
     ].map((key) => [key, t(key)]),
   );
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#dfe5d8] bg-[#fffefa]/95 backdrop-blur-xl">
-      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
+      <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <Image
             src="/brand/rafeeq-logo.webp"

@@ -5,7 +5,7 @@ export default function ErrorPage({ retry }: { retry: () => void }) {
   return (
     <section
       role="alert"
-      className="mx-auto my-12 max-w-xl rounded-3xl bg-white p-7"
+      className="mx-auto my-12 max-w-xl rounded-3xl bg-paper p-7"
     >
       <h2 className="text-xl font-bold">
         {ar ? "تعذّر تحميل الساحة" : "The campus square could not be loaded"}
