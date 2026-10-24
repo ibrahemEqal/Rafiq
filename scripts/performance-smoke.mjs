@@ -571,7 +571,7 @@ try {
       assert.equal(passwordUpdates.at(-1).id, studentId);
       assert.equal(passwordUpdates.at(-1).password, 'fixture-new-password');
       const failedResources = await visit(`${prefix}/resources?college=${collegeId}&major=${majorId}&course=${courseId}&q=resource-failure-fixture`, null);
-      assert.ok(!failedResources.body.includes('<h2 class="text-xl font-black text-slate-900">'), 'Database failures must not render the empty-course heading');
+      assert.ok(!failedResources.body.includes(prefix ? 'No resources for this course yet' : 'لا توجد موارد لهذا المساق حتى الآن'), 'Database failures must not render the empty-course heading');
       assert.ok(!failedResources.body.includes('Private database fixture error'), 'Database error details must not leak into the page');
     }
     console.log('PASS: recovery Server Actions, verified password updates and resource query failures');

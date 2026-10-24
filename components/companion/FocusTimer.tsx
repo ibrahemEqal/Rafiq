@@ -108,7 +108,7 @@ export default function FocusTimer({
               type="button"
               onClick={() => setMinutes(value)}
               aria-pressed={minutes === value}
-              className={`rounded-full px-4 py-2 text-xs font-bold ${minutes === value ? "bg-emerald-200 text-[#102f2d]" : "bg-white/10 text-white"}`}
+              className={`rounded-full px-4 py-2 text-xs font-bold ${minutes === value ? "bg-emerald-200 text-[#102f2d]" : "bg-paper/10 text-white"}`}
             >
               {t("minutes", { count: value })}
             </button>
@@ -130,7 +130,7 @@ export default function FocusTimer({
           <button
             type="button"
             onClick={session?.endAt ? pause : start}
-            className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-white p-3 text-sm font-bold text-[#102f2d]"
+            className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-paper p-3 text-sm font-bold text-[#102f2d]"
           >
             {session?.endAt ? (
               <Pause size={17} aria-hidden="true" />

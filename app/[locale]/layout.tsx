@@ -63,7 +63,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={dir}>
       <body
-        className={`${rafeeqFont.variable} bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col`}
+        className={`${rafeeqFont.variable} bg-canvas text-ink antialiased min-h-screen flex flex-col`}
       >
         <NextIntlClientProvider messages={null}>
           <Navbar locale={locale} />

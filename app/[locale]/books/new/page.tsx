@@ -19,15 +19,15 @@ export default async function NewBookPage() {
   const colleges = await getColleges();
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
+    <div className="min-h-screen bg-canvas py-12">
       <div className="container mx-auto max-w-2xl px-4">
-        <Link href="/books" className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-teal-700"><ArrowRight size={17} aria-hidden="true" className={locale === "en" ? "rotate-180" : undefined} />{t("backToMarket")}</Link>
-        <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm sm:p-8">
-          <div className="mb-8 border-b border-slate-100 pb-6">
-            <span className="mb-4 inline-flex rounded-2xl bg-teal-50 p-3 text-teal-700"><BookOpen size={25} aria-hidden="true" /></span>
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">{t("addNew")}</h1>
-            <p className="mt-3 text-sm leading-7 text-slate-500">{t("newListingIntro")}</p>
-            <p className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-teal-700"><HeartHandshake size={15} aria-hidden="true" />{t("freeLabel")}</p>
+        <Link href="/books" className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-muted hover:text-forest"><ArrowRight size={17} aria-hidden="true" className={locale === "en" ? "rotate-180" : undefined} />{t("backToMarket")}</Link>
+        <div className="bg-paper rounded-3xl border border-line p-5 shadow-sm sm:p-8">
+          <div className="mb-8 border-b border-line-soft pb-6">
+            <span className="mb-4 inline-flex rounded-2xl bg-sage-soft p-3 text-forest"><BookOpen size={25} aria-hidden="true" /></span>
+            <h1 className="text-2xl font-bold text-ink mb-2">{t("addNew")}</h1>
+            <p className="mt-3 text-sm leading-7 text-muted">{t("newListingIntro")}</p>
+            <p className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-forest"><HeartHandshake size={15} aria-hidden="true" />{t("freeLabel")}</p>
           </div>
           
           <ClientMessages namespace="Books"><AddBookForm colleges={colleges} /></ClientMessages>

@@ -60,11 +60,11 @@ export default function SemesterPanel({
             </p>
             <h2 className="mt-2 text-2xl font-bold">{t("semesterTitle")}</h2>
           </div>
-          <span className="rounded-full bg-violet-50 px-3 py-2 text-xs font-bold text-violet-800">
+          <span className="rounded-full bg-lavender px-3 py-2 text-xs font-bold text-plum">
             {t("simulation")}
           </span>
         </div>
-        <p className="mb-6 max-w-3xl text-sm leading-7 text-slate-500">
+        <p className="mb-6 max-w-3xl text-sm leading-7 text-muted">
           {t("semesterHint")}
         </p>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -139,7 +139,7 @@ export default function SemesterPanel({
             ["semesterCredits", projection.credits],
           ].map(([label, value]) => (
             <div key={String(label)} className="rounded-2xl bg-[#f2f5ee] p-5">
-              <p className="text-xs font-bold text-slate-500">
+              <p className="text-xs font-bold text-muted">
                 {t(String(label))}
               </p>
               <p
@@ -156,7 +156,7 @@ export default function SemesterPanel({
         {projection.required !== null && (
           <p
             role="status"
-            className="mt-4 rounded-xl bg-violet-50 p-4 text-sm leading-7 text-violet-900"
+            className="mt-4 rounded-xl bg-lavender p-4 text-sm leading-7 text-plum"
           >
             {projection.required > draft.scale
               ? t("targetBeyondRange")
@@ -179,14 +179,14 @@ export default function SemesterPanel({
             {draft.courses.map((course) => (
               <div
                 key={course.id}
-                className="rounded-2xl border border-slate-200 p-4"
+                className="rounded-2xl border border-line p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <h4 dir="auto" className="break-words font-bold">
                       {course.title}
                     </h4>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-muted">
                       {t("creditCount", { count: course.credits })}
                     </p>
                   </div>
@@ -201,7 +201,7 @@ export default function SemesterPanel({
                         ),
                       }))
                     }
-                    className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-700"
+                    className="rounded-lg p-2 text-muted hover:bg-red-50 hover:text-red-700"
                   >
                     <Trash2 size={16} aria-hidden="true" />
                   </button>
@@ -238,7 +238,7 @@ export default function SemesterPanel({
         )}
         <form
           onSubmit={add}
-          className="mt-6 grid items-end gap-3 border-t border-slate-100 pt-6 sm:grid-cols-[1fr_110px_auto]"
+          className="mt-6 grid items-end gap-3 border-t border-line-soft pt-6 sm:grid-cols-[1fr_110px_auto]"
         >
           <Field id="course-name" label={t("courseName")}>
             <input
@@ -279,7 +279,7 @@ export default function SemesterPanel({
           <button
             type="button"
             onClick={() => setDraft(plan)}
-            className="inline-flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-500"
+            className="inline-flex items-center gap-2 px-3 py-2 text-xs font-bold text-muted"
           >
             <RotateCcw size={14} aria-hidden="true" />
             {t("restoreSaved")}

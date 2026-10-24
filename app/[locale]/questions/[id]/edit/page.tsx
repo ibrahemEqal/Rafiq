@@ -21,8 +21,8 @@ export default async function EditQuestionPage({ params }: { params: Promise<{ i
   if (error) throw new Error("Question unavailable");
   if (!question || (question.author_id !== user.id && profile?.role !== "admin")) notFound();
 
-  return <ClientMessages namespace="Questions"><section className="min-h-screen bg-slate-50 px-4 py-10"><div className="mx-auto max-w-3xl space-y-6">
-    <Link href={`/questions/${question.id}`} className="text-sm font-bold text-teal-700">{t("backToQuestion")}</Link>
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"><h1 className="mb-6 text-2xl font-extrabold text-slate-900">{t("editQuestion")}</h1><QuestionEditForm question={question} courses={courses} /></div>
+  return <ClientMessages namespace="Questions"><section className="min-h-screen bg-canvas px-4 py-10"><div className="mx-auto max-w-3xl space-y-6">
+    <Link href={`/questions/${question.id}`} className="text-sm font-bold text-forest">{t("backToQuestion")}</Link>
+    <div className="rounded-3xl border border-line bg-paper p-6 shadow-sm sm:p-8"><h1 className="mb-6 text-2xl font-bold text-ink">{t("editQuestion")}</h1><QuestionEditForm question={question} courses={courses} /></div>
   </div></section></ClientMessages>;
 }

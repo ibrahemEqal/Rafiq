@@ -26,7 +26,7 @@ export default function CapsulePanel({
             {t("capsuleEyebrow")}
           </p>
           <h2 className="mt-2 text-2xl font-bold">{t("capsuleTitle")}</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-muted">
             {t("capsuleHint")}
           </p>
         </div>
@@ -58,7 +58,7 @@ export default function CapsulePanel({
                 <article key={capsule.id} className="companion-paper p-6">
                   <div className="mb-5 flex items-center justify-between">
                     <span
-                      className={`rounded-2xl p-3 ${ready ? "bg-amber-50 text-amber-700" : "bg-violet-50 text-violet-700"}`}
+                      className={`rounded-2xl p-3 ${ready ? "bg-amber-50 text-amber-700" : "bg-lavender text-plum"}`}
                     >
                       {ready ? (
                         <Mail size={24} aria-hidden="true" />
@@ -74,7 +74,7 @@ export default function CapsulePanel({
                           onRemove(capsule.id);
                       }}
                       aria-label={t("deleteNamed", { name: capsule.title })}
-                      className="rounded-lg p-2 text-slate-400 hover:text-red-700"
+                      className="rounded-lg p-2 text-muted hover:text-red-700"
                     >
                       <Trash2 size={16} aria-hidden="true" />
                     </button>
@@ -82,7 +82,7 @@ export default function CapsulePanel({
                   <h3 dir="auto" className="break-words text-lg font-bold">
                     {capsule.title}
                   </h3>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-muted">
                     {t("opensOn", { date: capsule.opensOn })}
                   </p>
                   {ready ? (
@@ -92,13 +92,13 @@ export default function CapsulePanel({
                       </summary>
                       <p
                         dir="auto"
-                        className="mt-4 whitespace-pre-wrap break-words text-sm leading-8 text-slate-700"
+                        className="mt-4 whitespace-pre-wrap break-words text-sm leading-8 text-ink"
                       >
                         {capsule.body}
                       </p>
                     </details>
                   ) : (
-                    <p className="mt-5 rounded-xl bg-slate-50 p-4 text-sm font-bold text-slate-500">
+                    <p className="mt-5 rounded-xl bg-canvas p-4 text-sm font-bold text-muted">
                       {t("daysUntil", { count: days })}
                     </p>
                   )}
@@ -111,9 +111,9 @@ export default function CapsulePanel({
           <Mail
             size={38}
             aria-hidden="true"
-            className="mx-auto mb-4 text-violet-400"
+            className="mx-auto mb-4 text-plum"
           />
-          <p className="text-sm leading-8 text-slate-500">{t("noCapsules")}</p>
+          <p className="text-sm leading-8 text-muted">{t("noCapsules")}</p>
         </div>
       )}
     </section>

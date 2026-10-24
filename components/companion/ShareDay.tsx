@@ -104,7 +104,7 @@ export default function ShareDay({
         type="button"
         disabled={busy}
         onClick={share}
-        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:border-teal-500"
+        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-line bg-paper px-4 py-2.5 text-xs font-bold text-ink hover:border-teal-500"
       >
         <Share2 size={15} aria-hidden="true" />
         {t(busy ? "preparingPoster" : "shareDay")}

@@ -5,12 +5,12 @@ export default function ErrorPage({ retry }: { retry: () => void }) {
   return (
     <section
       role="alert"
-      className="mx-auto my-12 max-w-xl rounded-3xl border border-amber-200 bg-white p-7"
+      className="mx-auto my-12 max-w-xl rounded-3xl border border-amber-200 bg-paper p-7"
     >
       <h2 className="text-xl font-bold">
         {ar ? "تعذّر تحميل مساحتك" : "Your space could not be loaded"}
       </h2>
-      <p className="my-4 text-sm leading-7 text-slate-500">
+      <p className="my-4 text-sm leading-7 text-muted">
         {ar
           ? "ما قدرنا نوصل لبيانات حسابك. حاول مجددًا حتى ما نستبدلها ببيانات فارغة."
           : "We could not reach your saved data. Try again; it has not been replaced with an empty plan."}

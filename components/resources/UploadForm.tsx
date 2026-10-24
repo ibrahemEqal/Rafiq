@@ -37,8 +37,8 @@ export default function UploadForm({ colleges, userId }: { colleges: ResourceOpt
 
   const supabase = createClient();
   const optionName = (option: ResourceOption) => locale === "ar" ? option.name_ar : option.name_en;
-  const fieldClass = "w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-base text-slate-900 outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-50";
-  const labelClass = "mb-2 block text-base font-bold text-slate-800";
+  const fieldClass = "w-full rounded-xl border border-line bg-paper px-4 py-3.5 text-base text-ink outline-none transition focus:border-forest focus:ring-4 focus:ring-sage-soft";
+  const labelClass = "mb-2 block text-base font-bold text-ink";
 
   const loadCatalog = async (kind: "college" | "major", value: string) => {
     if (!value) { if (kind === "college") setMajors([]); setCourses([]); return; }
@@ -150,7 +150,7 @@ export default function UploadForm({ colleges, userId }: { colleges: ResourceOpt
 
   if (success) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-teal-600">
+      <div className="flex flex-col items-center justify-center py-12 text-forest">
         <CheckCircle2 size={64} className="mb-4" />
         <h3 className="text-2xl font-bold">{t("uploadSuccess")}</h3>
       </div>
@@ -203,17 +203,17 @@ export default function UploadForm({ colleges, userId }: { colleges: ResourceOpt
       <fieldset>
         <legend className={labelClass}>{t("sourceType")}</legend>
         <div className="grid gap-3 sm:grid-cols-2">
-          <button type="button" onClick={() => setSourceType("upload")} className={`flex items-center gap-3 rounded-2xl border-2 p-4 text-start text-base font-bold transition ${sourceType === "upload" ? "border-teal-500 bg-teal-50 text-teal-800" : "border-slate-200 bg-white text-slate-700"}`}>
+          <button type="button" onClick={() => setSourceType("upload")} className={`flex items-center gap-3 rounded-2xl border-2 p-4 text-start text-base font-bold transition ${sourceType === "upload" ? "border-forest bg-sage-soft text-forest" : "border-line bg-paper text-ink"}`}>
             <FileUp size={22} />{t("uploadFileOption")}
           </button>
-          <button type="button" onClick={() => setSourceType("external")} className={`flex items-center gap-3 rounded-2xl border-2 p-4 text-start text-base font-bold transition ${sourceType === "external" ? "border-teal-500 bg-teal-50 text-teal-800" : "border-slate-200 bg-white text-slate-700"}`}>
+          <button type="button" onClick={() => setSourceType("external")} className={`flex items-center gap-3 rounded-2xl border-2 p-4 text-start text-base font-bold transition ${sourceType === "external" ? "border-forest bg-sage-soft text-forest" : "border-line bg-paper text-ink"}`}>
             <Link2 size={22} />{t("driveLinkOption")}
           </button>
         </div>
       </fieldset>
 
       {sourceType === "upload" ? (
-        <div className="rounded-2xl border-2 border-dashed border-slate-200 p-8 text-center transition-colors hover:bg-slate-50">
+        <div className="rounded-2xl border-2 border-dashed border-line p-8 text-center transition-colors hover:bg-canvas">
           <input
             type="file"
             id="file"
@@ -223,9 +223,9 @@ export default function UploadForm({ colleges, userId }: { colleges: ResourceOpt
             onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
           <label htmlFor="file" className="flex cursor-pointer flex-col items-center">
-            <UploadCloud size={44} className="mb-3 text-teal-500" />
-            <span className="text-base font-semibold text-slate-700">{file ? file.name : t("chooseFile")}</span>
-            {file && <span className="mt-2 text-sm text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</span>}
+            <UploadCloud size={44} className="mb-3 text-forest" />
+            <span className="text-base font-semibold text-ink">{file ? file.name : t("chooseFile")}</span>
+            {file && <span className="mt-2 text-sm text-muted">{(file.size / 1024 / 1024).toFixed(2)} MB</span>}
           </label>
         </div>
       ) : (
@@ -241,7 +241,7 @@ export default function UploadForm({ colleges, userId }: { colleges: ResourceOpt
             placeholder="https://drive.google.com/..."
             className={fieldClass}
           />
-          <p className="mt-2 text-sm leading-6 text-slate-500">{t("driveLinkHint")}</p>
+          <p className="mt-2 text-sm leading-6 text-muted">{t("driveLinkHint")}</p>
         </div>
       )}
 
@@ -254,7 +254,7 @@ export default function UploadForm({ colleges, userId }: { colleges: ResourceOpt
       <button
         type="submit"
         disabled={loading}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-4 text-lg font-bold text-white shadow-md transition-all hover:bg-teal-700 disabled:opacity-70"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-forest py-4 text-lg font-bold text-white shadow-md transition-all hover:bg-forest-hover disabled:opacity-70"
       >
         {loading ? <span className="animate-pulse">{t("uploading")}</span> : t("submitUpload")}
       </button>

@@ -29,7 +29,7 @@ export default function ReportReviewActions({ reportId, status }: { reportId: st
 
   const style = "inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold disabled:cursor-wait disabled:opacity-50";
   return <div className="space-y-3"><div className="flex flex-wrap gap-2">
-    {status === "pending" ? <><button disabled={busy} onClick={() => review("reviewed")} className={`${style} bg-teal-600 text-white`}><Check size={16} />{t("markReviewed")}</button><button disabled={busy} onClick={() => review("dismissed")} className={`${style} bg-slate-100 text-slate-700`}><X size={16} />{t("dismissReport")}</button></> : <button disabled={busy} onClick={() => review("pending")} className={`${style} bg-amber-50 text-amber-800`}><RotateCcw size={16} />{t("reopenReport")}</button>}
-    {busy && <span role="status" className="inline-flex items-center gap-2 text-sm text-slate-500"><LoaderCircle size={16} className="animate-spin" />{t("working")}</span>}
+    {status === "pending" ? <><button disabled={busy} onClick={() => review("reviewed")} className={`${style} bg-forest text-white`}><Check size={16} />{t("markReviewed")}</button><button disabled={busy} onClick={() => review("dismissed")} className={`${style} bg-sage-soft text-ink`}><X size={16} />{t("dismissReport")}</button></> : <button disabled={busy} onClick={() => review("pending")} className={`${style} bg-amber-50 text-amber-800`}><RotateCcw size={16} />{t("reopenReport")}</button>}
+    {busy && <span role="status" className="inline-flex items-center gap-2 text-sm text-muted"><LoaderCircle size={16} className="animate-spin" />{t("working")}</span>}
   </div>{error && <p role="alert" className="text-sm text-red-700">{t(`errors.${error}`)}</p>}</div>;
 }

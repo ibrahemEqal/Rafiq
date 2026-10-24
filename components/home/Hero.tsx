@@ -45,7 +45,7 @@ export default function Hero({ locale }: { locale: string }) {
             </Link>
             <Link
               href="/circles"
-              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-[#d9dece] bg-white/70 px-6 py-4 text-sm font-bold text-[#4d6247]"
+              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-[#d9dece] bg-paper/70 px-6 py-4 text-sm font-bold text-[#4d6247]"
             >
               <Users size={18} aria-hidden="true" />
               {t("ctaCircles")}

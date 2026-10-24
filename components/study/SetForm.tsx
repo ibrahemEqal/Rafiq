@@ -11,7 +11,7 @@ export default function SetForm({ set }: { set?: Pick<StudySet, "id" | "title" |
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const field = "w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-50";
+  const field = "w-full rounded-xl border border-line bg-canvas px-4 py-3 text-base outline-none focus:border-forest focus:ring-4 focus:ring-sage-soft";
   const prefix = set ? "edit" : "new";
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (busy) return;
@@ -40,8 +40,8 @@ export default function SetForm({ set }: { set?: Pick<StudySet, "id" | "title" |
       <div><label htmlFor={`${prefix}-title`} className="mb-2 block text-sm font-bold">{t("setTitle")}</label><input id={`${prefix}-title`} name="title" defaultValue={set?.title} required minLength={3} maxLength={160} placeholder={t("titleExample")} className={field} /></div>
       <div><label htmlFor={`${prefix}-subject`} className="mb-2 block text-sm font-bold">{t("subject")}</label><input id={`${prefix}-subject`} name="subject" defaultValue={set?.subject} maxLength={120} placeholder={t("subjectExample")} className={field} /></div>
       <div><label htmlFor={`${prefix}-description`} className="mb-2 block text-sm font-bold">{t("description")}</label><textarea id={`${prefix}-description`} name="description" defaultValue={set?.description} maxLength={2000} rows={3} className={field} /></div>
-      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-4"><input name="shared" type="checkbox" defaultChecked={set?.visibility === "shared"} className="mt-1 size-4 shrink-0 accent-teal-600" /><span><span className="block text-sm font-bold">{t("enableSharing")}</span><span className="mt-1 block text-xs leading-6 text-slate-500">{t("sharingHint")}</span></span></label>
-      <div className="flex flex-wrap gap-3"><button type="submit" className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white hover:bg-teal-700">{busy ? <LoaderCircle size={17} className="animate-spin" aria-hidden="true" /> : set ? <Save size={17} aria-hidden="true" /> : <Plus size={17} aria-hidden="true" />}{t(set ? "saveSet" : "createSet")}</button>
+      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-line p-4"><input name="shared" type="checkbox" defaultChecked={set?.visibility === "shared"} className="mt-1 size-4 shrink-0 accent-forest" /><span><span className="block text-sm font-bold">{t("enableSharing")}</span><span className="mt-1 block text-xs leading-6 text-muted">{t("sharingHint")}</span></span></label>
+      <div className="flex flex-wrap gap-3"><button type="submit" className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-forest px-5 py-3 text-sm font-bold text-white hover:bg-forest-hover">{busy ? <LoaderCircle size={17} className="animate-spin" aria-hidden="true" /> : set ? <Save size={17} aria-hidden="true" /> : <Plus size={17} aria-hidden="true" />}{t(set ? "saveSet" : "createSet")}</button>
       {set && <button type="button" onClick={remove} className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-red-200 px-4 py-3 text-sm font-bold text-red-700 hover:bg-red-50"><Trash2 size={16} aria-hidden="true" />{t("deleteSet")}</button>}</div>
     </fieldset>
   </form>;

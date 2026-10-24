@@ -30,12 +30,12 @@ export default function QuestionEditForm({ question, courses }: {
     finally { setBusy(false); }
   }
 
-  const field = "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-teal-500 disabled:opacity-60";
+  const field = "w-full rounded-xl border border-line bg-paper px-4 py-3 outline-none focus:border-forest disabled:opacity-60";
   return <form onSubmit={submit} className="space-y-6">
     <div><label htmlFor="edit-question-title" className="mb-2 block text-sm font-bold">{t("formTitle")}</label><input id="edit-question-title" name="title" defaultValue={question.title} minLength={5} maxLength={160} required disabled={busy} className={field} /></div>
     <div><label htmlFor="edit-question-course" className="mb-2 block text-sm font-bold">{t("course")}</label><select id="edit-question-course" name="course_id" defaultValue={question.course_id ?? ""} disabled={busy} className={field}><option value="">{t("general")}</option>{courses.map(course => <option key={course.id} value={course.id}>{locale === "ar" ? course.name_ar : course.name_en}</option>)}</select></div>
     <div><label htmlFor="edit-question-body" className="mb-2 block text-sm font-bold">{t("formBody")}</label><textarea id="edit-question-body" name="body" defaultValue={question.body} rows={9} minLength={10} maxLength={8000} required disabled={busy} className={`${field} resize-y`} /></div>
     {error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{t(`errors.${error}`)}</p>}
-    <button disabled={busy} className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-6 py-3 font-bold text-white disabled:cursor-wait disabled:opacity-50">{busy ? <LoaderCircle size={18} className="animate-spin" /> : <Save size={18} />}{busy ? t("working") : t("save")}</button>
+    <button disabled={busy} className="inline-flex items-center gap-2 rounded-xl bg-forest px-6 py-3 font-bold text-white disabled:cursor-wait disabled:opacity-50">{busy ? <LoaderCircle size={18} className="animate-spin" /> : <Save size={18} />}{busy ? t("working") : t("save")}</button>
   </form>;
 }
