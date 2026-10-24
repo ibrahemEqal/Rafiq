@@ -1,3 +1,4 @@
+import localFont from "next/font/local";
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -6,6 +7,23 @@ import { notFound } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import "../globals.css";
+
+const rafeeqFont = localFont({
+  src: [
+    {
+      path: "../../public/fonts/ibm-plex-arabic-regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/ibm-plex-arabic-bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-rafeeq",
+  display: "swap",
+});
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -44,13 +62,13 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} dir={dir}>
-      <body className="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col">
+      <body
+        className={`${rafeeqFont.variable} bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col`}
+      >
         <NextIntlClientProvider messages={null}>
           <Navbar locale={locale} />
           {/* الحاوية الرئيسية للمحتوى */}
-          <main className="flex-1 flex flex-col">
-            {children}
-          </main>
+          <main className="flex-1 flex flex-col">{children}</main>
           <Footer />
         </NextIntlClientProvider>
       </body>

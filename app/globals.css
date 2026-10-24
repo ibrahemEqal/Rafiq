@@ -8,7 +8,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-rafeeq);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -19,7 +19,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, "Segoe UI", Tahoma, sans-serif;
+  font-family: var(--font-rafeeq), Arial, sans-serif;
   line-height: 1.65;
 }
 
@@ -27,10 +27,84 @@ input,
 select,
 textarea,
 button {
-  font: inherit;
+  font-family: inherit;
 }
 
 ::selection {
   background: #2563eb;
   color: #ffffff;
+}
+
+/* Shared companion surfaces keep dense student tools readable in both directions. */
+.companion-paper {
+  border: 1px solid #e0e5da;
+  border-radius: 1.75rem;
+  background: #fffefa;
+  box-shadow: 0 3px 0 -2px rgba(31, 55, 39, 0.04);
+}
+.companion-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #6b8066;
+}
+.companion-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.5rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 999px;
+  background: #eff4e9;
+  color: #345437;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.companion-moment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.7rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 999px;
+  background: #fffefa;
+  color: #344b36;
+  font-size: 0.7rem;
+  font-weight: 700;
+  transition: transform 0.18s;
+}
+.companion-moment:hover {
+  transform: translateY(-2px);
+}
+.companion-empty {
+  border: 1px dashed #dbe2d3;
+  border-radius: 1rem;
+  padding: 1.6rem 1rem;
+  text-align: center;
+  color: #83907e;
+  font-size: 0.8rem;
+  line-height: 1.9;
+}
+.companion-dialog[open] {
+  animation: companion-enter 0.18s ease-out;
+}
+@keyframes companion-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .companion-dialog[open] {
+    animation: none;
+  }
+  .companion-moment:hover {
+    transform: none;
+  }
 }
