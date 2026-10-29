@@ -1,9 +1,9 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { z } from "zod";
 import { BookOpen, Building2, ChevronLeft, FolderOpen, GraduationCap, Plus, Search } from "lucide-react";
 import { Link } from "@/i18n/routing";
-import UniversityResources from "@/components/resources/UniversityResources";
+import ManagedUniversityResources from "@/components/resources/ManagedUniversityResources";
 import ResourceCard from "@/components/resources/ResourceCard";
 import ResourceFilters from "@/components/resources/ResourceFilters";
 import { getCatalogPath, getColleges, getCourses, getMajors, searchCourses } from "@/lib/data/catalog";
@@ -72,7 +72,7 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Pr
         </div>}
       </section>
 
-      {!college && <UniversityResources />}
+      {!college && <Suspense fallback={<div className="mb-8 h-64 animate-pulse rounded-3xl bg-paper" aria-busy="true" />}><ManagedUniversityResources /></Suspense>}
 
       <nav className="mb-8 flex flex-wrap items-center gap-2 text-sm font-bold text-muted" aria-label={t("catalogPath")}>
         <Link href="/resources" className="rounded-xl bg-paper px-3 py-2 hover:text-forest">{t("colleges")}</Link>

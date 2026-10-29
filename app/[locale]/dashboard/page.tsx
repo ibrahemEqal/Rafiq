@@ -7,6 +7,8 @@ import ResourceReviewActions from "@/components/admin/ResourceReviewActions";
 import ClientMessages from "@/components/shared/ClientMessages";
 import { ShieldCheck, FileText, User, BookOpen, Clock, MessageCircleQuestion, HandHeart, AlertTriangle, Users, ExternalLink } from "lucide-react";
 
+import { ApproveAllResources } from "@/components/admin/AdminControls";
+
 const PAGE_SIZE = 20;
 const statusStyle: Record<ResourceStatus, string> = {
   pending: "bg-amber-50 text-amber-700",
@@ -107,6 +109,11 @@ export default async function AdminDashboard({ searchParams }: {
             <Link href="/dashboard/reports" className="rounded-xl bg-amber-50 px-4 py-2.5 text-base font-bold text-amber-800">{t("openReports")}</Link>
           </div>
 
+          <div className="flex flex-wrap gap-3">
+            <Link href={{ pathname: "/dashboard/manage", query: { entity: "resources" } }} className="rounded-xl bg-forest px-5 py-3 font-bold text-white">{locale === "ar" ? "إدارة المحتوى والتعديل والحذف" : "Manage content, edit and delete"}</Link>
+          </div>
+          {status === "pending" && !error && <ApproveAllResources count={count ?? 0} />}
+
           <nav aria-label={t("filters")} className="flex flex-wrap gap-2">
             {resourceStatuses.map((item) => <Link key={item} href={{ pathname: "/dashboard", query: { status: item } }} aria-current={status === item ? "page" : undefined}
               className={`rounded-xl px-4 py-2.5 text-base font-bold ${status === item ? "bg-forest text-white" : "border border-line bg-paper text-muted hover:bg-sage-soft"}`}>
@@ -136,6 +143,7 @@ export default async function AdminDashboard({ searchParams }: {
                   <div className="flex items-center gap-2"><Clock size={17} /><dt className="sr-only">{t("uploaded")}</dt><dd><time dateTime={resource.created_at}>{dateFormat.format(new Date(resource.created_at))}</time></dd></div>
                 </dl>
                 <ResourceReviewActions resourceId={resource.id} status={resource.status as ResourceStatus} />
+                <Link href={{ pathname: "/dashboard/manage", query: { entity: "resources", q: resource.title.slice(0, 100) } }} className="mt-3 inline-block text-sm font-bold text-forest underline">{locale === "ar" ? "تعديل الاسم والبيانات أو حذف المورد" : "Edit details or delete resource"}</Link>
               </article>)}
             </div>}
 

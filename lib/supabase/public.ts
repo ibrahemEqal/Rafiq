@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export const publicDataTags = {
   resources: "public-resources",
+  curated_resources: "public-curated-resources",
   books: "public-books",
   questions: "public-questions",
   answers: "public-answers",

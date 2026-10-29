@@ -36,6 +36,7 @@ export default async function AdminUsersPage() {
           </div>
           <h1 className="text-3xl font-bold">{t("usersTitle")}</h1>
           <p className="mt-3 text-base leading-8 text-mist">{t("usersSubtitle")}</p>
+          <Link href={{ pathname: "/dashboard/manage", query: { entity: "profiles" } }} className="mt-5 me-5 inline-block font-bold text-white">{locale === "ar" ? "إدارة المستخدمين والصلاحيات" : "Manage users and roles"}</Link>
           <Link href="/dashboard" className="mt-5 inline-block text-base font-bold text-mist">{t("backToDashboard")}</Link>
         </header>
 

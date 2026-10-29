@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "catalog:build": "node scripts/build-najah-catalog.mjs"
+    "catalog:build": "node scripts/build-najah-catalog.mjs",
+    "test:admin-db": "node scripts/test-admin-content-db.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -21,6 +22,7 @@
     "zod": "^4.6.2"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.13",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

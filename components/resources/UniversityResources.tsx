@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLocale } from "next-intl";
 import { BookOpen, ExternalLink, Search } from "lucide-react";
-import courses from "@/data/university-resources.json";
+import defaultCourses from "@/data/university-resources.json";
 
 const typeNames: Record<string, [string, string]> = {
   previous_exam: ["امتحانات وكويزات", "Exams and quizzes"],
@@ -25,7 +25,7 @@ function sourceName(value: string) {
   return "Google Drive";
 }
 
-export default function UniversityResources() {
+export default function UniversityResources({ courses = defaultCourses }: { courses?: typeof defaultCourses }) {
   const ar = useLocale() === "ar";
   const [query, setQuery] = useState("");
   const [courseSlug, setCourseSlug] = useState("");
@@ -46,7 +46,7 @@ export default function UniversityResources() {
       <span className="rounded-2xl bg-sage-soft p-3 text-forest"><BookOpen size={24} /></span>
       <div>
         <h2 id="university-resources-title" className="text-2xl font-bold text-ink">{ar ? "متطلبات الجامعة — جامعة النجاح" : "University requirements — An-Najah"}</h2>
-        <p className="mt-2 leading-7 text-muted">{ar ? "كتب وتلاخيص وامتحانات ومحاضرات لست مواد. اختر المادة لعرض مواردها، ثم افتح الرابط الأصلي." : "Books, summaries, exams and lectures for six courses. Expand a course, then open the original link."}</p>
+        <p className="mt-2 leading-7 text-muted">{ar ? "كتب وتلاخيص وامتحانات ومحاضرات لمواد الجامعة. اختر المادة لعرض مواردها، ثم افتح الرابط الأصلي." : "Books, summaries, exams and lectures for university courses. Expand a course, then open the original link."}</p>
       </div>
     </div>
     <div className="mb-5 grid gap-3 md:grid-cols-[2fr_1fr_1fr]">
