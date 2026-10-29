@@ -22,8 +22,9 @@ export default async function ResourcesPage({ searchParams }: { searchParams: Pr
   const type = resourceTypes.has(params.type ?? "") ? params.type : undefined;
   const q = params.q?.trim().slice(0, 80) ?? "";
   const courseQuery = courseSearchTerm(params.courseQuery);
-  const matchingCourses = await searchCourses(courseQuery);
-  const path = await getCatalogPath(collegeId, majorId, courseId);
+  const [matchingCourses, path] = await Promise.all([
+    searchCourses(courseQuery), getCatalogPath(collegeId, majorId, courseId),
+  ]);
   const college = path.college;
   const major = path.major;
   const course = path.course;
@@ -122,5 +123,5 @@ function CatalogGrid({ title, subtitle, icon, children }: { title: string; subti
   return <section><div className="mb-6 flex items-center gap-4"><div className="rounded-2xl bg-sage-soft p-3 text-forest">{icon}</div><div><h2 className="text-2xl font-bold text-ink">{title}</h2><p className="mt-1 text-muted">{subtitle}</p></div></div><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{children}</div></section>;
 }
 function CatalogLink({ href, title, eyebrow, icon }: { href: string; title: string; eyebrow?: string; icon: ReactNode }) {
-  return <Link href={href} className="group flex min-h-32 items-center gap-4 rounded-3xl border border-line bg-paper p-5 shadow-sm transition hover:-translate-y-1 hover:border-line hover:shadow-sm"><div className="rounded-2xl bg-sage-soft p-3 text-muted group-hover:bg-sage-soft group-hover:text-forest">{icon}</div><div>{eyebrow && <p className="mb-1 text-xs font-bold tracking-wider text-forest">{eyebrow}</p>}<h3 className="font-bold leading-6 text-ink">{title}</h3></div></Link>;
+  return <Link href={href} prefetch={false} className="group flex min-h-32 items-center gap-4 rounded-3xl border border-line bg-paper p-5 shadow-sm transition hover:-translate-y-1 hover:border-line hover:shadow-sm"><div className="rounded-2xl bg-sage-soft p-3 text-muted group-hover:bg-sage-soft group-hover:text-forest">{icon}</div><div>{eyebrow && <p className="mb-1 text-xs font-bold tracking-wider text-forest">{eyebrow}</p>}<h3 className="font-bold leading-6 text-ink">{title}</h3></div></Link>;
 }

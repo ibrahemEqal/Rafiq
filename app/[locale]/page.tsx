@@ -1,3 +1,4 @@
+import BookExchange from "@/components/home/BookExchange";
 import Hero from "@/components/home/Hero";
 import OffersTeaser from "@/components/home/OffersTeaser";
 import Features from "@/components/home/Features";
@@ -12,6 +13,7 @@ export default async function Home({
   return (
     <div className="flex flex-col w-full">
       <Hero locale={locale} />
+      <BookExchange locale={locale} />
       <OffersTeaser locale={locale} />
       <Features locale={locale} />
     </div>

@@ -82,6 +82,7 @@ export default function ResourceCard({ resource }: { resource: ResourceType }) {
         
         <Link 
           href={`/resources/${resource.id}`}
+          prefetch={false}
           className="text-forest hover:text-forest font-bold text-sm flex items-center gap-1 transition-colors"
         >
           {t("download")} &rarr;

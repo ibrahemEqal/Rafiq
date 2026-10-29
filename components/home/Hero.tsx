@@ -8,6 +8,7 @@ import {
   Clock3,
   Check,
   Users,
+  BookOpen,
   Wallet,
   Layers,
   Sparkles,
@@ -44,11 +45,11 @@ export default function Hero({ locale }: { locale: string }) {
               <Arrow size={18} aria-hidden="true" />
             </Link>
             <Link
-              href="/circles"
+              href="/books"
               className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-[#d9dece] bg-paper/70 px-6 py-4 text-sm font-bold text-[#4d6247]"
             >
-              <Users size={18} aria-hidden="true" />
-              {t("ctaCircles")}
+              <BookOpen size={18} aria-hidden="true" />
+              {t("ctaBooks")}
             </Link>
           </div>
           <p className="mt-4 text-xs leading-7 text-[#8c9485]">
