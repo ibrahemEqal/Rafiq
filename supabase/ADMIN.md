@@ -32,3 +32,46 @@ tests. Before deployment, test with real admin and student sessions: student
 direct dashboard access must fail; student direct status updates must not approve
 files; admin approval must persist and permit public download. No live Supabase
 credentials are bundled or required for frontend CI.
+
+## Full content controls and bulk resource approval
+
+Apply `supabase/migrations/20261029010000_admin_content_controls.sql` in the project's
+SQL Editor as the project owner, then deploy the matching frontend. No role change
+is needed for an existing `profiles.role = 'admin'` account. The migration does not
+promote any user, disable RLS, or approve existing pending resources on its own.
+
+- `/dashboard`: **Approve all** approves every row still pending when the database
+  statement executes, including rows outside the current page and beyond the
+  PostgREST 1,000-row response limit. The confirmation states this scope; the UI
+  shows the actual affected count. Repeating the operation returns zero if none remain.
+- `/dashboard/manage`: searchable, paginated administration of resources,
+  university requirement links, books, requests/responses, questions/answers/comments,
+  public campus circles, profiles/roles, universities, colleges, majors, and courses.
+  Resource edits include title, description, type, course association and external link.
+- Existing university links are seeded into `curated_resources` with public read-only
+  RLS. The public resource page uses this table after rollout, retaining file fallback
+  only when that table has not been deployed. Renaming a university requirement course
+  updates its group of links; it does not rename catalog course rows.
+- Mutations require an admin verified by both the Server Action and the RPC. The
+  server uses the request's cookie-backed client, never a service role credential.
+  Private study sets and personal companion notes are not exposed by the editor.
+- A version hash prevents stale edits/deletes from overwriting newer data. Role
+  changes are serialized; an admin cannot delete their own account or alter their own
+  role. Account deletion targets Auth, not an orphaned profile; foreign-key dependencies
+  can require content removal first. Active JWTs may last until expiry, but deletion
+  removes the profile used for authorization and prevents new sign-ins.
+- Catalog parents with children cannot be deleted through the editor. Resource,
+  question and request deletion can cascade to dependent interactions; confirmation
+  identifies that consequence. Uploaded Storage objects are retained when their
+  resource database record is deleted; this avoids irreversible blob loss but may
+  require later orphan cleanup. Existing short-lived signed links can remain usable
+  until expiry.
+- New editor edits/deletes and bulk approvals write an admin-only audit ledger.
+  Existing individual moderation actions keep their earlier behavior.
+
+Validation: unit tests in `tests/admin-content-management.test.mjs`, production SSR
+and real Server Action checks in `scripts/performance-smoke.mjs`, plus a PGlite
+PostgreSQL-engine suite (`npm run test:admin-db`). The engine suite applies the real
+migration to controlled schemas and covers >1,000 approvals, auth/role boundaries,
+optimistic conflicts, deletions, dependencies, curated links, and audit. It does not
+replace a rollout check against the project's actual Supabase Auth, RLS and Storage.

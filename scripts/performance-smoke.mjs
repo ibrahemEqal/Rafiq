@@ -21,6 +21,8 @@ const collegeId = 'afc00000-0000-4000-8000-000000000005';
 const majorId = 'afc00000-0000-4000-8000-000000000008';
 const calls = [];
 const companionSections = [];
+let bulkApprovals = 0;
+const adminEditorRow = {id: resourceId, version: 'a'.repeat(32), values: {title:'Editable resource <script>alert(1)</script>',description:'Imported resource description',type:'summary',external_url:'https://drive.google.com/file/d/fixture/view',source_type:'external',status:'pending',course_id:courseId,_course_name_ar:'الخوارزميات',_course_name_en:'Algorithms'}};
 const campusCircles = [];
 const circleReports = [];
 
@@ -79,6 +81,17 @@ const mock = createServer(async (req, res) => {
   res.setHeader('content-type', 'application/json');
   const reply = data => res.end(JSON.stringify(data));
   const singleton = data => req.headers.accept?.includes('vnd.pgrst.object') ? data[0] : data;
+  if (url.pathname.startsWith('/rest/v1/rpc/admin_')) {
+    if(id!==adminId){res.statusCode=403;return reply({code:'42501'});}
+    let body='';for await(const chunk of req)body+=chunk;
+    const input=body?JSON.parse(body):{};
+    if(url.pathname.endsWith('/admin_approve_pending_resources')){bulkApprovals++;return reply(1107);}
+    if(url.pathname.endsWith('/admin_content_list'))return reply({rows:input.entity==='resources'?[adminEditorRow]:[],total:input.entity==='resources'?1:0});
+    if(url.pathname.endsWith('/admin_content_mutate'))return reply({success:true});
+  }
+  if (url.pathname === '/rest/v1/curated_resources') {
+    res.statusCode=404;return reply({code:'PGRST205'});
+  }
   if (url.pathname === '/auth/v1/recover') {
     let body = ''; for await (const chunk of req) body += chunk;
     recoveryRequests.push({ ...JSON.parse(body), redirectTo: url.searchParams.get('redirect_to') });
@@ -370,6 +383,15 @@ try {
     assert.ok(book.body.includes(prefix ? 'WhatsApp Number' : 'واتساب'));
     const dashboard = await visit(`${prefix}/dashboard`); assert.equal(dashboard.status, 200);
     assert.ok(dashboard.body.includes(prefix ? 'Approve and publish' : 'موافقة ونشر'));
+    assert.ok(dashboard.body.includes(prefix ? 'Approve all' : 'موافقة على الكل'));
+    const manage=await visit(`${prefix}/dashboard/manage?entity=resources`);
+    assert.equal(manage.status,200);
+    assert.ok(manage.body.includes('Editable resource &lt;script&gt;'));
+    assert.ok(manage.body.includes(prefix?'Manage Rafiq content':'إدارة محتوى رفيق'));
+    const unauthorizedManage=await visit(`${prefix}/dashboard/manage?entity=profiles`,studentId);
+    assert.ok(unauthorizedManage.status===404||unauthorizedManage.body.includes('noindex'));
+    assert.ok(!unauthorizedManage.body.includes('Editable resource'));
+
   }
   if (!baseline) for (const prefix of ['', '/en']) {
     const login = await visit(`${prefix}/auth/login`, null);
@@ -434,6 +456,17 @@ try {
         }); req.setTimeout(15000, () => req.destroy(Error('Action check timed out'))); req.on('error', fail); req.end(body);
       });
     }
+    const beforeBulk=bulkApprovals;
+    const deniedBulk=await action('/en/dashboard','approveAllPendingResources',null,studentId);
+    assert.ok(deniedBulk.body.includes('"error":"unauthorized"'));
+    assert.equal(bulkApprovals,beforeBulk);
+    const bulk=await action('/en/dashboard','approveAllPendingResources',null,adminId);
+    assert.ok(bulk.body.includes('"count":1107'));assert.equal(bulkApprovals,beforeBulk+1);
+    const edited=await action('/en/dashboard/manage?entity=resources','mutateAdminContent',{entity:'resources',id:resourceId,version:'a'.repeat(32),operation:'update',patch:{title:'Admin renamed resource'}},adminId);
+    assert.ok(edited.body.includes('"success":true'));
+    const deniedAdminEdit=await action('/en/dashboard/manage?entity=resources','mutateAdminContent',{entity:'resources',id:resourceId,version:'a'.repeat(32),operation:'delete',patch:{}},studentId);
+    assert.ok(deniedAdminEdit.body.includes('"error":"unauthorized"'));
+    console.log('PASS: Arabic-English admin editor SSR, escaped content, bulk approval and edit/delete Server Action authorization');
     for(const prefix of ['', '/en']) {
       const guest=await visit(`${prefix}/companion`,null);assert.equal(guest.status,200);assert.ok(guest.body.includes(prefix?'My next steps':'خطوة'));assert.ok(guest.body.includes('noindex'));
       const signed=await visit(`${prefix}/companion`,studentId);assert.equal(signed.status,200);
