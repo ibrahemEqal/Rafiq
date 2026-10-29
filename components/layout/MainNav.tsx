@@ -12,10 +12,10 @@ import {
 } from "lucide-react";
 const links = [
   ["/companion", "companion", Sun],
+  ["/books", "books", BookOpen],
+  ["/resources", "resources", LibraryBig],
   ["/circles", "circles", Users],
   ["/study", "study", Backpack],
-  ["/resources", "resources", LibraryBig],
-  ["/books", "books", BookOpen],
   ["/questions", "questions", MessageCircleQuestion],
   ["/requests", "requests", HandHelping],
   ["/offers", "offers", Ticket],

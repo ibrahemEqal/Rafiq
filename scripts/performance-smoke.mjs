@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import { performance } from 'node:perf_hooks';
+import { runInNewContext } from 'node:vm';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 
@@ -333,7 +334,23 @@ try {
     app.stdout.on('data', check); app.stderr.on('data', check);
     app.once('error', fail); app.once('exit', code => { clearTimeout(timer); fail(new Error('App exited '+code+' '+logs)); });
   });
-  const metrics = { fixtureLatencyMs: latency, samplesPerRoute: 5, mode: baseline ? 'baseline' : 'optimized', routes: {} };
+  // Sum the compressed JS chunks referenced by each route manifest. This is a
+  // build-size regression budget, not browser transfer size or a vitals score.
+  const clientJavaScript = {};
+  for (const route of ['home', 'companion']) {
+    const context = {};
+    const path = resolve(project, `.next/server/app/[locale]/${route === 'home' ? '' : 'companion/'}page_client-reference-manifest.js`);
+    runInNewContext(await readFile(path, 'utf8'), context);
+    const manifest = Object.values(context.__RSC_MANIFEST)[0];
+    const chunks = [...new Set(Object.values(manifest.clientModules).flatMap(entry => entry.chunks).filter(chunk => typeof chunk === 'string' && chunk.endsWith('.js')))];
+    const sizes = await Promise.all(chunks.map(async chunk => {
+      const body = await readFile(resolve(project, '.next', chunk.replace(/^\/_next\//, '')));
+      return { bytes: body.length, gzip: gzipSync(body).length };
+    }));
+    clientJavaScript[route] = { chunks: chunks.length, bytes: sizes.reduce((n, item) => n + item.bytes, 0), gzipBytes: sizes.reduce((n, item) => n + item.gzip, 0) };
+  }
+  if (!baseline) assert.ok(clientJavaScript.companion.gzipBytes < 100_000, 'Keep the personal workspace JS below its compressed build-size budget');
+  const metrics = { clientJavaScript, fixtureLatencyMs: latency, samplesPerRoute: 5, mode: baseline ? 'baseline' : 'optimized', routes: {} };
   for (const path of ['/en', '/en/resources/new']) {
     const first = await visit(path); assert.equal(first.status, 200);
     const samples = [];
@@ -359,6 +376,18 @@ try {
         assert.ok(first.body.includes('Select Course'), 'Upload translations must render');
       }
     }
+  }
+  // The new book campaign must preserve static home rendering: no database
+  // lookup or personal account data is needed to advertise public features.
+  for (const prefix of ['', '/en']) {
+    const before = calls.length;
+    const home = await visit(prefix || '/', null);
+    assert.equal(home.status, 200);
+    assert.equal(calls.length, before, 'Anonymous home must not wait for Supabase');
+    assert.ok(home.body.includes('id="book-exchange-heading"'));
+    assert.ok(home.body.includes(`action="${prefix}/books"`), 'Book search must target the active locale');
+    assert.ok(home.body.includes(`href="${prefix}/books/new"`));
+    assert.ok(home.body.includes(`href="${prefix}/offers"`), 'The teaser campaign must remain available');
   }
   const adminAccount = await visit('/api/account', adminId);
   assert.equal(adminAccount.status, 200);
@@ -468,7 +497,12 @@ try {
     assert.ok(deniedAdminEdit.body.includes('"error":"unauthorized"'));
     console.log('PASS: Arabic-English admin editor SSR, escaped content, bulk approval and edit/delete Server Action authorization');
     for(const prefix of ['', '/en']) {
-      const guest=await visit(`${prefix}/companion`,null);assert.equal(guest.status,200);assert.ok(guest.body.includes(prefix?'My next steps':'خطوة'));assert.ok(guest.body.includes('noindex'));
+      const guest=await visit(`${prefix}/companion`,null);assert.equal(guest.status,200);assert.ok(guest.body.includes(prefix?'Today’s tasks':'مهام اليوم'));assert.ok(guest.body.includes('noindex'));
+      for (const [tab, heading] of [['semester', prefix ? 'Your semester' : 'كيف رح يتغيّر معدلك؟'], ['wallet', prefix ? 'spending' : 'سجّل مصروفك وتابع المتبقي.'], ['capsules', prefix ? 'letter' : 'اكتب لنفسك، واقرأها بعدين.']]) {
+        const panel = await visit(`${prefix}/companion?tab=${tab}`, null);
+        assert.equal(panel.status, 200);
+        assert.ok(panel.body.includes(heading), `${tab} must render on a direct visit`);
+      }
       const signed=await visit(`${prefix}/companion`,studentId);assert.equal(signed.status,200);
       const circles=await visit(`${prefix}/circles`,null);assert.equal(circles.status,200);assert.ok(circles.body.includes(prefix?'The first seat':'الكرسي الأول'));
     }
@@ -510,6 +544,7 @@ try {
       assert.equal(market.status, 200);
       assert.ok(market.body.includes('Calculus 1') && market.body.includes('https://wa.me/970599123456'));
       assert.ok(market.body.includes(prefix ? 'Engineering' : 'الهندسة'), 'Object-shaped college relations must render');
+      assert.ok(market.body.includes(`href="${prefix}/requests/new"`), 'Book requests must be reachable from the market');
       assert.ok(market.body.includes('page=2'), 'A full page must link to more results');
       assert.ok(!market.body.includes('<script>alert(1)</script>'), 'Descriptions must be escaped');
       const bookSearch = await visit(`${prefix}/books?q=Calculus&type=book&college=${collegeId}`, null);

@@ -1,93 +1,94 @@
-import { z } from "zod";
+// Mini keeps the same validation rules without shipping Zod’s full fluent API
+// with the personal workspace. These schemas run on the server and the device.
+import * as z from "zod/mini";
 
 export const CAMPUS_ZONE = "Asia/Hebron";
 const id = z.guid();
 const date = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/)
-  .refine((value) => {
+  .check(z.regex(/^\d{4}-\d{2}-\d{2}$/), z.refine((value) => {
     const parsed = new Date(`${value}T12:00:00Z`);
     return (
       Number.isFinite(parsed.getTime()) &&
       parsed.toISOString().slice(0, 10) === value
     );
-  });
-const time = z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/);
+  }));
+const time = z.string().check(z.regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/));
 const task = z.object({
   id,
-  title: z.string().trim().min(1).max(140),
+  title: z.string().check(z.trim(), z.minLength(1), z.maxLength(140)),
   date,
   kind: z.enum(["task", "exam", "life"]),
-  minutes: z.number().int().min(5).max(240),
-  doneAt: z.iso.datetime().nullable(),
+  minutes: z.int().check(z.minimum(5), z.maximum(240)),
+  doneAt: z.nullable(z.iso.datetime()),
 });
 const lesson = z
   .object({
     id,
-    title: z.string().trim().min(1).max(100),
-    day: z.number().int().min(0).max(6),
+    title: z.string().check(z.trim(), z.minLength(1), z.maxLength(100)),
+    day: z.int().check(z.minimum(0), z.maximum(6)),
     start: time,
     end: time,
-    location: z.string().trim().max(100),
+    location: z.string().check(z.trim(), z.maxLength(100)),
   })
-  .refine((value) => value.end > value.start, { message: "end_after_start" });
+  .check(z.refine((value) => value.end > value.start, { message: "end_after_start" }));
 const course = z.object({
   id,
-  title: z.string().trim().min(1).max(100),
-  credits: z.number().min(0.5).max(12),
-  points: z.number().min(0).max(100),
+  title: z.string().check(z.trim(), z.minLength(1), z.maxLength(100)),
+  credits: z.number().check(z.minimum(0.5), z.maximum(12)),
+  points: z.number().check(z.minimum(0), z.maximum(100)),
 });
 const expense = z.object({
   id,
-  title: z.string().trim().min(1).max(100),
-  cents: z.number().int().min(1).max(100_000_000),
+  title: z.string().check(z.trim(), z.minLength(1), z.maxLength(100)),
+  cents: z.int().check(z.minimum(1), z.maximum(100_000_000)),
   date,
   category: z.enum(["food", "transport", "study", "other"]),
 });
 const capsule = z.object({
   id,
-  title: z.string().trim().min(1).max(100),
-  body: z.string().trim().min(1).max(3000),
+  title: z.string().check(z.trim(), z.minLength(1), z.maxLength(100)),
+  body: z.string().check(z.trim(), z.minLength(1), z.maxLength(3000)),
   opensOn: date,
   createdAt: z.iso.datetime(),
 });
 export const sections = {
   profile: z.object({
-    name: z.string().trim().max(50),
+    name: z.string().check(z.trim(), z.maxLength(50)),
     intention: z.enum(["light", "steady", "focused"]),
-    dailyMinutes: z.number().int().min(10).max(300),
+    dailyMinutes: z.int().check(z.minimum(10), z.maximum(300)),
   }),
-  tasks: z.array(task).max(200),
-  schedule: z.array(lesson).max(50),
+  tasks: z.array(task).check(z.maxLength(200)),
+  schedule: z.array(lesson).check(z.maxLength(50)),
   semester: z
     .object({
       scale: z.union([z.literal(4), z.literal(100)]),
-      previousCredits: z.number().min(0).max(400),
-      previousAverage: z.number().min(0).max(100),
-      target: z.number().min(0).max(100),
-      courses: z.array(course).max(20),
+      previousCredits: z.number().check(z.minimum(0), z.maximum(400)),
+      previousAverage: z.number().check(z.minimum(0), z.maximum(100)),
+      target: z.number().check(z.minimum(0), z.maximum(100)),
+      courses: z.array(course).check(z.maxLength(20)),
     })
-    .refine(
+    .check(z.refine(
       (value) =>
         value.previousAverage <= value.scale &&
         value.target <= value.scale &&
         value.courses.every((item) => item.points <= value.scale),
       { message: "points_outside_scale" },
-    ),
+    )),
   wallet: z.object({
-    budgetCents: z.number().int().min(0).max(100_000_000),
-    expenses: z.array(expense).max(400),
+    budgetCents: z.int().check(z.minimum(0), z.maximum(100_000_000)),
+    expenses: z.array(expense).check(z.maxLength(400)),
   }),
-  capsules: z.array(capsule).max(40),
+  capsules: z.array(capsule).check(z.maxLength(40)),
   focus: z
     .array(
       z.object({
         id,
-        minutes: z.number().int().min(1).max(120),
+        minutes: z.int().check(z.minimum(1), z.maximum(120)),
         finishedAt: z.iso.datetime(),
       }),
     )
-    .max(240),
+    .check(z.maxLength(240)),
 };
 export type Section = keyof typeof sections;
 export type CompanionData = { [K in Section]: z.infer<(typeof sections)[K]> };

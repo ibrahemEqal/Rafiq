@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import {
   Sun,
+  BookOpen,
   Cloud,
   HardDrive,
   RefreshCw,
@@ -36,12 +38,16 @@ import {
 import type { Snapshot, CompanionData } from "@/lib/companion/model";
 import { useCompanion } from "./useCompanion";
 import FocusTimer from "./FocusTimer";
-import SemesterPanel from "./SemesterPanel";
-import WalletPanel from "./WalletPanel";
-import CapsulePanel from "./CapsulePanel";
 import ShareDay from "./ShareDay";
 import Modal from "./Modal";
 import { Field, fieldClass, saveClass } from "./fields";
+const SemesterPanel = dynamic(() => import("./SemesterPanel"), { loading: PanelLoading });
+const WalletPanel = dynamic(() => import("./WalletPanel"), { loading: PanelLoading });
+const CapsulePanel = dynamic(() => import("./CapsulePanel"), { loading: PanelLoading });
+
+function PanelLoading() {
+  return <div role="status" aria-label="Loading / جارٍ التحميل" className="h-80 rounded-3xl border border-line bg-paper motion-safe:animate-pulse" />;
+}
 const tabs = ["day", "semester", "wallet", "capsules"] as const;
 type Tab = (typeof tabs)[number];
 type Editor = {
@@ -254,7 +260,7 @@ export default function CompanionApp({
             <p className="mb-2 text-xs font-bold text-[#788477]">{dateLabel}</p>
             <h1 className="flex flex-wrap items-center gap-3 text-3xl font-bold leading-tight text-[#173b31] sm:text-4xl">
               <span className="min-w-0 max-w-full [overflow-wrap:anywhere]">
-                {t("hello", { name: data.profile.name || t("friend") })}
+                {data.profile.name ? t("hello", { name: data.profile.name }) : t("welcome")}
               </span>
               <Sun size={30} aria-hidden="true" className="text-[#c38d44]" />
             </h1>
@@ -751,6 +757,12 @@ export default function CompanionApp({
                   })}
                 </p>
               </section>
+              <Link href="/books" className="block rounded-[1.75rem] border border-line bg-sage-soft p-6 hover:border-forest">
+                <BookOpen size={26} aria-hidden="true" className="text-forest" />
+                <h2 className="mt-4 text-xl font-bold text-ink">{t("booksTeaserTitle")}</h2>
+                <p className="mt-3 text-sm leading-7 text-muted">{t("booksTeaserHint")}</p>
+                <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-forest">{t("browseBooks")}<ArrowUpLeft size={15} aria-hidden="true" className={!ar ? "rotate-90" : ""} /></span>
+              </Link>
               <Link
                 href="/circles"
                 className="block rounded-[1.75rem] bg-[#eee8db] p-6"

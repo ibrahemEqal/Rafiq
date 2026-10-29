@@ -14,19 +14,11 @@ export default async function BooksPage({ params, searchParams }: {
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const [t, queryParams, colleges] = await Promise.all([getTranslations("Books"), searchParams, getColleges()]);
-  const filters = bookFilters(queryParams);
-  let query = createPublicClient().from("books")
-    .select("id, title, description, type, whatsapp_number, created_at, colleges(name_ar, name_en)")
-    .eq("status", "available");
-  if (filters.type) query = query.eq("type", filters.type);
-  if (filters.college) query = query.eq("college_id", filters.college);
-  if (filters.q) query = query.ilike("title", bookTitlePattern(filters.q));
-  const offset = (filters.page - 1) * PAGE_SIZE;
-  const { data, error } = await query.order("created_at", { ascending: filters.sort === "oldest" }).order("id", { ascending: filters.sort === "oldest" }).range(offset, offset + PAGE_SIZE);
-  if (error) throw new Error("Book listings unavailable");
-  const books = (data ?? []).slice(0, PAGE_SIZE);
-  const hasMore = (data?.length ?? 0) > PAGE_SIZE;
+  const filters = bookFilters(await searchParams);
+  const [t, colleges, listings] = await Promise.all([
+    getTranslations("Books"), getColleges(), loadBooks(filters),
+  ]);
+  const { books, hasMore } = listings;
   const filtered = Boolean(filters.q || filters.college || filters.type);
   const Previous = locale === "ar" ? ArrowRight : ArrowLeft;
   const Next = locale === "ar" ? ArrowLeft : ArrowRight;
@@ -59,6 +51,10 @@ export default async function BooksPage({ params, searchParams }: {
         </div>
       </section>
 
+      <section aria-label={t("howItWorks")} className="mt-6 grid gap-3 sm:grid-cols-3">
+        {(["stepBrowse", "stepContact", "stepHandover"] as const).map((step, index) => <div key={step} className="flex items-start gap-3 rounded-2xl border border-line bg-paper p-4"><span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sage-soft text-sm font-bold text-forest">{index + 1}</span><p className="text-sm leading-7 text-ink">{t(step)}</p></div>)}
+      </section>
+
       <section aria-label={t("filterListings")} className="relative mt-6 rounded-3xl border border-line bg-paper p-4 shadow-sm sm:p-6">
         <form method="get" className="grid grid-cols-2 items-end gap-4 lg:grid-cols-[2fr_1.3fr_1fr_auto]">
           {filters.type && <input type="hidden" name="type" value={filters.type} />}
@@ -89,7 +85,24 @@ export default async function BooksPage({ params, searchParams }: {
           {hasMore && <Link href={bookListHref(filters, { page: filters.page + 1 })} className="inline-flex items-center gap-2 rounded-xl bg-forest px-4 py-3 text-sm font-bold text-white">{t("nextPage")}<Next size={16} aria-hidden="true" /></Link>}
         </nav>}
       </section>
+      <section className="mt-8 flex flex-col justify-between gap-4 rounded-3xl bg-sand p-6 sm:flex-row sm:items-center">
+        <div><h2 className="text-lg font-bold text-ink">{t("requestBookTitle")}</h2><p className="mt-2 text-sm leading-7 text-muted">{t("requestBookHint")}</p></div>
+        <Link href="/requests/new" className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-xl border border-line bg-paper px-5 py-3 text-sm font-bold text-forest">{t("requestBook")}</Link>
+      </section>
       <p className="mt-8 text-center text-xs leading-6 text-muted">{t("handoverHint")}</p>
     </div>
   </div>;
+}
+
+async function loadBooks(filters: ReturnType<typeof bookFilters>) {
+  let query = createPublicClient().from("books")
+    .select("id, title, description, type, whatsapp_number, created_at, colleges(name_ar, name_en)")
+    .eq("status", "available");
+  if (filters.type) query = query.eq("type", filters.type);
+  if (filters.college) query = query.eq("college_id", filters.college);
+  if (filters.q) query = query.ilike("title", bookTitlePattern(filters.q));
+  const offset = (filters.page - 1) * PAGE_SIZE;
+  const { data, error } = await query.order("created_at", { ascending: filters.sort === "oldest" }).order("id", { ascending: filters.sort === "oldest" }).range(offset, offset + PAGE_SIZE);
+  if (error) throw new Error("Book listings unavailable");
+  return { books: (data ?? []).slice(0, PAGE_SIZE), hasMore: (data?.length ?? 0) > PAGE_SIZE };
 }
